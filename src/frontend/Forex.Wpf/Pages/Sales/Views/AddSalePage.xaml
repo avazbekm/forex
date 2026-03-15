@@ -371,7 +371,7 @@
                     Command="{Binding CancelEditCommand}"
                     Content="Bekor qilish"
                     FontSize="14" 
-                    Visibility="{Binding IsEditingItem, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    Visibility="{Binding IsEditingItem, Converter={StaticResource BoolToVisibilityConverter}}" />
                 
                 <Button
                     x:Name="btnAdd"
@@ -564,7 +564,7 @@
         </StackPanel>
 
         <!-- Product Popup Overlay -->
-        <Grid Grid.RowSpan="5" Background="#AA000000" Visibility="{Binding IsPopupOpen, Converter={StaticResource BooleanToVisibilityConverter}}" 
+        <Grid Grid.RowSpan="5" Background="#AA000000" Visibility="{Binding IsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}" 
               MouseDown="ClosePopup_MouseDown" IsHitTestVisible="{Binding IsPopupOpen}">
              <Border Background="White" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" MaxWidth="600" MaxHeight="600">
                  <Grid>

@@ -34,7 +34,6 @@ public partial class AddSalePageViewModel : ViewModelBase
     private static readonly Dictionary<string, BitmapSource> _imageCache = new();
     private static readonly HttpClient _httpClient = new HttpClient();
 
-    // Initialization state tracking
     private Task? _initializationTask;
 
     public AddSalePageViewModel(ForexClient client, IMapper mapper, INavigationService navigation, SaleSessionService saleSession)
@@ -43,16 +42,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         this.mapper = mapper;
         this.navigation = navigation;
         this.saleSession = saleSession;
-        
-        // Sync with session
+
         SaleItems = saleSession.CartItems;
-        if (saleSession.CurrentInputItem != null && saleSession.CurrentInputItem.Product != null)
-        {
-             // Mapping back from DTO to VM would be needed here if we persist input item fully
-             // For now, let's assume input item is transient or handled via properties
-             // We'll stick to binding CurrentSaleItem properties manually if needed, 
-             // but simpler to just let it be transient for input, and persist CartItems.
-        }
 
         CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
         SaleItems.CollectionChanged += (s, e) => RecalculateTotals();
@@ -138,7 +129,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         var allTypes = productResidues.Select(pr =>
         {
             pr.ProductType.AvailableCount = pr.Count;
-            
+
             // Sync with session cart to reflect correct available count
             var inCart = SaleItems.FirstOrDefault(i => i.ProductType?.Id == pr.ProductType.Id);
             if (inCart != null)
@@ -198,12 +189,12 @@ public partial class AddSalePageViewModel : ViewModelBase
         bool isDuplicate = false;
         if (!IsEditingItem)
         {
-             isDuplicate = CurrentSaleItem.ProductType.Id > 0
-                ? SaleItems.Any(s => s.ProductType?.Id == CurrentSaleItem.ProductType.Id)
-                : SaleItems.Any(s => s.ProductType?.Type == CurrentSaleItem.ProductType.Type
-                                  && s.Product?.Id == CurrentSaleItem.Product?.Id);
+            isDuplicate = CurrentSaleItem.ProductType.Id > 0
+               ? SaleItems.Any(s => s.ProductType?.Id == CurrentSaleItem.ProductType.Id)
+               : SaleItems.Any(s => s.ProductType?.Type == CurrentSaleItem.ProductType.Type
+                                 && s.Product?.Id == CurrentSaleItem.Product?.Id);
         }
-        
+
         if (isDuplicate)
         {
             WarningMessage = "Bu turdagi mahsulot allaqachon ro'yxatda bor!";
@@ -239,7 +230,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                 currentStock,
                 Date,
                 client);
-            
+
             // Set owner to ensure Z-order
             if (Application.Current.MainWindow != null)
                 window.Owner = Application.Current.MainWindow;
@@ -263,7 +254,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         // Update stock
         item.ProductType.AvailableCount -= (item.TotalCount ?? 0);
         item.PropertyChanged += SaleItemPropertyChanged;
-        
+
         if (IsEditingItem)
         {
             if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
@@ -292,8 +283,8 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         if (IsEditingItem)
         {
-             WarningMessage = "Avval tahrirlashni yakunlang!";
-             return;
+            WarningMessage = "Avval tahrirlashni yakunlang!";
+            return;
         }
 
         bool hasCurrentData = CurrentSaleItem.Product is not null ||
@@ -320,7 +311,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         {
             // Snapshot for cancel
             _editingItemSnapshot = SelectedSaleItem; // Keep ref just in case, but we rebuild from properties anyway
-            
+
             // Store state
             OriginalItemIndex = SaleItems.IndexOf(SelectedSaleItem);
             IsEditingItem = true;
@@ -356,7 +347,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         // Restore the original item
         // We need to re-deduct stock because we added it back when Edit started
         _editingItemSnapshot.ProductType.AvailableCount -= (_editingItemSnapshot.TotalCount ?? 0);
-        
+
         if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
             SaleItems.Insert(OriginalItemIndex, _editingItemSnapshot);
         else
@@ -416,8 +407,8 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         if (Date.Date > DateTime.Today)
         {
-             WarningMessage = "Kelajakdagi sanani tanlab bo'lmaydi!";
-             return;
+            WarningMessage = "Kelajakdagi sanani tanlab bo'lmaydi!";
+            return;
         }
 
         if (SaleItems.Count == 0)
@@ -728,7 +719,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         }
         return fixedDoc;
     }
-    private async Task<BitmapSource> DownloadBitmapAsync(string url)
+    private async Task<BitmapSource?> DownloadBitmapAsync(string url)
     {
         try
         {
@@ -882,10 +873,10 @@ public partial class AddSalePageViewModel : ViewModelBase
     private void Clear()
     {
         saleSession.ClearSession(); // Clear session state
-        // SaleItems.Clear() is redundant as it is the same reference as session.CartItems
-        // But if we want to be safe:
-        // SaleItems.Clear(); // already handled by saleSession.ClearSession() since SaleItems ref matches
-        
+                                    // SaleItems.Clear() is redundant as it is the same reference as session.CartItems
+                                    // But if we want to be safe:
+                                    // SaleItems.Clear(); // already handled by saleSession.ClearSession() since SaleItems ref matches
+
         Customer = null;
         TotalAmount = null;
         FinalAmount = null;
@@ -895,7 +886,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         IsEditingItem = false;
         OriginalItemIndex = -1;
         _editingItemSnapshot = null;
-        
+
         ClearCurrentSaleItem();
     }
     private void ClearCurrentSaleItem()

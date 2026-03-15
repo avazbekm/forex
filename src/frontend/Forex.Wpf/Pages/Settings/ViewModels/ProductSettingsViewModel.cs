@@ -31,7 +31,7 @@ public partial class ProductSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<ProductViewModel> products = [];
-    
+
     [ObservableProperty]
     private ObservableCollection<UnitMeasuerViewModel> unitMeasures = [];
 
@@ -59,7 +59,7 @@ public partial class ProductSettingsViewModel : ViewModelBase
     {
         ProductsView?.Refresh();
     }
-    
+
     private async Task LoadDataAsync()
     {
         await Task.WhenAll(LoadProductsAsync(), LoadUnitMeasuresAsync());
@@ -104,12 +104,12 @@ public partial class ProductSettingsViewModel : ViewModelBase
     private void AddProduct()
     {
         var newProduct = new ProductViewModel { Name = "Yangi mahsulot", Code = "" };
-        
+
         if (UnitMeasures.Any())
         {
-             var defaultUnit = UnitMeasures.First();
-             newProduct.UnitMeasure = defaultUnit;
-             newProduct.UnitMeasureId = defaultUnit.Id;
+            var defaultUnit = UnitMeasures.First();
+            newProduct.UnitMeasure = defaultUnit;
+            newProduct.UnitMeasureId = defaultUnit.Id;
         }
 
         Products.Insert(0, newProduct);

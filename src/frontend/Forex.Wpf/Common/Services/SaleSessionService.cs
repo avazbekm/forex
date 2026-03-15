@@ -1,7 +1,8 @@
-using System.Collections.ObjectModel;
-using Forex.Wpf.ViewModels;
-
 namespace Forex.Wpf.Common.Services;
+
+using Forex.Wpf.Pages.Sales.ViewModels;
+using Forex.Wpf.ViewModels;
+using System.Collections.ObjectModel;
 
 public class SaleSessionService
 {

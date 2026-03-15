@@ -476,8 +476,8 @@ public partial class SemiProductPageViewModel : ViewModelBase
             {
                 SuccessMessage = $"Muvaffaqiyatli yuklandi!\n" +
                                $"- {validProducts.Count} ta mahsulot\n" +
-                               $"- {validProducts.Sum(p => p.ProductTypes.Count)} ta o'lcham\n" +
-                               $"- {validProducts.Sum(p => p.ProductTypes.Sum(t => t.ProductTypeItems.Count))} ta element";
+                               $"- {validProducts.Sum(p => p?.ProductTypes?.Count ?? 0)} ta o'lcham\n" +
+                               $"- {validProducts.Sum(p => p?.ProductTypes?.Sum(t => t.ProductTypeItems?.Count ?? 0) ?? 0)} ta element";
                 ResetForm();
             }
             else

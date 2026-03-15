@@ -19,7 +19,6 @@ public partial class ProductTypeViewModel : ViewModelBase
 
     public bool CanEditBundleCount => IsNew;
 
-    // for UI only
     [ObservableProperty] private int availableCount;
     [ObservableProperty] private ProductViewModel product = default!;
     private ProductTypeViewModel? selected;
