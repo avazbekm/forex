@@ -7,6 +7,7 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Common.Interfaces;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using Forex.Wpf.Windows;
@@ -14,33 +15,40 @@ using MapsterMapper;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Net.Http;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Markup;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+
+namespace Forex.Wpf.Pages.Sales.ViewModels;
 
 public partial class AddSalePageViewModel : ViewModelBase
 {
     private readonly ForexClient client;
     private readonly IMapper mapper;
     private readonly INavigationService navigation;
+    private readonly SaleSessionService saleSession;
     private static readonly Dictionary<string, BitmapSource> _imageCache = new();
     private static readonly HttpClient _httpClient = new HttpClient();
 
     // Initialization state tracking
     private Task? _initializationTask;
 
-    public AddSalePageViewModel(ForexClient client, IMapper mapper, INavigationService navigation)
+    public AddSalePageViewModel(ForexClient client, IMapper mapper, INavigationService navigation, SaleSessionService saleSession)
     {
         this.client = client;
         this.mapper = mapper;
         this.navigation = navigation;
+        this.saleSession = saleSession;
+        
+        // Sync with session
+        SaleItems = saleSession.CartItems;
+        if (saleSession.CurrentInputItem != null && saleSession.CurrentInputItem.Product != null)
+        {
+             // Mapping back from DTO to VM would be needed here if we persist input item fully
+             // For now, let's assume input item is transient or handled via properties
+             // We'll stick to binding CurrentSaleItem properties manually if needed, 
+             // but simpler to just let it be transient for input, and persist CartItems.
+        }
+
         CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
+        SaleItems.CollectionChanged += (s, e) => RecalculateTotals();
 
         _initializationTask = LoadDataAsync();
     }
@@ -60,6 +68,9 @@ public partial class AddSalePageViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<ProductViewModel> availableProducts = [];
 
     [ObservableProperty] private long editingSaleId = 0;
+    [ObservableProperty] private bool isEditingItem;
+    [ObservableProperty] private int originalItemIndex = -1;
+    private SaleItemViewModel? _editingItemSnapshot;
 
     #region Initialization
 
@@ -103,8 +114,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         {
             Filters = new()
             {
-                ["ProductType"] = ["include:Product"],
-                ["Count"] = [">0"]
+                ["ProductType"] = ["include:Product"]
             }
         };
 
@@ -121,6 +131,17 @@ public partial class AddSalePageViewModel : ViewModelBase
         var allTypes = productResidues.Select(pr =>
         {
             pr.ProductType.AvailableCount = pr.Count;
+            
+            // Sync with session cart to reflect correct available count
+            var inCart = SaleItems.FirstOrDefault(i => i.ProductType?.Id == pr.ProductType.Id);
+            if (inCart != null)
+            {
+                pr.ProductType.AvailableCount -= (inCart.TotalCount ?? 0);
+                // Update references so stock updates work correctly
+                inCart.ProductType = pr.ProductType;
+                inCart.Product = pr.ProductType.Product;
+            }
+
             return pr.ProductType;
         })
         .Where(pt => pt is not null && pt.Product is not null)
@@ -149,6 +170,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     [RelayCommand]
     private async Task Add()
     {
+        if (Date.Date > DateTime.Today)
+        {
+            WarningMessage = "Kelajakdagi sanani tanlab bo'lmaydi!";
+            return;
+        }
+
         if (CurrentSaleItem.Product is null ||
             CurrentSaleItem.BundleCount == null ||
             CurrentSaleItem.ProductType is null ||
@@ -160,10 +187,16 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         int needed = CurrentSaleItem.TotalCount ?? 0;
 
-        bool isDuplicate = CurrentSaleItem.ProductType.Id > 0
-            ? SaleItems.Any(s => s.ProductType?.Id == CurrentSaleItem.ProductType.Id)
-            : SaleItems.Any(s => s.ProductType?.Type == CurrentSaleItem.ProductType.Type
-                              && s.Product?.Id == CurrentSaleItem.Product?.Id);
+        // Duplicate check (skip if editing same item type)
+        bool isDuplicate = false;
+        if (!IsEditingItem)
+        {
+             isDuplicate = CurrentSaleItem.ProductType.Id > 0
+                ? SaleItems.Any(s => s.ProductType?.Id == CurrentSaleItem.ProductType.Id)
+                : SaleItems.Any(s => s.ProductType?.Type == CurrentSaleItem.ProductType.Type
+                                  && s.Product?.Id == CurrentSaleItem.Product?.Id);
+        }
+        
         if (isDuplicate)
         {
             WarningMessage = "Bu turdagi mahsulot allaqachon ro'yxatda bor!";
@@ -199,6 +232,10 @@ public partial class AddSalePageViewModel : ViewModelBase
                 currentStock,
                 Date,
                 client);
+            
+            // Set owner to ensure Z-order
+            if (Application.Current.MainWindow != null)
+                window.Owner = Application.Current.MainWindow;
 
             if (window.ShowDialog() != true)
                 return;
@@ -216,9 +253,25 @@ public partial class AddSalePageViewModel : ViewModelBase
             TotalCount = CurrentSaleItem.TotalCount,
         };
 
+        // Update stock
         item.ProductType.AvailableCount -= (item.TotalCount ?? 0);
         item.PropertyChanged += SaleItemPropertyChanged;
-        SaleItems.Add(item);
+        
+        if (IsEditingItem)
+        {
+            if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
+                SaleItems.Insert(OriginalItemIndex, item);
+            else
+                SaleItems.Add(item);
+
+            IsEditingItem = false;
+            OriginalItemIndex = -1;
+            _editingItemSnapshot = null;
+        }
+        else
+        {
+            SaleItems.Add(item);
+        }
 
         ClearCurrentSaleItem();
         RecalculateTotals();
@@ -229,6 +282,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         if (SelectedSaleItem is null)
             return;
+
+        if (IsEditingItem)
+        {
+             WarningMessage = "Avval tahrirlashni yakunlang!";
+             return;
+        }
 
         bool hasCurrentData = CurrentSaleItem.Product is not null ||
                              CurrentSaleItem.BundleCount.HasValue;
@@ -245,10 +304,20 @@ public partial class AddSalePageViewModel : ViewModelBase
                 return;
         }
 
+        // Restore stock for the item being edited so validation works correctly
+        SelectedSaleItem.ProductType.AvailableCount += (SelectedSaleItem.TotalCount ?? 0);
+
         CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
 
         try
         {
+            // Snapshot for cancel
+            _editingItemSnapshot = SelectedSaleItem; // Keep ref just in case, but we rebuild from properties anyway
+            
+            // Store state
+            OriginalItemIndex = SaleItems.IndexOf(SelectedSaleItem);
+            IsEditingItem = true;
+
             CurrentSaleItem.Product = SelectedSaleItem.Product;
             CurrentSaleItem.ProductType = SelectedSaleItem.ProductType;
             CurrentSaleItem.BundleCount = SelectedSaleItem.BundleCount;
@@ -268,6 +337,33 @@ public partial class AddSalePageViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void CancelEdit()
+    {
+        if (!IsEditingItem || _editingItemSnapshot is null)
+        {
+            IsEditingItem = false;
+            ClearCurrentSaleItem();
+            return;
+        }
+
+        // Restore the original item
+        // We need to re-deduct stock because we added it back when Edit started
+        _editingItemSnapshot.ProductType.AvailableCount -= (_editingItemSnapshot.TotalCount ?? 0);
+        
+        if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
+            SaleItems.Insert(OriginalItemIndex, _editingItemSnapshot);
+        else
+            SaleItems.Add(_editingItemSnapshot);
+
+        IsEditingItem = false;
+        OriginalItemIndex = -1;
+        _editingItemSnapshot = null;
+
+        ClearCurrentSaleItem();
+        RecalculateTotals();
+    }
+
+    [RelayCommand]
     private void DeleteItem(SaleItemViewModel item)
     {
         if (item is null)
@@ -282,14 +378,41 @@ public partial class AddSalePageViewModel : ViewModelBase
         if (result == MessageBoxResult.No)
             return;
 
+        // Restore stock
+        item.ProductType.AvailableCount += (item.TotalCount ?? 0);
+
         item.PropertyChanged -= SaleItemPropertyChanged;
         SaleItems.Remove(item);
         RecalculateTotals();
     }
 
+    [ObservableProperty] private ProductViewModel? popupProduct;
+    [ObservableProperty] private bool isPopupOpen;
+
+    [RelayCommand]
+    private void ViewProduct(SaleItemViewModel? item)
+    {
+        if (item?.Product is null) return;
+        PopupProduct = item.Product;
+        IsPopupOpen = true;
+    }
+
+    [RelayCommand]
+    private void ClosePopup()
+    {
+        IsPopupOpen = false;
+        PopupProduct = null;
+    }
+
     [RelayCommand]
     private async Task Submit()
     {
+        if (Date.Date > DateTime.Today)
+        {
+             WarningMessage = "Kelajakdagi sanani tanlab bo'lmaydi!";
+             return;
+        }
+
         if (SaleItems.Count == 0)
         {
             WarningMessage = "Hech qanday mahsulot kiritilmagan!";
@@ -436,7 +559,8 @@ public partial class AddSalePageViewModel : ViewModelBase
                 Width = 1050,
                 Height = 850,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                Content = layout
+                Content = layout,
+                Owner = Application.Current.MainWindow // Ensure Z-Order
             };
 
             previewWindow.ShowDialog();
@@ -750,13 +874,21 @@ public partial class AddSalePageViewModel : ViewModelBase
     }
     private void Clear()
     {
-        SaleItems.Clear();
+        saleSession.ClearSession(); // Clear session state
+        // SaleItems.Clear() is redundant as it is the same reference as session.CartItems
+        // But if we want to be safe:
+        // SaleItems.Clear(); // already handled by saleSession.ClearSession() since SaleItems ref matches
+        
         Customer = null;
         TotalAmount = null;
         FinalAmount = null;
         Note = string.Empty;
         TotalAmountWithUserBalance = null;
         EditingSaleId = 0;
+        IsEditingItem = false;
+        OriginalItemIndex = -1;
+        _editingItemSnapshot = null;
+        
         ClearCurrentSaleItem();
     }
     private void ClearCurrentSaleItem()

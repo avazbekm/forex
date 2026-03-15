@@ -359,18 +359,33 @@
                 IsEnabled="False"
                 Label="Jami summa"
                 Text="{Binding CurrentSaleItem.Amount, UpdateSourceTrigger=PropertyChanged}" />
-			<Button
-                x:Name="btnAdd"
-                Grid.Column="7"
-                Height="30"
-                Margin="2,0"
-                md:ButtonAssist.CornerRadius="4"
-                Background="{DynamicResource OtherBackground}"
-                Command="{Binding AddCommand}"
-                Content="Qo'shish"
-                FontSize="14" />
+                
+            <StackPanel Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button
+                    x:Name="btnCancel"
+                    Height="30"
+                    Margin="2,0"
+                    Padding="10,0"
+                    md:ButtonAssist.CornerRadius="4"
+                    Background="#FF5252"
+                    Command="{Binding CancelEditCommand}"
+                    Content="Bekor qilish"
+                    FontSize="14" 
+                    Visibility="{Binding IsEditingItem, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
+                <Button
+                    x:Name="btnAdd"
+                    Height="30"
+                    Margin="2,0"
+                    Padding="10,0"
+                    md:ButtonAssist.CornerRadius="4"
+                    Background="{DynamicResource OtherBackground}"
+                    Command="{Binding AddCommand}"
+                    Content="Qo'shish"
+                    FontSize="14" />
+            </StackPanel>
 
-		</Grid>
+        </Grid>
         <Grid Grid.Row="3" Margin="0,5,0,5">
             <DataGrid
                 x:Name="dataGrid"
@@ -387,6 +402,10 @@
                 SelectedItem="{Binding SelectedSaleItem}"
                 SelectionMode="Single"
                 SelectionUnit="FullRow">
+                
+                <DataGrid.InputBindings>
+                    <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ViewProductCommand}" CommandParameter="{Binding SelectedItem, ElementName=dataGrid}" />
+                </DataGrid.InputBindings>
 
                 <DataGrid.Resources>
                     <Style x:Key="RightAlignedCellStyle" TargetType="TextBlock">
@@ -543,6 +562,28 @@
                 Content="Yuborish"
                 Foreground="{StaticResource SuccessButtonForeground}" />
         </StackPanel>
+
+        <!-- Product Popup Overlay -->
+        <Grid Grid.RowSpan="5" Background="#AA000000" Visibility="{Binding IsPopupOpen, Converter={StaticResource BooleanToVisibilityConverter}}" 
+              MouseDown="ClosePopup_MouseDown" IsHitTestVisible="{Binding IsPopupOpen}">
+             <Border Background="White" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" MaxWidth="600" MaxHeight="600">
+                 <Grid>
+                     <Grid.RowDefinitions>
+                         <RowDefinition Height="Auto"/>
+                         <RowDefinition Height="Auto"/>
+                         <RowDefinition Height="Auto"/>
+                         <RowDefinition Height="Auto"/>
+                     </Grid.RowDefinitions>
+                     
+                     <Image Grid.Row="0" Source="{Binding PopupProduct.DisplayImagePath}" MaxWidth="500" MaxHeight="400" Stretch="Uniform" Margin="0,0,0,10"/>
+                     
+                     <TextBlock Grid.Row="1" Text="{Binding PopupProduct.Code}" FontSize="18" Foreground="Gray" HorizontalAlignment="Center"/>
+                     <TextBlock Grid.Row="2" Text="{Binding PopupProduct.Name}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5,0,10"/>
+                     
+                     <Button Grid.Row="3" Command="{Binding ClosePopupCommand}" Content="Yopish" HorizontalAlignment="Center" Padding="20,5"/>
+                 </Grid>
+             </Border>
+        </Grid>
 
     </Grid>
 </Page>

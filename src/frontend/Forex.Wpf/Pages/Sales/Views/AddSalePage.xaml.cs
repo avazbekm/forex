@@ -118,4 +118,10 @@ public partial class AddSalePage : Page
 
         return dialog.user!;
     }
+    
+    private void ClosePopup_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (vm.IsPopupOpen)
+            vm.ClosePopupCommand.Execute(null);
+    }
 }

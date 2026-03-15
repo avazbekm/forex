@@ -57,10 +57,10 @@ public partial class HomePage : Page
         btnSale.RegisterShortcut(Key.F1);
         btnCash.RegisterShortcut(Key.F2);
         btnProduct.RegisterShortcut(Key.F3);
-        btnSemiProductEntry.RegisterShortcut(Key.F4);
-        btnUser.RegisterShortcut(Key.F5);
-        btnReports.RegisterShortcut(Key.F6);
-        btnSettings.RegisterShortcut(Key.F7);
+        //btnSemiProductEntry.RegisterShortcut(Key.F4);
+        btnUser.RegisterShortcut(Key.F4);
+        btnReports.RegisterShortcut(Key.F5);
+        btnSettings.RegisterShortcut(Key.F6);
     }
 
     private void RegisterFocusNavigation()

@@ -91,6 +91,7 @@ public partial class UserPage : Page
             dgUsers.SelectedItem = null; // Selection ni tozalash
             btnSave.Visibility = GetSaveButtonVisibility();
             btnUpdate.Visibility = Visibility.Collapsed;
+            btnCancel.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -174,6 +175,7 @@ public partial class UserPage : Page
         {
             btnUpdate.IsEnabled = true;
             btnUpdate.Visibility = Visibility.Collapsed;
+            btnCancel.Visibility = Visibility.Collapsed;
             btnSave.Visibility = GetSaveButtonVisibility();
             currentUser = null!;
         }
@@ -520,6 +522,7 @@ public partial class UserPage : Page
 
         btnSave.Visibility = Visibility.Collapsed;
         btnUpdate.Visibility = Visibility.Visible;
+        btnCancel.Visibility = Visibility.Visible;
     }
     private void btnEdit_Click(object sender, RoutedEventArgs e)
     {
@@ -672,6 +675,7 @@ public partial class UserPage : Page
                 ClearForm();
                 btnSave.Visibility = GetSaveButtonVisibility();
                 btnUpdate.Visibility = Visibility.Collapsed;
+                btnCancel.Visibility = Visibility.Collapsed;
                 currentUser = null!;
             }
             else
@@ -689,5 +693,14 @@ public partial class UserPage : Page
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
+    }
+
+    private void BtnCancel_Click(object sender, RoutedEventArgs e)
+    {
+        ClearForm();
+        btnUpdate.Visibility = Visibility.Collapsed;
+        btnCancel.Visibility = Visibility.Collapsed;
+        btnSave.Visibility = GetSaveButtonVisibility();
+        currentUser = null!;
     }
 }

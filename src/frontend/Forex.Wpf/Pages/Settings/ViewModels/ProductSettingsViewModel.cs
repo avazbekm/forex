@@ -26,11 +26,14 @@ public partial class ProductSettingsViewModel : ViewModelBase
         this.client = client;
         this.mapper = mapper;
         this.dialogService = dialogService;
-        _ = LoadProductsAsync();
+        _ = LoadDataAsync();
     }
 
     [ObservableProperty]
     private ObservableCollection<ProductViewModel> products = [];
+    
+    [ObservableProperty]
+    private ObservableCollection<UnitMeasuerViewModel> unitMeasures = [];
 
     [ObservableProperty]
     private ProductViewModel? selectedProduct;
@@ -55,6 +58,18 @@ public partial class ProductSettingsViewModel : ViewModelBase
     partial void OnSearchTextChanged(string value)
     {
         ProductsView?.Refresh();
+    }
+    
+    private async Task LoadDataAsync()
+    {
+        await Task.WhenAll(LoadProductsAsync(), LoadUnitMeasuresAsync());
+    }
+
+    private async Task LoadUnitMeasuresAsync()
+    {
+        var response = await client.UnitMeasures.GetAllAsync();
+        if (response.IsSuccess)
+            UnitMeasures = mapper.Map<ObservableCollection<UnitMeasuerViewModel>>(response.Data);
     }
 
     private async Task LoadProductsAsync()
@@ -89,6 +104,14 @@ public partial class ProductSettingsViewModel : ViewModelBase
     private void AddProduct()
     {
         var newProduct = new ProductViewModel { Name = "Yangi mahsulot", Code = "" };
+        
+        if (UnitMeasures.Any())
+        {
+             var defaultUnit = UnitMeasures.First();
+             newProduct.UnitMeasure = defaultUnit;
+             newProduct.UnitMeasureId = defaultUnit.Id;
+        }
+
         Products.Insert(0, newProduct);
         SelectedProduct = newProduct;
     }
