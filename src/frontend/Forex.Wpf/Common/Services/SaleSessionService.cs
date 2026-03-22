@@ -10,6 +10,7 @@ public class SaleSessionService
     public SaleItemViewModel CurrentInputItem { get; set; } = new();
 
     public UserViewModel? SelectedCustomer { get; set; }
+    public DateTime? Date { get; set; }
     public decimal? TotalAmount { get; set; }
     public decimal? FinalAmount { get; set; }
     public string Note { get; set; } = string.Empty;
@@ -19,6 +20,7 @@ public class SaleSessionService
         CartItems.Clear();
         CurrentInputItem = new();
         SelectedCustomer = null;
+        Date = null;
         TotalAmount = null;
         FinalAmount = null;
         Note = string.Empty;

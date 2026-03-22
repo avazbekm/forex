@@ -19,6 +19,7 @@ using System.IO;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Markup;
@@ -31,10 +32,10 @@ public partial class AddSalePageViewModel : ViewModelBase
     private readonly IMapper mapper;
     private readonly INavigationService navigation;
     private readonly SaleSessionService saleSession;
-    private static readonly Dictionary<string, BitmapSource> _imageCache = new();
-    private static readonly HttpClient _httpClient = new HttpClient();
+    private static readonly Dictionary<string, BitmapSource> _imageCache = [];
+    private static readonly HttpClient _httpClient = new();
 
-    private Task? _initializationTask;
+    private readonly Task? _initializationTask;
 
     public AddSalePageViewModel(ForexClient client, IMapper mapper, INavigationService navigation, SaleSessionService saleSession)
     {
@@ -44,6 +45,12 @@ public partial class AddSalePageViewModel : ViewModelBase
         this.saleSession = saleSession;
 
         SaleItems = saleSession.CartItems;
+
+        if (saleSession.TotalAmount.HasValue) TotalAmount = saleSession.TotalAmount;
+        if (saleSession.FinalAmount.HasValue) FinalAmount = saleSession.FinalAmount;
+        if (saleSession.Date.HasValue) Date = saleSession.Date.Value;
+        if (!string.IsNullOrEmpty(saleSession.Note)) Note = saleSession.Note;
+        if (saleSession.SelectedCustomer != null) Customer = saleSession.SelectedCustomer;
 
         CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
         SaleItems.CollectionChanged += (s, e) => RecalculateTotals();
@@ -57,6 +64,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     [ObservableProperty] private decimal? totalAmountWithUserBalance;
     [ObservableProperty] private string note = string.Empty;
 
+    // Statistik ma'lumotlar
+    [ObservableProperty] private int totalRowsCount;
+    [ObservableProperty] private int distinctProductsCount;
+    [ObservableProperty] private int totalBundlesCount;
+    [ObservableProperty] private int totalQuantityCount;
+
     [ObservableProperty] private SaleItemViewModel currentSaleItem = new();
     [ObservableProperty] private ObservableCollection<SaleItemViewModel> saleItems = [];
     [ObservableProperty] private SaleItemViewModel? selectedSaleItem = default;
@@ -65,19 +78,99 @@ public partial class AddSalePageViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
     [ObservableProperty] private ObservableCollection<ProductViewModel> availableProducts = [];
 
+    // Filtrlanuvchi ro'yxatlar — XAML shu ikki xususiyatga bind qiladi
+    [ObservableProperty] private ObservableCollection<UserViewModel> filteredCustomers = [];
+    [ObservableProperty] private ICollectionView filteredProducts;
+    [ObservableProperty] private string productSearchText;
+
+    partial void OnProductSearchTextChanged(string value)
+    {
+        // Navigatsiya paytida filterni buzmaslik uchun:
+        if (CurrentSaleItem?.Product != null)
+        {
+            var p = CurrentSaleItem.Product;
+            // Agar matn maxsulot kodi yoki nomiga teng bo'lsa, demak bu tanlov (navigatsiya) natijasi
+            if (string.Equals(value, p.Code, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value, p.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+        FilteredProducts?.Refresh();
+    }
+
+    private bool FilterProducts(object item)
+    {
+        if (string.IsNullOrWhiteSpace(ProductSearchText)) return true;
+        if (item is not ProductViewModel p) return false;
+
+        var search = ProductSearchText.Trim();
+        return (p.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (p.Code?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
     [ObservableProperty] private long editingSaleId = 0;
     [ObservableProperty] private bool isEditingItem;
     [ObservableProperty] private int originalItemIndex = -1;
     private SaleItemViewModel? _editingItemSnapshot;
 
-    #region Initialization
+    // ─────────────────────────────────────────────
+    // Filter public methodlar — code-behind chaqiradi
+    // ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Mahsulotlarni Kod yoki Nomi bo'yicha filtrlaydi.
+    /// null yoki bo'sh qiymat berilsa to'liq ro'yxat ko'rsatiladi.
+    /// </summary>
+    public void ApplyProductFilter(string? searchText)
+    {
+        ProductSearchText = searchText;
+    }
+
+    /// <summary>
+    /// Mijozlarni Ismi bo'yicha filtrlaydi.
+    /// null yoki bo'sh qiymat berilsa to'liq ro'yxat ko'rsatiladi.
+    /// </summary>
+    public void ApplyCustomerFilter(string? searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            FilteredCustomers = AvailableCustomers;
+            return;
+        }
+
+        var lower = searchText.Trim().ToLower();
+        var results = AvailableCustomers
+            .Where(c => c.Name?.ToLower().Contains(lower) == true)
+            .ToList();
+
+        FilteredCustomers = new ObservableCollection<UserViewModel>(results);
+    }
+
+    // ─────────────────────────────────────────────
+    // AvailableProducts / AvailableCustomers o'zgarganda filterni yangilaymiz
+    // ─────────────────────────────────────────────
+
+    partial void OnAvailableProductsChanged(ObservableCollection<ProductViewModel> value)
+    {
+        if (value is null) return;
+        FilteredProducts = CollectionViewSource.GetDefaultView(value);
+        FilteredProducts.Filter = FilterProducts;
+    }
+
+    partial void OnAvailableCustomersChanged(ObservableCollection<UserViewModel> value)
+    {
+        FilteredCustomers = value;
+    }
+
+    // ─────────────────────────────────────────────
+    // Data Loading
+    // ─────────────────────────────────────────────
 
     private async Task EnsureInitializedAsync()
     {
         if (_initializationTask is not null)
-        {
             await _initializationTask;
-        }
     }
 
     private async Task LoadDataAsync()
@@ -101,7 +194,20 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         var response = await client.Users.Filter(request).Handle(isLoading => IsLoading = isLoading);
         if (response.IsSuccess)
+        {
             AvailableCustomers = mapper.Map<ObservableCollection<UserViewModel>>(response.Data!);
+
+            if (Customer != null)
+            {
+                var match = AvailableCustomers.FirstOrDefault(c => c.Id == Customer.Id);
+                if (match != null) Customer = match;
+            }
+            else if (EditingSaleId == 0 && saleSession.SelectedCustomer != null)
+            {
+                var match = AvailableCustomers.FirstOrDefault(c => c.Id == saleSession.SelectedCustomer.Id);
+                if (match != null) Customer = match;
+            }
+        }
         else
             ErrorMessage = response.Message ?? "Mahsulot turlarini yuklashda xatolik.";
     }
@@ -130,12 +236,10 @@ public partial class AddSalePageViewModel : ViewModelBase
         {
             pr.ProductType.AvailableCount = pr.Count;
 
-            // Sync with session cart to reflect correct available count
             var inCart = SaleItems.FirstOrDefault(i => i.ProductType?.Id == pr.ProductType.Id);
             if (inCart != null)
             {
                 pr.ProductType.AvailableCount -= (inCart.TotalCount ?? 0);
-                // Update references so stock updates work correctly
                 inCart.ProductType = pr.ProductType;
                 inCart.Product = pr.ProductType.Product;
             }
@@ -146,14 +250,11 @@ public partial class AddSalePageViewModel : ViewModelBase
         .ToList();
 
         var grouped = allTypes.GroupBy(pt => pt.Product.Id);
-
         var products = new ObservableCollection<ProductViewModel>();
 
         foreach (var group in grouped)
         {
-            var sampleType = group.First();
-            var product = sampleType.Product;
-
+            var product = group.First().Product;
             product.ProductTypes = new ObservableCollection<ProductTypeViewModel>(group);
             products.Add(product);
         }
@@ -161,9 +262,97 @@ public partial class AddSalePageViewModel : ViewModelBase
         AvailableProducts = products;
     }
 
-    #endregion
+    public async Task LoadSaleForEditAsync(long saleId, bool notifyOnLoad = true)
+    {
+        await EnsureInitializedAsync();
 
-    #region Commands
+        EditingSaleId = saleId;
+
+        SaleItems = new ObservableCollection<SaleItemViewModel>();
+        SaleItems.CollectionChanged += (s, e) => RecalculateTotals();
+
+        FilteringRequest request = new()
+        {
+            Filters = new()
+            {
+                ["id"] = [saleId.ToString()],
+                ["saleItems"] = ["include:productType.product"]
+            }
+        };
+
+        var response = await client.Sales.Filter(request).Handle(isLoading => IsLoading = isLoading);
+
+        if (!response.IsSuccess)
+        {
+            ErrorMessage = response.Message ?? "Savdoni yuklashda xatolik!";
+            EditingSaleId = 0;
+            return;
+        }
+
+        var sale = mapper.Map<SaleViewModel>(response.Data.First());
+
+        Date = sale.Date;
+        Note = sale.Note ?? string.Empty;
+
+        var customer = AvailableCustomers.FirstOrDefault(c => c.Id == sale.CustomerId);
+        if (customer is not null) Customer = customer;
+
+        if (sale.SaleItems is not null)
+        {
+            foreach (var saleItemResponse in sale.SaleItems)
+            {
+                var productTypeResponse = saleItemResponse.ProductType;
+                var productResponse = productTypeResponse?.Product;
+
+                ProductViewModel? productVM = null;
+
+                if (productTypeResponse != null)
+                    productVM = AvailableProducts.FirstOrDefault(p => p.Id == productTypeResponse.ProductId);
+
+                if (productVM == null && productResponse != null)
+                {
+                    productVM = mapper.Map<ProductViewModel>(productResponse);
+                    productVM.ProductTypes ??= [];
+                    AvailableProducts.Add(productVM);
+                }
+
+                ProductTypeViewModel? productTypeVM = null;
+
+                if (productVM != null && productTypeResponse != null)
+                {
+                    productTypeVM = productVM.ProductTypes?.FirstOrDefault(pt => pt.Id == productTypeResponse.Id);
+
+                    if (productTypeVM == null)
+                    {
+                        productTypeVM = mapper.Map<ProductTypeViewModel>(productTypeResponse);
+                        productVM.ProductTypes ??= [];
+                        productVM.ProductTypes.Add(productTypeVM);
+                    }
+                }
+
+                if (productVM == null || productTypeVM == null) continue;
+
+                var newItemVM = new SaleItemViewModel
+                {
+                    Product = productVM,
+                    ProductType = productTypeVM,
+                    BundleCount = saleItemResponse.BundleCount,
+                    UnitPrice = saleItemResponse.UnitPrice,
+                    Amount = saleItemResponse.Amount,
+                    TotalCount = saleItemResponse.TotalCount
+                };
+
+                newItemVM.PropertyChanged += SaleItemPropertyChanged;
+                SaleItems.Add(newItemVM);
+            }
+        }
+
+        RecalculateTotals();
+    }
+
+    // ─────────────────────────────────────────────
+    // Commands
+    // ─────────────────────────────────────────────
 
     [RelayCommand]
     private async Task Add()
@@ -185,7 +374,6 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         int needed = CurrentSaleItem.TotalCount ?? 0;
 
-        // Duplicate check (skip if editing same item type)
         bool isDuplicate = false;
         if (!IsEditingItem)
         {
@@ -220,23 +408,17 @@ public partial class AddSalePageViewModel : ViewModelBase
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (msgResult == MessageBoxResult.No)
-                return;
+            if (msgResult == MessageBoxResult.No) return;
 
             var window = new QuickProductEntryWindow(
                 CurrentSaleItem.Product,
                 CurrentSaleItem.ProductType,
-                needed,
-                currentStock,
-                Date,
-                client);
+                needed, currentStock, Date, client);
 
-            // Set owner to ensure Z-order
             if (Application.Current.MainWindow != null)
                 window.Owner = Application.Current.MainWindow;
 
-            if (window.ShowDialog() != true)
-                return;
+            if (window.ShowDialog() != true) return;
 
             CurrentSaleItem.ProductType.AvailableCount += window.EnteredCount;
         }
@@ -251,7 +433,6 @@ public partial class AddSalePageViewModel : ViewModelBase
             TotalCount = CurrentSaleItem.TotalCount,
         };
 
-        // Update stock
         item.ProductType.AvailableCount -= (item.TotalCount ?? 0);
         item.PropertyChanged += SaleItemPropertyChanged;
 
@@ -278,8 +459,7 @@ public partial class AddSalePageViewModel : ViewModelBase
     [RelayCommand]
     private void Edit()
     {
-        if (SelectedSaleItem is null)
-            return;
+        if (SelectedSaleItem is null) return;
 
         if (IsEditingItem)
         {
@@ -287,8 +467,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             return;
         }
 
-        bool hasCurrentData = CurrentSaleItem.Product is not null ||
-                             CurrentSaleItem.BundleCount.HasValue;
+        bool hasCurrentData = CurrentSaleItem.Product is not null || CurrentSaleItem.BundleCount.HasValue;
 
         if (hasCurrentData)
         {
@@ -298,21 +477,16 @@ public partial class AddSalePageViewModel : ViewModelBase
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.No)
-                return;
+            if (result == MessageBoxResult.No) return;
         }
 
-        // Restore stock for the item being edited so validation works correctly
         SelectedSaleItem.ProductType.AvailableCount += (SelectedSaleItem.TotalCount ?? 0);
 
         CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
 
         try
         {
-            // Snapshot for cancel
-            _editingItemSnapshot = SelectedSaleItem; // Keep ref just in case, but we rebuild from properties anyway
-
-            // Store state
+            _editingItemSnapshot = SelectedSaleItem;
             OriginalItemIndex = SaleItems.IndexOf(SelectedSaleItem);
             IsEditingItem = true;
 
@@ -344,8 +518,6 @@ public partial class AddSalePageViewModel : ViewModelBase
             return;
         }
 
-        // Restore the original item
-        // We need to re-deduct stock because we added it back when Edit started
         _editingItemSnapshot.ProductType.AvailableCount -= (_editingItemSnapshot.TotalCount ?? 0);
 
         if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
@@ -364,34 +536,30 @@ public partial class AddSalePageViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteItem(SaleItemViewModel item)
     {
-        if (item is null)
-            return;
+        if (item is null) return;
 
         var result = MessageBox.Show(
-            $"Mahsulotni o'chirishni tasdiqlaysizmi?",
+            "Mahsulotni o'chirishni tasdiqlaysizmi?",
             "O'chirishni tasdiqlash",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
-        if (result == MessageBoxResult.No)
-            return;
+        if (result == MessageBoxResult.No) return;
 
-        // Restore stock
         item.ProductType.AvailableCount += (item.TotalCount ?? 0);
-
         item.PropertyChanged -= SaleItemPropertyChanged;
         SaleItems.Remove(item);
         RecalculateTotals();
     }
 
-    [ObservableProperty] private ProductViewModel? popupProduct;
+    [ObservableProperty] private SaleItemViewModel? popupItem;
     [ObservableProperty] private bool isPopupOpen;
 
     [RelayCommand]
     private void ViewProduct(SaleItemViewModel? item)
     {
-        if (item?.Product is null) return;
-        PopupProduct = item.Product;
+        if (item is null) return;
+        PopupItem = item;
         IsPopupOpen = true;
     }
 
@@ -399,7 +567,23 @@ public partial class AddSalePageViewModel : ViewModelBase
     private void ClosePopup()
     {
         IsPopupOpen = false;
-        PopupProduct = null;
+        PopupItem = null;
+    }
+
+    [RelayCommand]
+    private void ClearSale()
+    {
+        var result = MessageBox.Show(
+            "Barcha kiritilgan ma'lumotlarni tozalashni xohlaysizmi?",
+            "Tozalash",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            Clear();
+            SuccessMessage = "Ma'lumotlar tozalandi.";
+        }
     }
 
     [RelayCommand]
@@ -447,7 +631,8 @@ public partial class AddSalePageViewModel : ViewModelBase
 
             if (isSuccess = response.IsSuccess)
                 SuccessMessage = "Savdo muvaffaqiyatli yangilandi!";
-            else ErrorMessage = response.Message ?? "Savdoni yangilashda xatolik!";
+            else
+                ErrorMessage = response.Message ?? "Savdoni yangilashda xatolik!";
         }
         else
         {
@@ -466,7 +651,8 @@ public partial class AddSalePageViewModel : ViewModelBase
                 if (result == MessageBoxResult.Yes)
                     await ShowPrintPreview();
             }
-            else ErrorMessage = response.Message ?? "Savdoni ro'yxatga olishda xatolik!";
+            else
+                ErrorMessage = response.Message ?? "Savdoni ro'yxatga olishda xatolik!";
         }
 
         if (isSuccess)
@@ -475,6 +661,99 @@ public partial class AddSalePageViewModel : ViewModelBase
             navigation.GoBack();
         }
     }
+
+    private void Clear()
+    {
+        saleSession.ClearSession();
+        SaleItems = saleSession.CartItems;
+
+        Customer = null;
+        TotalAmount = null;
+        FinalAmount = null;
+        Note = string.Empty;
+        TotalAmountWithUserBalance = null;
+        EditingSaleId = 0;
+        IsEditingItem = false;
+        OriginalItemIndex = -1;
+        _editingItemSnapshot = null;
+        ClearCurrentSaleItem();
+        RecalculateTotals();
+    }
+
+    private void ClearCurrentSaleItem()
+    {
+        CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
+        CurrentSaleItem = new SaleItemViewModel();
+        CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
+    }
+
+    // ─────────────────────────────────────────────
+    // Property Changes
+    // ─────────────────────────────────────────────
+
+    private void SaleItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SaleItemViewModel.Amount))
+            RecalculateTotals();
+    }
+
+    partial void OnEditingSaleIdChanged(long value)
+    {
+        IsEditing = value > 0;
+    }
+
+    partial void OnTotalAmountChanged(decimal? value)
+    {
+        if (EditingSaleId == 0) saleSession.TotalAmount = value;
+    }
+
+    partial void OnNoteChanged(string value)
+    {
+        if (EditingSaleId == 0) saleSession.Note = value;
+    }
+
+    partial void OnDateChanged(DateTime value)
+    {
+        if (EditingSaleId == 0) saleSession.Date = value;
+    }
+
+    partial void OnFinalAmountChanged(decimal? value)
+    {
+        if (EditingSaleId == 0) saleSession.FinalAmount = value;
+        if (Customer is not null)
+            TotalAmountWithUserBalance = Customer.Balance - FinalAmount;
+    }
+
+    partial void OnCustomerChanged(UserViewModel? value)
+    {
+        if (EditingSaleId == 0) saleSession.SelectedCustomer = value;
+        RecalculateTotalAmountWithUserBalance();
+    }
+
+    // ─────────────────────────────────────────────
+    // Private Helpers
+    // ─────────────────────────────────────────────
+
+    private void RecalculateTotals()
+    {
+        TotalAmount = SaleItems.Sum(x => x.Amount ?? 0);
+        FinalAmount = TotalAmount;
+
+        TotalRowsCount = SaleItems.Count;
+        DistinctProductsCount = SaleItems.Select(x => x.Product?.Code).Distinct().Count();
+        TotalBundlesCount = SaleItems.Sum(x => x.BundleCount ?? 0);
+        TotalQuantityCount = SaleItems.Sum(x => x.TotalCount ?? 0);
+    }
+
+    private void RecalculateTotalAmountWithUserBalance()
+    {
+        if (Customer is not null)
+            TotalAmountWithUserBalance = Customer.Balance - TotalAmount;
+    }
+
+    // ─────────────────────────────────────────────
+    // Generate Print Preview
+    // ─────────────────────────────────────────────
 
     public async Task ShowPrintPreview()
     {
@@ -486,7 +765,6 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         try
         {
-            // 1. Rasmlarni parallel yuklash (Tezlik siri)
             var uniqueUrls = SaleItems
                 .Select(i => i.Product.DisplayImagePath)
                 .Where(url => !string.IsNullOrEmpty(url) && !_imageCache.ContainsKey(url))
@@ -495,7 +773,6 @@ public partial class AddSalePageViewModel : ViewModelBase
 
             if (uniqueUrls.Any())
             {
-                // Barcha rasmlarni bir vaqtda yuklashni boshlaymiz
                 var tasks = uniqueUrls.Select(async url =>
                 {
                     var bitmap = await DownloadBitmapAsync(url);
@@ -504,14 +781,12 @@ public partial class AddSalePageViewModel : ViewModelBase
                 await Task.WhenAll(tasks);
             }
 
-            // 2. Hujjatni yaratish
             var fixedDoc = CreateFixedDocumentForPrint();
 
-            // 3. UI qismlari
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(10) };
             var shareButton = new Button
             {
-                Content = "Telegram’da ulashish",
+                Content = "Telegram'da ulashish",
                 Padding = new Thickness(15, 5, 15, 5),
                 Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
                 Foreground = Brushes.White,
@@ -558,7 +833,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                 Height = 850,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 Content = layout,
-                Owner = Application.Current.MainWindow // Ensure Z-Order
+                Owner = Application.Current.MainWindow
             };
 
             previewWindow.ShowDialog();
@@ -568,6 +843,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             MessageBox.Show($"Xatolik: {ex.Message}");
         }
     }
+
     private FixedDocument CreateFixedDocumentForPrint()
     {
         var fixedDoc = new FixedDocument();
@@ -579,12 +855,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         double marginRight = 30;
         double tableWorkingWidth = pageWidth - marginLeft - marginRight;
 
-        // 1. Kod bo'yicha saralash va guruhlash
-        var groupedItems = SaleItems
-            .OrderBy(i => i.Product.Code)
-            .GroupBy(i => i.Product.Code)
-            .ToList();
-
+        var groupedItems = SaleItems.OrderBy(i => i.Product.Code).GroupBy(i => i.Product.Code).ToList();
         var flatItems = groupedItems.SelectMany(g => g).ToList();
 
         decimal totalAmountSum = flatItems.Sum(i => i.Amount) ?? 0;
@@ -594,9 +865,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         string[] headers = { "T/r", "Rasm", "Kod", "Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
         double[] finalWidths = { 35, 70, 60, 165, 60, 60, 70, 70, 143.7 };
 
-        int maxRowsPerPage = 22; // Rasm borligi uchun qator sonini biroz kamaytirdik
+        int maxRowsPerPage = 22;
         int totalPages = (int)Math.Ceiling((double)(flatItems.Count + 1) / maxRowsPerPage);
-
         int processedIndex = 0;
         int globalTr = 0;
 
@@ -626,14 +896,11 @@ public partial class AddSalePageViewModel : ViewModelBase
             for (int i = 0; i < finalWidths.Length; i++)
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(finalWidths[i]) });
 
-            // Header
             AddRow(grid, true, 0, headers);
             int currentRow = 1;
 
             int pageCount = Math.Min(maxRowsPerPage, flatItems.Count - processedIndex);
             var pageItems = flatItems.Skip(processedIndex).Take(pageCount).ToList();
-
-            // Sahifadagi itemlarni kod bo'yicha guruhlab chiqish (RowSpan uchun)
             var pageGroups = pageItems.GroupBy(i => i.Product.Code).ToList();
 
             foreach (var group in pageGroups)
@@ -646,10 +913,8 @@ public partial class AddSalePageViewModel : ViewModelBase
                     globalTr++;
                     grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-                    // 1. T/R
                     AddCellToGrid(grid, globalTr.ToString(), currentRow, 0, false, TextAlignment.Center);
 
-                    // 2. RASM (Faqat guruhning birinchi qatorida va RowSpan bilan)
                     if (!imageRendered)
                     {
                         var imageBorder = CreateImageCell(item.Product.DisplayImagePath);
@@ -660,7 +925,6 @@ public partial class AddSalePageViewModel : ViewModelBase
                         imageRendered = true;
                     }
 
-                    // Qolgan ustunlar
                     AddCellToGrid(grid, item.Product.Code ?? "", currentRow, 2, false, TextAlignment.Left);
                     AddCellToGrid(grid, item.Product.Name ?? "", currentRow, 3, false, TextAlignment.Left);
                     AddCellToGrid(grid, item.ProductType.Type ?? "", currentRow, 4, false, TextAlignment.Center);
@@ -675,15 +939,15 @@ public partial class AddSalePageViewModel : ViewModelBase
 
             processedIndex += pageItems.Count;
 
-            // Jami qatori (Faqat oxirgi sahifada)
             if (pageIndex == totalPages - 1)
             {
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
                 var totalLabel = CreateCell("Jami:", true, TextAlignment.Left);
                 totalLabel.Padding = new Thickness(10, 5, 4, 5);
                 Grid.SetRow(totalLabel, currentRow);
                 Grid.SetColumn(totalLabel, 0);
-                Grid.SetColumnSpan(totalLabel, 5); // T/r dan Razmergacha
+                Grid.SetColumnSpan(totalLabel, 5);
                 grid.Children.Add(totalLabel);
 
                 AddCellToGrid(grid, totalBundleCountSum.ToString("N0"), currentRow, 5, true, TextAlignment.Right);
@@ -695,7 +959,8 @@ public partial class AddSalePageViewModel : ViewModelBase
                 Grid.SetColumnSpan(totalAmountCell, 2);
                 if (totalAmountCell.Child is TextBlock tbSum)
                 {
-                    tbSum.FontSize = 14; tbSum.Foreground = new SolidColorBrush(Color.FromRgb(0, 50, 150));
+                    tbSum.FontSize = 14;
+                    tbSum.Foreground = new SolidColorBrush(Color.FromRgb(0, 50, 150));
                 }
                 grid.Children.Add(totalAmountCell);
             }
@@ -717,32 +982,33 @@ public partial class AddSalePageViewModel : ViewModelBase
             ((IAddChild)pc).AddChild(page);
             fixedDoc.Pages.Add(pc);
         }
+
         return fixedDoc;
     }
+
     private async Task<BitmapSource?> DownloadBitmapAsync(string url)
     {
         try
         {
             byte[] data = await _httpClient.GetByteArrayAsync(url);
-            using (var ms = new MemoryStream(data))
-            {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.StreamSource = ms;
-                bitmap.DecodePixelWidth = 150; // PDF sifati va hajmi uchun optimal
-                bitmap.EndInit();
-                bitmap.Freeze();
-                return bitmap;
-            }
+            using MemoryStream ms = new(data);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = ms;
+            bitmap.DecodePixelWidth = 150;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
         }
         catch { return null; }
     }
+
     private Border CreateImageCell(string imagePath)
     {
         var border = new Border
         {
-            Width = 70, // Kvadrat joy
+            Width = 70,
             Height = 70,
             BorderBrush = new SolidColorBrush(Color.FromRgb(230, 230, 230)),
             BorderThickness = new Thickness(1),
@@ -753,21 +1019,25 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         if (!string.IsNullOrEmpty(imagePath) && _imageCache.TryGetValue(imagePath, out var bitmap))
         {
-            var img = new Image
-            {
-                Source = bitmap,
-                Stretch = Stretch.Uniform, // Seniorlar tanlovi: proporsiya buzilmaydi
-                Margin = new Thickness(2)
-            };
+            var img = new Image { Source = bitmap, Stretch = Stretch.Uniform, Margin = new Thickness(2) };
             RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.HighQuality);
             border.Child = img;
         }
         else
         {
-            border.Child = new TextBlock { Text = "Rasm yo'q", FontSize = 8, Foreground = Brushes.LightGray, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+            border.Child = new TextBlock
+            {
+                Text = "Rasm yo'q",
+                FontSize = 8,
+                Foreground = Brushes.LightGray,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
         }
+
         return border;
     }
+
     private void AddCellToGrid(Grid grid, string text, int row, int col, bool isHeader, TextAlignment align)
     {
         var cell = CreateCell(text, isHeader, align);
@@ -775,10 +1045,13 @@ public partial class AddSalePageViewModel : ViewModelBase
         Grid.SetColumn(cell, col);
         grid.Children.Add(cell);
     }
+
     private void AddRow(Grid grid, bool isHeader, int row, params string[] values)
     {
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        TextAlignment[] alignments = {
+
+        TextAlignment[] alignments =
+        {
             TextAlignment.Center, TextAlignment.Center, TextAlignment.Left,
             TextAlignment.Left, TextAlignment.Center, TextAlignment.Right,
             TextAlignment.Right, TextAlignment.Right, TextAlignment.Right
@@ -793,6 +1066,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             grid.Children.Add(cell);
         }
     }
+
     private Border CreateCell(string text, bool isHeader, TextAlignment alignment = TextAlignment.Left)
     {
         var border = new Border
@@ -811,9 +1085,11 @@ public partial class AddSalePageViewModel : ViewModelBase
             TextAlignment = alignment,
             VerticalAlignment = VerticalAlignment.Center
         };
+
         border.Child = tb;
         return border;
     }
+
     private void SaveFixedDocumentToPdf(FixedDocument doc, string path, int dpi = 300)
     {
         try
@@ -863,6 +1139,7 @@ public partial class AddSalePageViewModel : ViewModelBase
 
                 xgfx.DrawImage(ximg, (pdfPage.Width.Point - w) / 2, (pdfPage.Height.Point - h) / 2, w, h);
             }
+
             pdfDoc.Save(path);
         }
         catch (Exception ex)
@@ -870,163 +1147,4 @@ public partial class AddSalePageViewModel : ViewModelBase
             MessageBox.Show($"PDF saqlashda xatolik: {ex.Message}", "Xatolik", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
-    private void Clear()
-    {
-        saleSession.ClearSession(); // Clear session state
-                                    // SaleItems.Clear() is redundant as it is the same reference as session.CartItems
-                                    // But if we want to be safe:
-                                    // SaleItems.Clear(); // already handled by saleSession.ClearSession() since SaleItems ref matches
-
-        Customer = null;
-        TotalAmount = null;
-        FinalAmount = null;
-        Note = string.Empty;
-        TotalAmountWithUserBalance = null;
-        EditingSaleId = 0;
-        IsEditingItem = false;
-        OriginalItemIndex = -1;
-        _editingItemSnapshot = null;
-
-        ClearCurrentSaleItem();
-    }
-    private void ClearCurrentSaleItem()
-    {
-        CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
-        CurrentSaleItem = new SaleItemViewModel();
-        CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
-    }
-
-    #endregion
-
-    #region Property Changes
-
-    partial void OnCustomerChanged(UserViewModel? value) => RecalculateTotalAmountWithUserBalance();
-
-    private void SaleItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(SaleItemViewModel.Amount))
-        {
-            RecalculateTotals();
-        }
-    }
-
-    partial void OnFinalAmountChanged(decimal? value)
-    {
-        if (Customer is not null)
-            TotalAmountWithUserBalance = Customer.Balance - FinalAmount;
-    }
-
-    partial void OnEditingSaleIdChanged(long value)
-    {
-        IsEditing = value > 0;
-    }
-
-    #endregion
-
-    #region Private Helpers
-
-    private void RecalculateTotals()
-    {
-        TotalAmount = SaleItems.Sum(x => x.Amount);
-        FinalAmount = TotalAmount;
-    }
-
-    private void RecalculateTotalAmountWithUserBalance()
-    {
-        if (Customer is not null)
-            TotalAmountWithUserBalance = Customer.Balance - TotalAmount;
-    }
-
-    #endregion
-
-    #region Public Methods for External Use
-
-    /// <summary>
-    /// Loads sale data for editing. Ensures initialization is complete first.
-    /// </summary>
-    public async Task LoadSaleForEditAsync(long saleId, bool notifyOnLoad = true)
-    {
-        // Ma'lumotlar yuklanishini kutamiz
-        await EnsureInitializedAsync();
-
-        FilteringRequest request = new()
-        {
-            Filters = new()
-            {
-                ["id"] = [saleId.ToString()],
-                ["saleItems"] = ["include:productType.product"]
-            }
-        };
-
-        var response = await client.Sales.Filter(request).Handle(isLoading => IsLoading = isLoading);
-
-        if (!response.IsSuccess)
-        {
-            ErrorMessage = response.Message ?? "Savdoni yuklashda xatolik!";
-            return;
-        }
-
-        var sale = mapper.Map<SaleViewModel>(response.Data.First());
-
-        EditingSaleId = sale.Id;
-        Date = sale.Date;
-        Note = sale.Note ?? string.Empty;
-
-        // Endi AvailableCustomers to'liq yuklangan
-        var customer = AvailableCustomers.FirstOrDefault(c => c.Id == sale.CustomerId);
-        if (customer is not null)
-        {
-            Customer = customer;
-        }
-
-        SaleItems.Clear();
-        if (sale.SaleItems is not null)
-        {
-            foreach (var saleItem in sale.SaleItems)
-            {
-                var product = AvailableProducts.FirstOrDefault(p =>
-                    p.Id == saleItem.ProductType?.Product?.Id);
-
-                if (product == null && saleItem.ProductType?.Product is not null)
-                {
-                    product = mapper.Map<ProductViewModel>(saleItem.ProductType.Product);
-                    product.ProductTypes = [];
-                    AvailableProducts.Add(product);
-                }
-
-                ProductTypeViewModel? productType = null;
-                if (product is not null && saleItem.ProductType is not null)
-                {
-                    productType = product.ProductTypes?.FirstOrDefault(pt =>
-                        pt.Id == saleItem.ProductType.Id);
-
-                    if (productType == null)
-                    {
-                        productType = mapper.Map<ProductTypeViewModel>(saleItem.ProductType);
-                        product.ProductTypes ??= [];
-                        product.ProductTypes.Add(productType);
-                    }
-                }
-
-                var item = new SaleItemViewModel
-                {
-                    Product = product!,
-                    ProductType = productType!,
-                    BundleCount = saleItem.BundleCount,
-                    UnitPrice = saleItem.UnitPrice,
-                    Amount = saleItem.Amount,
-                    TotalCount = saleItem.TotalCount
-                };
-
-                item.PropertyChanged += SaleItemPropertyChanged;
-                SaleItems.Add(item);
-            }
-        }
-
-        RecalculateTotals();
-        if (notifyOnLoad)
-            SuccessMessage = "Savdo tahrirlash uchun yuklandi.";
-    }
-
-    #endregion
 }

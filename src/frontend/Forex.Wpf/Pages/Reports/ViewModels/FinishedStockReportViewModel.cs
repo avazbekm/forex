@@ -384,6 +384,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
 
         return doc;
     }
+
     private void AddRow(Grid grid, bool isHeader, params string[] values)
     {
         int row = grid.RowDefinitions.Count;

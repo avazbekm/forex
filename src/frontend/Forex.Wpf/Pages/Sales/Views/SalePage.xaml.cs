@@ -54,6 +54,9 @@ public partial class SalePage : Page
     private void BtnAddSale_Click(object sender, RoutedEventArgs e)
     {
         // Yangi savdo qo'shish - bo'sh sahifa
+        // var session = App.AppHost!.Services.GetRequiredService<SaleSessionService>();
+        // session.ClearSession();
+
         Main.NavigateTo(new AddSalePage());
     }
     private async void BtnPrintSale_Click(object sender, RoutedEventArgs e)
@@ -79,12 +82,14 @@ public partial class SalePage : Page
         if (sender is not Button button || button.Tag is not SaleViewModel sale)
             return;
 
+        // Edit qilishda sessiyani tozalamaymiz, chunki edit alohida yuklanadi
         var addSalePage = new AddSalePage();
-        var addSaleVm = App.AppHost!.Services.GetRequiredService<AddSalePageViewModel>();
-        addSalePage.DataContext = addSaleVm;
 
-        await addSaleVm.LoadSaleForEditAsync(sale.Id);
-
-        Main.NavigateTo(addSalePage);
+        // Use the ViewModel already created by the page to avoid 'split-brain' issue
+        if (addSalePage.DataContext is AddSalePageViewModel addSaleVm)
+        {
+            await addSaleVm.LoadSaleForEditAsync(sale.Id);
+            Main.NavigateTo(addSalePage);
+        }
     }
 }

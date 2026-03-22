@@ -50,6 +50,10 @@ public partial class FloatingImageComboBox : UserControl
     public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(nameof(IsSearchEnabled), typeof(bool), typeof(FloatingImageComboBox), new PropertyMetadata(true));
     public bool IsSearchEnabled { get => (bool)GetValue(IsSearchEnabledProperty); set => SetValue(IsSearchEnabledProperty, value); }
 
+    public static readonly DependencyProperty IsTextSearchEnabledProperty = DependencyProperty.Register(nameof(IsTextSearchEnabled), typeof(bool), typeof(FloatingImageComboBox), new PropertyMetadata(true));
+    public bool IsTextSearchEnabled { get => (bool)GetValue(IsTextSearchEnabledProperty); set => SetValue(IsTextSearchEnabledProperty, value); }
+
+
     public static readonly DependencyProperty ItemHoverScaleProperty = DependencyProperty.Register(nameof(ItemHoverScale), typeof(double), typeof(FloatingImageComboBox), new PropertyMetadata(1.0));
     public double ItemHoverScale { get => (double)GetValue(ItemHoverScaleProperty); set => SetValue(ItemHoverScaleProperty, value); }
 
