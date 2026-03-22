@@ -28,21 +28,22 @@
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Button x:Name="btnLoad"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        HorizontalAlignment="Right"
-                        Height="32"
-                        Width="80"
-                        Margin="0,4"
-                        md:ButtonAssist.CornerRadius="6"
-                        Background="#673AB7"
-                        BorderThickness="0"
-                        Command="{Binding LoadCommand}"
-                        Content="Yuklash"
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Foreground="White" />
+                <Button
+                    x:Name="btnLoad"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Width="80"
+                    Height="32"
+                    Margin="0,4"
+                    HorizontalAlignment="Right"
+                    md:ButtonAssist.CornerRadius="6"
+                    Background="#673AB7"
+                    BorderThickness="0"
+                    Command="{Binding LoadCommand}"
+                    Content="Yuklash"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Foreground="White" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="0"
@@ -57,7 +58,8 @@
                     BorderBrush="#CCCCCC"
                     BorderThickness="2"
                     CornerRadius="4">
-                    <ComboBox x:Name="cbxCustomer"
+                    <ComboBox
+                        x:Name="cbxCustomer"
                         Padding="3"
                         BorderThickness="0"
                         DisplayMemberPath="Name"
@@ -73,7 +75,8 @@
                 Margin="30,0,0,0"
                 VerticalAlignment="Center"
                 Orientation="Vertical">
-                <Button x:Name="btnPreview"
+                <Button
+                    x:Name="btnPreview"
                     Height="32"
                     Margin="0,4"
                     md:ButtonAssist.CornerRadius="6"
@@ -84,7 +87,8 @@
                     FontSize="14"
                     FontWeight="SemiBold"
                     Foreground="White" />
-                <Button x:Name="btnClear"
+                <Button
+                    x:Name="btnClear"
                     Height="32"
                     Margin="0,4"
                     md:ButtonAssist.CornerRadius="6"
@@ -101,7 +105,8 @@
                 Margin="15,0"
                 VerticalAlignment="Center"
                 Orientation="Vertical">
-                <Button x:Name="btnPrint"
+                <Button
+                    x:Name="btnPrint"
                     Height="32"
                     Margin="0,4"
                     md:ButtonAssist.CornerRadius="6"
@@ -112,7 +117,8 @@
                     FontSize="14"
                     FontWeight="SemiBold"
                     Foreground="White" />
-                <Button x:Name="btnExport"
+                <Button
+                    x:Name="btnExport"
                     Height="32"
                     Margin="0,4"
                     md:ButtonAssist.CornerRadius="6"
@@ -127,7 +133,6 @@
         </Grid>
         <DataGrid
             Grid.Row="1"
-            VirtualizingStackPanel.VirtualizationMode="Standard"
             AlternatingRowBackground="#F5F5F5"
             AutoGenerateColumns="False"
             BorderBrush="LightGray"
@@ -136,7 +141,8 @@
             GridLinesVisibility="Horizontal"
             IsReadOnly="True"
             ItemsSource="{Binding FilteredItems}"
-            RowHeight="48">
+            RowHeight="48"
+            VirtualizingStackPanel.VirtualizationMode="Standard">
             <!--  ⭐ HEADERlarni o‘rtaga, fon rang, semi-bold  -->
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
@@ -150,10 +156,10 @@
                 <DataGridTemplateColumn Width="60" Header="T/r">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow},
-                                       Converter={StaticResource IndexConverter}}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource IndexConverter}}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

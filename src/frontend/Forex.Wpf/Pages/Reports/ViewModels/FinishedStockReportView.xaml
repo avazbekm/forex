@@ -49,23 +49,23 @@
                             Width="175"
                             Padding="3"
                             BorderThickness="0"
-                            DisplayMemberPath="Code"
                             FontSize="14"
                             IsEditable="True"
-                            ItemsSource="{Binding AvailableProducts}"
-                            SelectedItem="{Binding SelectedCode, Mode=TwoWay}" />
+                            ItemsSource="{Binding AvailableCodes}"
+                            SelectedItem="{Binding SelectedCode}" />
                     </Border>
 
-                    <Button x:Name="btnLoad"
-                            Width="90"
-                            Height="29"
-                            Margin="10,0,0,0"
-                            md:ButtonAssist.CornerRadius="4"
-                            Background="#673AB7"
-                            BorderThickness="0"
-                            Command="{Binding LoadCommand}"
-                            Content="Yuklash"
-                            Foreground="White" />
+                    <Button
+                        x:Name="btnLoad"
+                        Width="90"
+                        Height="29"
+                        Margin="10,0,0,0"
+                        md:ButtonAssist.CornerRadius="4"
+                        Background="#673AB7"
+                        BorderThickness="0"
+                        Command="{Binding LoadCommand}"
+                        Content="Yuklash"
+                        Foreground="White" />
                 </StackPanel>
 
                 <TextBlock
@@ -87,11 +87,10 @@
                         Width="275"
                         Padding="3"
                         BorderThickness="0"
-                        DisplayMemberPath="Name"
                         FontSize="14"
                         IsEditable="True"
-                        ItemsSource="{Binding AvailableProducts}"
-                        SelectedItem="{Binding SelectedProduct, Mode=TwoWay}" />
+                        ItemsSource="{Binding AvailableNames}"
+                        SelectedItem="{Binding SelectedName}" />
                 </Border>
             </Grid>
 

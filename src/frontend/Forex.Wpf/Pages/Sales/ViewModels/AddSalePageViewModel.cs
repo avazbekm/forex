@@ -449,153 +449,228 @@ public partial class AddSalePageViewModel : ViewModelBase
     private FixedDocument CreateFixedDocumentForPrint()
     {
         var fixedDoc = new FixedDocument();
-        double pageWidth = 793.7;
-        double pageHeight = 1122.5;
-        double marginTop = 40;
-        double marginBottom = 40;
-        double marginLeft = 30;
-        double marginRight = 30;
-        double tableWorkingWidth = pageWidth - marginLeft - marginRight;
+        const double pageWidth = 793.7;
+        const double pageHeight = 1122.5;
+        const double margin = 25;
+        const double footerSpace = 60; // Jami qatori + bet raqami uchun joy
 
-        // 1. Kod bo'yicha saralash va guruhlash
+        string[] headers = { "T/r", "Rasm", "Kod", "Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
+        double[] widths = { 35, 70, 60, 165, 60, 60, 70, 70, 143.7 };
+        double tableWidth = pageWidth - margin * 2;
+
         var groupedItems = SaleItems
             .OrderBy(i => i.Product.Code)
             .GroupBy(i => i.Product.Code)
             .ToList();
 
-        var flatItems = groupedItems.SelectMany(g => g).ToList();
+        decimal grandTotalAmount = SaleItems.Sum(x => x.Amount ?? 0);
+        double grandTotalBundle = SaleItems.Sum(x => (double)(x.BundleCount ?? 0));
+        double grandTotalCount = SaleItems.Sum(x => (double)(x.TotalCount ?? 0));
 
-        decimal totalAmountSum = flatItems.Sum(i => i.Amount) ?? 0;
-        double totalBundleCountSum = flatItems.Sum(i => i.BundleCount) ?? 0;
-        double totalTotalCountSum = flatItems.Sum(i => i.TotalCount) ?? 0;
+        int currentGroupIndex = 0;
+        int pageNumber = 1;
+        int globalTr = 1;
 
-        string[] headers = { "T/r", "Rasm", "Kod", "Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
-        double[] finalWidths = { 35, 70, 60, 165, 60, 60, 70, 70, 143.7 };
-
-        int maxRowsPerPage = 22; // Rasm borligi uchun qator sonini biroz kamaytirdik
-        int totalPages = (int)Math.Ceiling((double)(flatItems.Count + 1) / maxRowsPerPage);
-
-        int processedIndex = 0;
-        int globalTr = 0;
-
-        for (int pageIndex = 0; pageIndex < totalPages; pageIndex++)
+        while (currentGroupIndex < groupedItems.Count)
         {
             var page = new FixedPage { Width = pageWidth, Height = pageHeight, Background = Brushes.White };
-            var gridContainer = new StackPanel { Margin = new Thickness(marginLeft, marginTop, marginRight, 0) };
+            var container = new StackPanel { Margin = new Thickness(margin, 20, margin, 20) };
 
-            gridContainer.Children.Add(new TextBlock
+            // currentY — sahifada qancha joy ishlatilganini kuzatib boramiz
+            double currentY = 40; // StackPanel top margin
+
+            // Sarlavha faqat 1-betda
+            if (pageNumber == 1)
             {
-                Text = "Sotilgan mahsulotlar ro'yxati",
-                FontSize = 22,
-                FontWeight = FontWeights.Bold,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 5)
-            });
+                var title = new TextBlock
+                {
+                    Text = "Sotilgan mahsulotlar ro'yxati",
+                    FontSize = 20,
+                    FontWeight = FontWeights.ExtraBold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 5)
+                };
+                title.Measure(new Size(tableWidth, double.PositiveInfinity));
+                container.Children.Add(title);
+                currentY += title.DesiredSize.Height + 5;
 
-            gridContainer.Children.Add(new TextBlock
-            {
-                Text = $"Mijoz: {Customer?.Name.ToUpper() ?? "Naqd"} | Sana: {Date:dd.MM.yyyy}",
-                FontSize = 14,
-                Foreground = Brushes.Gray,
-                Margin = new Thickness(0, 0, 0, 10)
-            });
+                var info = new TextBlock
+                {
+                    Text = $"Mijoz: {Customer?.Name.ToUpper() ?? "Naqd"} | Sana: {Date:dd.MM.yyyy}",
+                    FontSize = 14,
+                    Margin = new Thickness(0, 0, 0, 10)
+                };
+                info.Measure(new Size(tableWidth, double.PositiveInfinity));
+                container.Children.Add(info);
+                currentY += info.DesiredSize.Height + 10;
+            }
 
-            var grid = new Grid { Width = tableWorkingWidth, HorizontalAlignment = HorizontalAlignment.Left };
-            for (int i = 0; i < finalWidths.Length; i++)
-                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(finalWidths[i]) });
+            var grid = new Grid { Width = tableWidth };
+            foreach (var w in widths)
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
-            // Header
+            // Header qatori
             AddRow(grid, true, 0, headers);
-            int currentRow = 1;
-
-            int pageCount = Math.Min(maxRowsPerPage, flatItems.Count - processedIndex);
-            var pageItems = flatItems.Skip(processedIndex).Take(pageCount).ToList();
-
-            // Sahifadagi itemlarni kod bo'yicha guruhlab chiqish (RowSpan uchun)
-            var pageGroups = pageItems.GroupBy(i => i.Product.Code).ToList();
-
-            foreach (var group in pageGroups)
+            // Header balandligini o'lchash
             {
-                int groupSize = group.Count();
-                bool imageRendered = false;
+                var hb = new Border
+                {
+                    BorderBrush = Brushes.Gray,
+                    BorderThickness = new Thickness(0.5),
+                    Background = new SolidColorBrush(Color.FromRgb(235, 235, 235)),
+                    Padding = new Thickness(4, 5, 4, 5),
+                    Child = new TextBlock { Text = "Jami soni", FontSize = 13, FontWeight = FontWeights.Bold }
+                };
+                hb.Measure(new Size(widths[6], double.PositiveInfinity));
+                currentY += hb.DesiredSize.Height;
+            }
+
+            var groupsOnPage = new List<IGrouping<string, SaleItemViewModel>>();
+            int tempGroupIndex = currentGroupIndex;
+
+            // 0.5 sm = ~19px (96 DPI da 1sm = 37.8px, 0.5sm = 18.9px)
+            const double safetyGap = 19.0;
+
+            while (tempGroupIndex < groupedItems.Count)
+            {
+                var group = groupedItems[tempGroupIndex];
+
+                // 1. Bir qator balandligini o'lchash
+                double oneRowHeight = CalculateOneRowHeight(group.First(), widths);
+
+                // 2. Guruhda nechta qator bor — shuncha ko'paytirish
+                // (lekin rasm tufayli minimum 72px)
+                int rowCount = group.Count();
+                double groupHeight = Math.Max(oneRowHeight * rowCount, 72.0);
+
+                // 3. Oxirgi guruh bo'lsa, Jami qatori uchun ham joy kerak
+                bool isLastGroup = (tempGroupIndex == groupedItems.Count - 1);
+                double jamiExtra = isLastGroup ? footerSpace : 0;
+
+                // 4. Footer + safetyGap (0.5sm) + joriy ishlatilgan joy
+                double usedSpace = currentY + groupHeight + jamiExtra + safetyGap;
+
+                // 5. Sig'adimi?
+                if (usedSpace > pageHeight - margin && tempGroupIndex > currentGroupIndex)
+                    break; // Bu guruh keyingi betga
+
+                groupsOnPage.Add(group);
+                currentY += groupHeight;
+                tempGroupIndex++;
+            }
+
+            // Jadvalni render qilish
+            int gridRow = 1;
+            foreach (var group in groupsOnPage)
+            {
+                int groupStartRow = gridRow;
+                bool isFirstInGroup = true;
 
                 foreach (var item in group)
                 {
-                    globalTr++;
                     grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-                    // 1. T/R
-                    AddCellToGrid(grid, globalTr.ToString(), currentRow, 0, false, TextAlignment.Center);
+                    AddCellToGrid(grid, globalTr.ToString(), gridRow, 0, false, TextAlignment.Center);
+                    AddCellToGrid(grid, item.Product.Code ?? "", gridRow, 2, false, TextAlignment.Left);
+                    AddCellToGrid(grid, item.Product.Name ?? "", gridRow, 3, false, TextAlignment.Left);
+                    AddCellToGrid(grid, item.ProductType.Type ?? "", gridRow, 4, false, TextAlignment.Center);
+                    AddCellToGrid(grid, item.BundleCount?.ToString("N0") ?? "0", gridRow, 5, false, TextAlignment.Right);
+                    AddCellToGrid(grid, item.TotalCount?.ToString("N0") ?? "0", gridRow, 6, false, TextAlignment.Right);
+                    AddCellToGrid(grid, item.UnitPrice?.ToString("N2") ?? "0.00", gridRow, 7, false, TextAlignment.Right);
+                    AddCellToGrid(grid, item.Amount?.ToString("N2") ?? "0.00", gridRow, 8, false, TextAlignment.Right);
 
-                    // 2. RASM (Faqat guruhning birinchi qatorida va RowSpan bilan)
-                    if (!imageRendered)
+                    if (isFirstInGroup)
                     {
-                        var imageBorder = CreateImageCell(item.Product.DisplayImagePath);
-                        Grid.SetRow(imageBorder, currentRow);
-                        Grid.SetColumn(imageBorder, 1);
-                        Grid.SetRowSpan(imageBorder, groupSize);
-                        grid.Children.Add(imageBorder);
-                        imageRendered = true;
+                        var imgBorder = CreateImageCell(item.Product.DisplayImagePath);
+                        Grid.SetRow(imgBorder, groupStartRow);
+                        Grid.SetColumn(imgBorder, 1);
+                        Grid.SetRowSpan(imgBorder, group.Count());
+                        grid.Children.Add(imgBorder);
+                        isFirstInGroup = false;
                     }
 
-                    // Qolgan ustunlar
-                    AddCellToGrid(grid, item.Product.Code ?? "", currentRow, 2, false, TextAlignment.Left);
-                    AddCellToGrid(grid, item.Product.Name ?? "", currentRow, 3, false, TextAlignment.Left);
-                    AddCellToGrid(grid, item.ProductType.Type ?? "", currentRow, 4, false, TextAlignment.Center);
-                    AddCellToGrid(grid, item.BundleCount?.ToString("N0") ?? "0", currentRow, 5, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.TotalCount?.ToString("N0") ?? "0", currentRow, 6, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.UnitPrice?.ToString("N2") ?? "0.00", currentRow, 7, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.Amount?.ToString("N2") ?? "0.00", currentRow, 8, false, TextAlignment.Right);
-
-                    currentRow++;
+                    gridRow++;
+                    globalTr++;
                 }
             }
 
-            processedIndex += pageItems.Count;
-
-            // Jami qatori (Faqat oxirgi sahifada)
-            if (pageIndex == totalPages - 1)
+            // Jami qatori faqat oxirgi betda
+            if (tempGroupIndex >= groupedItems.Count)
             {
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                var totalLabel = CreateCell("Jami:", true, TextAlignment.Left);
-                totalLabel.Padding = new Thickness(10, 5, 4, 5);
-                Grid.SetRow(totalLabel, currentRow);
+                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(35) });
+
+                var totalLabel = CreateCell("JAMI:", true, TextAlignment.Right);
+                totalLabel.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
+                Grid.SetRow(totalLabel, gridRow);
                 Grid.SetColumn(totalLabel, 0);
-                Grid.SetColumnSpan(totalLabel, 5); // T/r dan Razmergacha
+                Grid.SetColumnSpan(totalLabel, 5);
                 grid.Children.Add(totalLabel);
 
-                AddCellToGrid(grid, totalBundleCountSum.ToString("N0"), currentRow, 5, true, TextAlignment.Right);
-                AddCellToGrid(grid, totalTotalCountSum.ToString("N0"), currentRow, 6, true, TextAlignment.Right);
+                AddCellToGrid(grid, grandTotalBundle.ToString("N0"), gridRow, 5, true, TextAlignment.Right);
+                AddCellToGrid(grid, grandTotalCount.ToString("N0"), gridRow, 6, true, TextAlignment.Right);
 
-                var totalAmountCell = CreateCell(totalAmountSum.ToString("N2"), true, TextAlignment.Right);
-                Grid.SetRow(totalAmountCell, currentRow);
-                Grid.SetColumn(totalAmountCell, 7);
-                Grid.SetColumnSpan(totalAmountCell, 2);
-                if (totalAmountCell.Child is TextBlock tbSum)
-                {
-                    tbSum.FontSize = 14; tbSum.Foreground = new SolidColorBrush(Color.FromRgb(0, 50, 150));
-                }
-                grid.Children.Add(totalAmountCell);
+                var totalSumCell = CreateCell(grandTotalAmount.ToString("N2"), true, TextAlignment.Right);
+                totalSumCell.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
+                Grid.SetRow(totalSumCell, gridRow);
+                Grid.SetColumn(totalSumCell, 7);
+                Grid.SetColumnSpan(totalSumCell, 2);
+                grid.Children.Add(totalSumCell);
             }
 
-            gridContainer.Children.Add(grid);
-            page.Children.Add(gridContainer);
+            container.Children.Add(grid);
+            page.Children.Add(container);
 
-            var pageNum = new TextBlock
+            var pnb = new TextBlock
             {
-                Text = $"{pageIndex + 1} - bet / {totalPages}",
-                FontSize = 11,
+                Text = $"{pageNumber}-bet",
+                FontSize = 10,
                 Foreground = Brushes.Gray
             };
-            FixedPage.SetRight(pageNum, marginRight);
-            FixedPage.SetBottom(pageNum, marginBottom);
-            page.Children.Add(pageNum);
+            FixedPage.SetRight(pnb, margin);
+            FixedPage.SetBottom(pnb, 15);
+            page.Children.Add(pnb);
 
             var pc = new PageContent();
             ((IAddChild)pc).AddChild(page);
             fixedDoc.Pages.Add(pc);
+
+            currentGroupIndex = tempGroupIndex;
+            pageNumber++;
         }
+
         return fixedDoc;
+    }
+
+    // Bir qatorning (bitta item) balandligini o'lchaydi
+    private double CalculateOneRowHeight(SaleItemViewModel item, double[] widths)
+    {
+        double rowH = 0;
+        var cells = new[]
+        {
+        (item.Product.Code     ?? "",        widths[2]),
+        (item.Product.Name     ?? "",        widths[3]),
+        (item.ProductType.Type ?? "",        widths[4]),
+        (item.BundleCount?.ToString("N0") ?? "0",    widths[5]),
+        (item.TotalCount?.ToString("N0")  ?? "0",    widths[6]),
+        (item.UnitPrice?.ToString("N2")   ?? "0.00", widths[7]),
+        (item.Amount?.ToString("N2")      ?? "0.00", widths[8]),
+    };
+
+        foreach (var (text, width) in cells)
+        {
+            var border = new Border
+            {
+                BorderBrush = Brushes.Gray,
+                BorderThickness = new Thickness(0.5),
+                Padding = new Thickness(4, 5, 4, 5),
+                Child = new TextBlock { Text = text, FontSize = 12, TextWrapping = TextWrapping.Wrap }
+            };
+            border.Measure(new Size(width, double.PositiveInfinity));
+            if (border.DesiredSize.Height > rowH)
+                rowH = border.DesiredSize.Height;
+        }
+
+        return rowH;
     }
     private async Task<BitmapSource> DownloadBitmapAsync(string url)
     {
@@ -810,10 +885,6 @@ public partial class AddSalePageViewModel : ViewModelBase
     #endregion
 
     #region Public Methods for External Use
-
-    /// <summary>
-    /// Loads sale data for editing. Ensures initialization is complete first.
-    /// </summary>
     public async Task LoadSaleForEditAsync(long saleId, bool notifyOnLoad = true)
     {
         // Ma'lumotlar yuklanishini kutamiz

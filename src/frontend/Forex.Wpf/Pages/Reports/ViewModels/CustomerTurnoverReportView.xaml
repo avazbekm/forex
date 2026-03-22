@@ -48,7 +48,8 @@
                         Grid.Column="1"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
-                        <controls:UserCalendar x:Name="dateBegin"
+                        <controls:UserCalendar
+                            x:Name="dateBegin"
                             Width="120"
                             Height="30"
                             SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
@@ -56,7 +57,8 @@
                             Margin="8,0"
                             VerticalAlignment="Center"
                             Text="dan" />
-						<controls:UserCalendar x:Name="dateEnd"
+                        <controls:UserCalendar
+                            x:Name="dateEnd"
                             Width="120"
                             Height="30"
                             SelectedDate="{Binding EndDate, Mode=TwoWay}" />
@@ -80,7 +82,8 @@
                         BorderBrush="#CCCCCC"
                         BorderThickness="2"
                         CornerRadius="4">
-                        <ComboBox x:Name="cbxCustomer"
+                        <ComboBox
+                            x:Name="cbxCustomer"
                             Padding="3"
                             BorderThickness="0"
                             DisplayMemberPath="Name"
@@ -96,7 +99,8 @@
                     Grid.Column="1"
                     Margin="20,0,15,0"
                     VerticalAlignment="Center">
-                    <Button x:Name="btnPreview"
+                    <Button
+                        x:Name="btnPreview"
                         Height="30"
                         Margin="0,5"
                         md:ButtonAssist.CornerRadius="4"
@@ -105,7 +109,8 @@
                         Command="{Binding PreviewCommand}"
                         Content="Ko‘rish"
                         Foreground="White" />
-                    <Button x:Name="btnClear"
+                    <Button
+                        x:Name="btnClear"
                         Height="30"
                         Margin="0,5"
                         md:ButtonAssist.CornerRadius="4"
@@ -120,7 +125,8 @@
                     Grid.Column="2"
                     Margin="0"
                     VerticalAlignment="Center">
-                    <Button x:Name="btnPrint"
+                    <Button
+                        x:Name="btnPrint"
                         Height="30"
                         Margin="0,5"
                         md:ButtonAssist.CornerRadius="4"
@@ -129,7 +135,8 @@
                         Command="{Binding PrintCommand}"
                         Content="Pechat"
                         Foreground="White" />
-                    <Button x:Name="btnExport"
+                    <Button
+                        x:Name="btnExport"
                         Height="30"
                         Margin="0,5"
                         md:ButtonAssist.CornerRadius="4"
@@ -193,26 +200,26 @@
             Grid.Row="1"
             AlternatingRowBackground="#F8F9FA"
             AutoGenerateColumns="False"
-            FontSize="14"
             BorderBrush="LightGray"
             BorderThickness="2"
-            VirtualizingStackPanel.VirtualizationMode="Standard"
-          EnableRowVirtualization="True"
+            EnableRowVirtualization="True"
+            FontSize="14"
             GridLinesVisibility="Horizontal"
             HeadersVisibility="Column"
             IsReadOnly="True"
             ItemsSource="{Binding Operations}"
             RowHeaderWidth="0"
-            SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+            SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+            VirtualizingStackPanel.VirtualizationMode="Standard">
 
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="60" Header="T/r">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock HorizontalAlignment="Center" 
-                       VerticalAlignment="Center"
-                       Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, 
-                                      Converter={StaticResource IndexConverter}}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource IndexConverter}}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

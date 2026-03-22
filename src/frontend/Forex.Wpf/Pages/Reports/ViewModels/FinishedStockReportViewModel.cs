@@ -20,17 +20,22 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
 
-    // Serverdan keladigan to‘liq ma’lumot
+    // Serverdan keladigan to'liq ma'lumot
     private readonly ObservableCollection<FinishedStockItemViewModel> _allItems = [];
 
-    // UI ga ko‘rinadigan filtrlangan ro‘yxat
+    // UI ga ko'rinadigan filtrlangan ro'yxat
     [ObservableProperty]
     private ObservableCollection<FinishedStockItemViewModel> items = [];
 
-    public ObservableCollection<ProductViewModel> AvailableProducts => _commonData.AvailableProducts;
+    // ComboBox'lar uchun faqat datagridda mavjud mahsulotlar
+    [ObservableProperty]
+    private ObservableCollection<string> availableCodes = [];
 
-    [ObservableProperty] private ProductViewModel? selectedCode;
-    [ObservableProperty] private ProductViewModel? selectedProduct;
+    [ObservableProperty]
+    private ObservableCollection<string> availableNames = [];
+
+    [ObservableProperty] private string? selectedCode;
+    [ObservableProperty] private string? selectedName;
 
 
     public FinishedStockReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -38,14 +43,12 @@ public partial class FinishedStockReportViewModel : ViewModelBase
         _client = client;
         _commonData = commonData;
 
-        // Har qanday property o‘zgarsa avtomatik filter boladi
+        // Har qanday property o'zgarsa avtomatik filter boladi
         this.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(SelectedCode) or nameof(SelectedProduct))
+            if (e.PropertyName is nameof(SelectedCode) or nameof(SelectedName))
                 ApplyFilters();
         };
-
-        //_ = LoadAsync();
     }
 
 
@@ -101,6 +104,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
             }
 
             ApplyFilters();
+            UpdateAvailableFilters(); // ComboBox'larni yangilash
         }
         finally { IsLoading = false; }
     }
@@ -110,14 +114,14 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     {
         if (!Items.Any())
         {
-            MessageBox.Show("Chop etish uchun ma’lumot yo‘q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Chop etish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var dlg = new PrintDialog();
         if (dlg.ShowDialog() == true)
         {
-            dlg.PrintDocument(CreateFixedDocument().DocumentPaginator, "Tayyor mahsulot qoldig‘i");
+            dlg.PrintDocument(CreateFixedDocument().DocumentPaginator, "Tayyor mahsulot qoldig'i");
         }
     }
 
@@ -126,7 +130,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     {
         if (!Items.Any())
         {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -141,11 +145,11 @@ public partial class FinishedStockReportViewModel : ViewModelBase
         try
         {
             using var workbook = new XLWorkbook();
-            var ws = workbook.Worksheets.Add("Tayyor mahsulot qoldig‘i");
+            var ws = workbook.Worksheets.Add("Tayyor mahsulot qoldig'i");
 
             int row = 1;
 
-            ws.Cell(row, 1).Value = "TAYYOR MAHSULOT QOLDIG‘I";
+            ws.Cell(row, 1).Value = "TAYYOR MAHSULOT QOLDIG'I";
             ws.Range(row, 1, row, 8).Merge().Style
                 .Font.SetBold().Font.SetFontSize(16)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
@@ -200,7 +204,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     {
         if (!Items.Any())
         {
-            MessageBox.Show("Ko‘rsatish uchun ma’lumot yo‘q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -209,7 +213,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
 
         var window = new Window
         {
-            Title = "Tayyor mahsulot qoldig‘i",
+            Title = "Tayyor mahsulot qoldig'i",
             Width = 1000,
             Height = 800,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
@@ -223,7 +227,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     private void ClearFilter()
     {
         SelectedCode = null;
-        SelectedProduct = null;
+        SelectedName = null;
         // ApplyFilters avtomatik ishlaydi
     }
 
@@ -233,16 +237,32 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     {
         var result = _allItems.AsEnumerable();
 
-        if (SelectedProduct != null)
-            result = result.Where(x => x.Name == SelectedProduct.Name);
+        if (!string.IsNullOrEmpty(SelectedName))
+            result = result.Where(x => x.Name == SelectedName);
 
-        if (SelectedCode != null)
-            result = result.Where(x => x.Code == SelectedCode.Code);
+        if (!string.IsNullOrEmpty(SelectedCode))
+            result = result.Where(x => x.Code == SelectedCode);
 
         Items = new ObservableCollection<FinishedStockItemViewModel>(result);
     }
 
-    // PDF/Print uchun document yaratish (PASTDAN 25mm BO‘SH JOY!)
+    // ComboBox'lar uchun mavjud filterlarni yangilash
+    private void UpdateAvailableFilters()
+    {
+        // Faqat _allItems'dan unique Code va Name'larni olamiz
+        var codes = _allItems.Select(x => x.Code).Distinct().OrderBy(x => x).ToList();
+        var names = _allItems.Select(x => x.Name).Distinct().OrderBy(x => x).ToList();
+
+        AvailableCodes.Clear();
+        foreach (var code in codes)
+            AvailableCodes.Add(code);
+
+        AvailableNames.Clear();
+        foreach (var name in names)
+            AvailableNames.Add(name);
+    }
+
+    // PDF/Print uchun document yaratish (PASTDAN 25mm BO'SH JOY!)
     private FixedDocument CreateFixedDocument()
     {
         var doc = new FixedDocument();
@@ -323,7 +343,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
             {
                 contentStack.Children.Add(new TextBlock
                 {
-                    Text = "Mavjud mahsulotlar qoldig‘i",
+                    Text = "Mavjud mahsulotlar qoldig'i",
                     FontSize = 22,
                     FontWeight = FontWeights.Bold,
                     HorizontalAlignment = HorizontalAlignment.Center,
@@ -395,14 +415,14 @@ public partial class FinishedStockReportViewModel : ViewModelBase
             TextAlignment align =
                 isHeader ? TextAlignment.Center : i switch
                 {
-                    0 => TextAlignment.Right,   // T/r – O‘NG
-                    1 => TextAlignment.Center,  // Kodi – O‘RTA
-                    2 => TextAlignment.Left,   // Nomi – O‘NG
-                    5 => TextAlignment.Center,  // Donasi – O‘RTA
-                    6 => TextAlignment.Right,   // Jami – O‘NG
-                    7 => TextAlignment.Right,   // Narxi – O‘NG
-                    8 => TextAlignment.Right,   // Umumiy – O‘NG
-                    _ => TextAlignment.Center   // Boshqa ustunlar – O‘RTA
+                    0 => TextAlignment.Right,   // T/r – O'NG
+                    1 => TextAlignment.Center,  // Kodi – O'RTA
+                    2 => TextAlignment.Left,   // Nomi – O'NG
+                    5 => TextAlignment.Center,  // Donasi – O'RTA
+                    6 => TextAlignment.Right,   // Jami – O'NG
+                    7 => TextAlignment.Right,   // Narxi – O'NG
+                    8 => TextAlignment.Right,   // Umumiy – O'NG
+                    _ => TextAlignment.Center   // Boshqa ustunlar – O'RTA
                 };
 
             var tb = new TextBlock
