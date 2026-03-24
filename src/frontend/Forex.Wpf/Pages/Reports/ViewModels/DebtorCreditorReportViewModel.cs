@@ -36,10 +36,11 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
             if (e.PropertyName == nameof(SelectedCustomer))
                 ApplyFilter();
         };
-        _ = LoadAsync();
+       // _ = LoadAsync();
     }
 
     #region Load Data
+    [RelayCommand]
     private async Task LoadAsync()
     {
         var users = await LoadUsersAsync();

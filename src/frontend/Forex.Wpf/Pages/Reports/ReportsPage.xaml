@@ -2,9 +2,9 @@
     x:Class="Forex.Wpf.Pages.Reports.ReportsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:views="clr-namespace:Forex.Wpf.Pages.Reports.ViewModels"
-    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     Title="Hisobotlar">
 
     <Grid Margin="10">
@@ -17,7 +17,7 @@
         <Button
             x:Name="btnBack"
             Grid.Row="0"
-            Margin="0 0 0 10"
+            Margin="0,0,0,10"
             HorizontalAlignment="Right"
             md:ButtonAssist.CornerRadius="4"
             Background="{DynamicResource OtherBackground}"
@@ -40,16 +40,7 @@
                 SelectedIndex="0"
                 TabStripPlacement="Top">
 
-                <!--  1. Savdo tarixi  -->
-                <TabItem Header="Savdo tarixi">
-                    <views:SalesHistoryReportView DataContext="{Binding SalesHistoryVM}" />
-                </TabItem>
-
-                <!--  2. Tayyor mahsulotlar qoldig‘i  -->
-                <TabItem Header="Tayyor mahsulotlar qoldig‘i">
-                    <views:FinishedStockReportView DataContext="{Binding FinishedStockVM}" />
-                </TabItem>
-                <!--  3. Mijoz aylanmasi  -->
+                <!--  1. Mijoz aylanmasi  -->
                 <TabItem Header="Mijoz aylanmasi">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="IsVisibleChanged">
@@ -57,6 +48,15 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                     <views:CustomerTurnoverReportView DataContext="{Binding CustomerTurnoverVM}" />
+                </TabItem>
+
+                <!--  2. Tayyor mahsulotlar qoldig‘i  -->
+                <TabItem Header="Tayyor mahsulotlar qoldig‘i">
+                    <views:FinishedStockReportView DataContext="{Binding FinishedStockVM}" />
+                </TabItem>
+                <!--  3. Savdo tarixi  -->
+                <TabItem Header="Savdo tarixi">
+                    <views:SalesHistoryReportView DataContext="{Binding SalesHistoryVM}" />
                 </TabItem>
                 <!--  4. Debitor va Kreditor  -->
                 <TabItem Header="Debitor va Kreditor">

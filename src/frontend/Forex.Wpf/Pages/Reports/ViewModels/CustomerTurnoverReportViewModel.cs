@@ -334,7 +334,6 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                 if (File.Exists(path))
                 {
                     Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
-                    Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
                 }
             }
             catch (Exception ex)

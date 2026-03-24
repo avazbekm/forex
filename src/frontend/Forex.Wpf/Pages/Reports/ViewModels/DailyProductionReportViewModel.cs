@@ -43,13 +43,13 @@ public partial class DailyProductionReportViewModel : ViewModelBase
         _commonData = commonData;
         _ = LoadProductsAsync();
 
-        PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedCode))
-                LoadDataCommand.Execute(null);
-        };
+        //PropertyChanged += (_, e) =>
+        //{
+        //    if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedCode))
+        //        LoadDataCommand.Execute(null);
+        //};
 
-        LoadDataCommand.Execute(null);
+        //LoadDataCommand.Execute(null);
     }
 
     private async Task LoadProductsAsync()

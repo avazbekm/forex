@@ -48,7 +48,6 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                 ApplyFilters();
         };
 
-        _ = LoadAsync();
     }
 
     #region Commands

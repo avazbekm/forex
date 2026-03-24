@@ -10,38 +10,42 @@
     d:DesignWidth="100"
     mc:Ignorable="d">
 
-	<Grid>
-		<TextBlock HorizontalAlignment="Center" 
-                    Style="{StaticResource FloatingLabelStyle}"
-                    Tag="{Binding ElementName=input}"
-                    Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+    <Grid>
+        <TextBlock
+            HorizontalAlignment="Center"
+            Style="{StaticResource FloatingLabelStyle}"
+            Tag="{Binding ElementName=input}"
+            Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}" />
 
-		<Border Height="30"
-                Padding="5,0"
-                VerticalAlignment="Bottom"
-                BorderBrush="{DynamicResource PrimaryTextColor}"
-                BorderThickness="1"
-                CornerRadius="4">
-			<Grid>
-				<TextBox x:Name="input" 
-                        VerticalContentAlignment="Center"
-                        Background="{DynamicResource InputBackground}"
-                        IsReadOnly="True"
-                        BorderThickness="0"
-                        Style="{x:Null}"
-                        Text="{Binding FileName, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnTargetUpdated=True}" />
+        <Border
+            Height="30"
+            Padding="5,0"
+            VerticalAlignment="Bottom"
+            BorderBrush="{DynamicResource PrimaryTextColor}"
+            BorderThickness="1"
+            CornerRadius="4">
+            <Grid>
+                <TextBox
+                    x:Name="input"
+                    VerticalContentAlignment="Center"
+                    Background="{DynamicResource InputBackground}"
+                    BorderThickness="0"
+                    IsReadOnly="True"
+                    Style="{x:Null}"
+                    Text="{Binding FileName, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnTargetUpdated=True}" />
 
-				<Button x:Name="button"
-                        Padding="6,0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Click="BtnBrowse_Click"
-                        Content="📁"
-                        Foreground="Black"
-                        ToolTip="Fayl tanlash" />
-			</Grid>
-		</Border>
-	</Grid>
+                <Button
+                    x:Name="button"
+                    Padding="6,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="BtnBrowse_Click"
+                    Content="📁"
+                    Foreground="Black"
+                    ToolTip="Fayl tanlash" />
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

@@ -262,6 +262,14 @@
                 ImageMemberPath="ImagePath"
                 ImageWidth="50"
                 IsEditable="True"
+                IsSearchEnabled="True"
+                ItemsSource="{Binding AvailableProducts}"
+                Label="Mahsulot"
+                Margin="2,0"
+                ImageHeight="50"
+                ImageMemberPath="ImagePath"
+                ImageWidth="50"
+                IsEditable="True"
                 IsTextSearchEnabled="False"
                 ItemsSource="{Binding FilteredProducts}"
                 Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
@@ -310,6 +318,16 @@
                 IsEnabled="False"
                 Label="Jami summa"
                 Text="{Binding CurrentSaleItem.Amount, UpdateSourceTrigger=PropertyChanged}" />
+            <Button
+                x:Name="btnAdd"
+                Grid.Column="7"
+                Height="30"
+                Margin="2,0"
+                md:ButtonAssist.CornerRadius="4"
+                Background="{DynamicResource OtherBackground}"
+                Command="{Binding AddCommand}"
+                Content="Qo'shish"
+                FontSize="14" />
 
 			<Grid Grid.Column="7" HorizontalAlignment="Right">
 				<Grid.ColumnDefinitions>
@@ -344,6 +362,9 @@
 			</Grid>
 		</Grid>
 
+        </Grid>
+        <Grid Grid.Row="3" Margin="0,5,0,5">
+            <DataGrid
 		<Grid Grid.Row="3" Margin="0,5,0,5">
 			<DataGrid
                 x:Name="dataGrid"

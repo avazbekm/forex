@@ -32,15 +32,16 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
     {
         _client = client;
         _commonData = commonData;
-        PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedCustomer))
-                LoadSalesAsync();
-        };
-        LoadSalesAsync();
+        //PropertyChanged += (_, e) =>
+        //{
+        //    if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedCustomer))
+        //        LoadSalesAsync();
+        //};
+        //LoadSalesAsync();
     }
 
-    private async void LoadSalesAsync()
+    [RelayCommand] 
+    private async Task LoadSalesAsync()
     {
         IsLoading = true;
 
