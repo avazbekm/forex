@@ -6,6 +6,7 @@ using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Common.Interfaces;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using Mapster;
@@ -94,10 +95,10 @@ public partial class ProductSettingsViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(SearchText))
             return true;
 
-        var search = SearchText.ToLower();
+        var search = SearchText.Trim();
 
-        return product.Code?.ToLower().Contains(search) == true ||
-               product.Name?.ToLower().Contains(search) == true;
+        return TransliterationHelper.ContainsIgnoreScript(product.Code ?? string.Empty, search) ||
+               TransliterationHelper.ContainsIgnoreScript(product.Name ?? string.Empty, search);
     }
 
     [RelayCommand]

@@ -237,7 +237,7 @@ public partial class UserPage : Page
 
     private void ApplyFilters()
     {
-        string query = txtSearch.Text.Trim().ToLower();
+        string query = txtSearch.Text.Trim();
         string selectedRole = cbRole.SelectedItem?.ToString() ?? "";
 
         var filtered = rawUsers.AsEnumerable();
@@ -254,10 +254,10 @@ public partial class UserPage : Page
         if (!string.IsNullOrWhiteSpace(query))
         {
             filtered = filtered.Where(u =>
-                (u.Name?.Contains(query, StringComparison.CurrentCultureIgnoreCase) ?? false) ||
-                (u.Phone?.Contains(query, StringComparison.CurrentCultureIgnoreCase) ?? false) ||
-                (u.Address?.Contains(query, StringComparison.CurrentCultureIgnoreCase) ?? false) ||
-                (u.Description?.Contains(query, StringComparison.CurrentCultureIgnoreCase) ?? false));
+                TransliterationHelper.ContainsIgnoreScript(u.Name ?? string.Empty, query) ||
+                TransliterationHelper.ContainsIgnoreScript(u.Phone ?? string.Empty, query) ||
+                TransliterationHelper.ContainsIgnoreScript(u.Address ?? string.Empty, query) ||
+                TransliterationHelper.ContainsIgnoreScript(u.Description ?? string.Empty, query));
         }
 
         filteredUsers = new ObservableCollection<UserResponse>(filtered);

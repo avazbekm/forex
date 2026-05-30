@@ -183,8 +183,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         if (item is not ProductViewModel p) return false;
 
         var search = ProductSearchText.Trim();
-        return (p.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (p.Code?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+        return TransliterationHelper.ContainsIgnoreScript(p.Name ?? string.Empty, search) ||
+               TransliterationHelper.ContainsIgnoreScript(p.Code ?? string.Empty, search);
     }
 
     // ─────────────────────────────────────────────

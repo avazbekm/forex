@@ -28,6 +28,7 @@ public partial class LoginPage : Page
         FocusNavigator.RegisterElements([
             tbLogin,
             pbPassword,
+            chRemember,
             btnLogin,
             ]);
 
