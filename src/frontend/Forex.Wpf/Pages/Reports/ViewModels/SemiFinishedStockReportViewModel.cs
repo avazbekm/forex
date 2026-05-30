@@ -1,11 +1,13 @@
-﻿namespace Forex.Wpf.Pages.Sales.ViewModels;
+﻿namespace Forex.Wpf.Pages.Reports.ViewModels;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using Forex.ClientService;
+using Forex.ClientService.Extensions;
 using Forex.Wpf.Pages.Common;
-using Forex.Wpf.Pages.Reports.ViewModels;
 using Forex.Wpf.ViewModels;
 using System.Collections.ObjectModel;
+
+using Forex.ClientService.Models.Responses;
 
 // SemiFinishedStockReportViewModel.cs
 public partial class SemiFinishedStockReportViewModel : ViewModelBase
@@ -13,11 +15,11 @@ public partial class SemiFinishedStockReportViewModel : ViewModelBase
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
 
-    //[ObservableProperty] private ObservableCollection<SemiFinishedStockItemViewModel> items = [];
+    [ObservableProperty] private ObservableCollection<SemiFinishedStockItemViewModel> items = [];
+    [ObservableProperty] private decimal totalSum;
 
-    public ObservableCollection<ProductViewModel> AvailableProducts => _commonData.AvailableProducts;
-    [ObservableProperty] private ProductViewModel? selectedProduct;
-    [ObservableProperty] private ProductViewModel? selectedCode;
+    [ObservableProperty] private ObservableCollection<SemiProductResponse> availableSemiProducts = [];
+    [ObservableProperty] private SemiProductResponse? selectedSemiProduct;
 
     public SemiFinishedStockReportViewModel(ForexClient client, CommonReportDataService commonData)
     {
@@ -26,8 +28,8 @@ public partial class SemiFinishedStockReportViewModel : ViewModelBase
 
         PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(SelectedProduct) or nameof(SelectedCode))
-                _ = LoadAsync();
+            if (e.PropertyName is nameof(SelectedSemiProduct))
+                _ = LoadStockAsync();
         };
 
         _ = LoadAsync();
@@ -35,31 +37,54 @@ public partial class SemiFinishedStockReportViewModel : ViewModelBase
 
     private async Task LoadAsync()
     {
-        //Items.Clear();
+        await LoadSemiProductsAsync();
+        await LoadStockAsync();
+    }
 
-        //var response = await _client.Stocks.GetSemiFinished().Handle(l => IsLoading = l);
-        //if (!response.IsSuccess || response.Data == null)
-        //{ ErrorMessage = "Yarim tayyor mahsulotlar yuklanmadi"; return; }
+    private async Task LoadSemiProductsAsync()
+    {
+        var response = await _client.SemiProduct.GetAll().Handle(l => IsLoading = l);
+        if (response.IsSuccess)
+        {
+            AvailableSemiProducts = new ObservableCollection<SemiProductResponse>(response.Data);
+        }
+    }
 
-        //foreach (var s in response.Data)
-        //{
-        //    var p = s.ProductType?.Product;
-        //    if (SelectedProduct != null && p?.Id != SelectedProduct.Id) continue;
-        //    if (SelectedCode != null && p?.Code != SelectedCode.Code) continue;
+    private async Task LoadStockAsync()
+    {
+        Items.Clear();
 
-        //    Items.Add(new SemiFinishedStockItemViewModel
-        //    {
-        //        Name = p?.Name ?? "-",
-        //        Type = s.ProductType?.Type ?? "-",
-        //        BundleItemCount = s.ProductType?.BundleItemCount ?? 0,
-        //        BundleCount = s.BundleCount,
-        //        UnitMeasure = p?.UnitMeasure?.Name ?? "-",
-        //        TotalCount = s.TotalCount,
-        //        PurchasePrice = s.PurchasePrice,
-        //        ExpensePerItem = s.ExpensePerItem,
-        //        CostPrice = s.CostPrice,
-        //        TotalAmount = s.TotalAmount
-        //    });
-        //}
+        var response = await _client.Manufactories.GetAll().Handle(l => IsLoading = l);
+        
+        if (!response.IsSuccess || response.Data == null)
+        { 
+            ErrorMessage = "Yarim tayyor mahsulotlar yuklanmadi"; 
+            return; 
+        }
+
+        var allItems = response.Data
+            .SelectMany(m => m.SemiProducts ?? [])
+            .ToList();
+
+        foreach (var s in allItems)
+        {
+            if (SelectedSemiProduct != null && s.SemiProductId != SelectedSemiProduct.Id) continue;
+
+            Items.Add(new SemiFinishedStockItemViewModel
+            {
+                Name = s.SemiProduct?.Name ?? "-",
+                // Type = s.ProductType?.Type ?? "-", // Not available
+                // BundleItemCount = s.ProductType?.BundleItemCount ?? 0,
+                // BundleCount = s.BundleCount,
+                UnitMeasure = s.SemiProduct?.UnitMeasure?.Name ?? "-",
+                TotalCount = s.Quantity,
+                // PurchasePrice = s.PurchasePrice,
+                // ExpensePerItem = s.ExpensePerItem,
+                // CostPrice = s.CostPrice,
+                // TotalAmount = s.TotalAmount
+            });
+        }
+        
+        TotalSum = Items.Sum(x => x.TotalAmount);
     }
 }

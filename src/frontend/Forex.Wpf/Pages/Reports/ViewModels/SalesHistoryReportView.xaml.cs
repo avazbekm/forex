@@ -5,9 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-/// <summary>
-/// Interaction logic for SalesHistoryReportView.xaml
-/// </summary>
 public partial class SalesHistoryReportView : UserControl
 {
     public SalesHistoryReportView()
@@ -26,13 +23,11 @@ public partial class SalesHistoryReportView : UserControl
     {
         FocusNavigator.RegisterElements([
             cbxCustomer,
-            dateBegin.input,
-            dateEnd.input,
-            cbxProductCode,
-            cbxProductName,
+            dtBegin.input,
+            dtEnd.input,
+            btnLoad,
             btnPreview,
             btnPrint,
-            btnClear,
             btnExport,
         ]);
 

@@ -23,7 +23,10 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(BeginDate) or nameof(EndDate))
+            {
+                CurrentPage = 1;
                 _ = LoadSalesAsync();
+            }
         };
 
         _ = LoadDataAsync();
@@ -31,11 +34,87 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
 
     [ObservableProperty] private ObservableCollection<SaleViewModel> sales = [];
     [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
+    [ObservableProperty] private ObservableCollection<UserViewModel> filteredCustomers = [];
     [ObservableProperty] private SaleViewModel? selectedSale;
 
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
     [ObservableProperty] private UserViewModel? selectedCustomer;
+    [ObservableProperty] private string customerSearchText = string.Empty;
+
+    [ObservableProperty] private int currentPage = 1;
+    [ObservableProperty] private int totalPages = 1;
+    [ObservableProperty] private int totalCount;
+    [ObservableProperty] private int pageSize = 20;
+    [ObservableProperty] private ObservableCollection<object> visiblePageNumbers = [];
+
+    public bool CanGoPrevious => CurrentPage > 1;
+    public bool CanGoNext => CurrentPage < TotalPages;
+
+    partial void OnCurrentPageChanged(int value) => UpdateVisiblePageNumbers();
+    partial void OnTotalPagesChanged(int value) => UpdateVisiblePageNumbers();
+    partial void OnCustomerSearchTextChanged(string value) => ApplyCustomerFilter();
+
+    private void UpdateVisiblePageNumbers()
+    {
+        var pages = new List<object>();
+
+        if (TotalPages <= 7)
+        {
+            for (int i = 1; i <= TotalPages; i++)
+                pages.Add(i);
+        }
+        else
+        {
+            pages.Add(1);
+
+            if (CurrentPage > 4)
+            {
+                pages.Add("...");
+            }
+
+            int start = Math.Max(2, CurrentPage - 1);
+            int end = Math.Min(TotalPages - 1, CurrentPage + 1);
+
+            if (CurrentPage < 5)
+            {
+                end = 5;
+            }
+            else if (CurrentPage > TotalPages - 4)
+            {
+                start = TotalPages - 4;
+            }
+
+            for (int i = start; i <= end; i++)
+            {
+                pages.Add(i);
+            }
+
+            if (CurrentPage < TotalPages - 3)
+            {
+                pages.Add("...");
+            }
+
+            pages.Add(TotalPages);
+        }
+
+        VisiblePageNumbers = new ObservableCollection<object>(pages);
+    }
+    
+    private void ApplyCustomerFilter()
+    {
+        if (string.IsNullOrWhiteSpace(CustomerSearchText))
+        {
+            FilteredCustomers = new ObservableCollection<UserViewModel>(AvailableCustomers);
+            return;
+        }
+
+        var filtered = AvailableCustomers.Where(c => 
+            Forex.Wpf.Common.Services.TransliterationHelper.ContainsIgnoreScript(c.Name, CustomerSearchText) ||
+            Forex.Wpf.Common.Services.TransliterationHelper.ContainsIgnoreScript(c.Phone, CustomerSearchText));
+
+        FilteredCustomers = new ObservableCollection<UserViewModel>(filtered);
+    }
 
     #region Load Data
 
@@ -63,6 +142,7 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
         if (response.IsSuccess)
         {
             AvailableCustomers = mapper.Map<ObservableCollection<UserViewModel>>(response.Data);
+            FilteredCustomers = new ObservableCollection<UserViewModel>(AvailableCustomers);
         }
         else
         {
@@ -74,6 +154,10 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     {
         FilteringRequest request = new()
         {
+            Page = CurrentPage,
+            PageSize = PageSize,
+            SortBy = "date",
+            Descending = true,
             Filters = new()
             {
                 ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
@@ -82,19 +166,31 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
             }
         };
 
-        // Agar mijoz tanlangan bo'lsa, filter qo'shamiz
         if (SelectedCustomer is not null)
         {
             request.Filters["customerId"] = [SelectedCustomer.Id.ToString()];
         }
 
         var response = await client.Sales.Filter(request)
-            .Handle(isLoading => IsLoading = isLoading);
+            .HandleWithPagination(isLoading => IsLoading = isLoading);
 
         if (response.IsSuccess)
         {
-            var ordered = response.Data.OrderByDescending(s => s.Date).ToList();
-            Sales = mapper.Map<ObservableCollection<SaleViewModel>>(ordered);
+            Sales = mapper.Map<ObservableCollection<SaleViewModel>>(response.Data);
+            
+            if (response.Metadata is not null)
+            {
+                TotalCount = response.Metadata.TotalCount;
+                TotalPages = response.Metadata.TotalPages;
+            }
+            else
+            {
+                TotalCount = response.Data?.Count ?? 0;
+                TotalPages = TotalCount < PageSize ? CurrentPage : CurrentPage + 1;
+            }
+            
+            OnPropertyChanged(nameof(CanGoPrevious));
+            OnPropertyChanged(nameof(CanGoNext));
         }
         else
         {
@@ -107,9 +203,73 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     #region Commands
 
     [RelayCommand]
+    private async Task PreviewSale(SaleViewModel? sale)
+    {
+        if (sale is null) return;
+
+        IsLoading = true;
+        try
+        {
+            var printVm = App.AppHost!.Services.GetRequiredService<AddSalePageViewModel>();
+            await printVm.LoadSaleForEditAsync(sale.Id, notifyOnLoad: false);
+            await printVm.ShowPrintPreview();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
     private async Task FilterSales()
     {
+        CurrentPage = 1;
         await LoadSalesAsync();
+    }
+
+
+
+    [RelayCommand]
+    private async Task GoToFirstPage()
+    {
+        if (CurrentPage == 1) return;
+        CurrentPage = 1;
+        await LoadSalesAsync();
+    }
+
+    [RelayCommand]
+    private async Task GoToPreviousPage()
+    {
+        if (!CanGoPrevious) return;
+        CurrentPage--;
+        await LoadSalesAsync();
+    }
+
+    [RelayCommand]
+    private async Task GoToNextPage()
+    {
+        if (!CanGoNext) return;
+        CurrentPage++;
+        await LoadSalesAsync();
+    }
+
+    [RelayCommand]
+    private async Task GoToLastPage()
+    {
+        if (CurrentPage == TotalPages) return;
+        CurrentPage = TotalPages;
+        await LoadSalesAsync();
+    }
+
+    [RelayCommand]
+    private async Task GoToPage(object? parameter)
+    {
+        if (parameter is int page)
+        {
+            if (page < 1 || page > TotalPages || page == CurrentPage) return;
+            CurrentPage = page;
+            await LoadSalesAsync();
+        }
     }
 
     [RelayCommand]
@@ -148,6 +308,7 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
 
     partial void OnSelectedCustomerChanged(UserViewModel? value)
     {
+        CurrentPage = 1;
         _ = LoadSalesAsync();
     }
 

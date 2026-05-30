@@ -1,5 +1,6 @@
 ﻿namespace Forex.Wpf.Pages.Transactions.ViewModels;
 
+using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
@@ -8,11 +9,13 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.ClientService.Models.Responses;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 
 public partial class TransactionPageViewModel : ViewModelBase
@@ -31,7 +34,7 @@ public partial class TransactionPageViewModel : ViewModelBase
 
         PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedFilterUser))
+            if (e.PropertyName is nameof(BeginDate) or nameof(EndDate))
                 _ = LoadTransactionsAsync();
         };
 
@@ -42,22 +45,94 @@ public partial class TransactionPageViewModel : ViewModelBase
 
     [ObservableProperty] private ObservableCollection<TransactionViewModel> transactions = [];
     [ObservableProperty] private ObservableCollection<UserViewModel> availableUsers = [];
+    [ObservableProperty] private ObservableCollection<UserViewModel> filteredUsers = [];
+    [ObservableProperty] private string userFilterText = string.Empty;
+    [ObservableProperty] private ObservableCollection<UserViewModel> filterPanelFilteredUsers = [];
+    [ObservableProperty] private string filterPanelUserText = string.Empty;
     [ObservableProperty] private ObservableCollection<CurrencyViewModel> availableCurrencies = [];
     [ObservableProperty] private ObservableCollection<ShopAccountViewModel> availableShopAccounts = [];
     [ObservableProperty] private TransactionViewModel transaction = new();
     [ObservableProperty] private UserViewModel? selectedFilterUser;
+    [ObservableProperty] private PaymentMethod? selectedPaymentMethodFilter;
+
+    [ObservableProperty] private TransactionTypeFilter selectedTransactionType = TransactionTypeFilter.All;
+
+    public static IEnumerable<TransactionTypeFilter> TransactionTypes => Enum.GetValues<TransactionTypeFilter>();
+
+    partial void OnSelectedTransactionTypeChanged(TransactionTypeFilter value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedPaymentMethodFilterChanged(PaymentMethod? value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedFilterUserChanged(UserViewModel? value) => _ = LoadTransactionsAsync();
 
     public static IEnumerable<PaymentMethod> AvailablePaymentMethods => Enum.GetValues<PaymentMethod>();
+    public static IEnumerable<PaymentMethod?> AvailablePaymentMethodFilters
+    {
+        get
+        {
+            yield return null;
+            foreach (var method in Enum.GetValues<PaymentMethod>())
+                yield return method;
+        }
+    }
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
 
-    // UI-specific computed properties
     [ObservableProperty] private bool isIncomeEnabled = true;
     [ObservableProperty] private bool isExpenseEnabled = true;
     [ObservableProperty] private bool isDiscountEnabled = false;
     [ObservableProperty] private decimal? totalAmountWithUserBalance;
     [ObservableProperty] private bool isDebtor;
     [ObservableProperty] private string submitButtonText = "To'lash";
+
+    [ObservableProperty] private decimal totalIncome;
+    [ObservableProperty] private decimal totalExpense;
+    [ObservableProperty] private decimal netAmount;
+
+    partial void OnUserFilterTextChanged(string value) => ApplyUserFilter(value);
+    partial void OnFilterPanelUserTextChanged(string value) => ApplyFilterPanelUserFilter(value);
+
+    public void ApplyUserFilter(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            FilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
+            return;
+        }
+
+        var filtered = AvailableUsers.Where(u =>
+            TransliterationHelper.ContainsIgnoreScript(u.Name ?? "", text) ||
+            TransliterationHelper.ContainsIgnoreScript(u.Phone ?? "", text) ||
+            TransliterationHelper.ContainsIgnoreScript(u.Address ?? "", text));
+
+        FilteredUsers = new ObservableCollection<UserViewModel>(filtered);
+    }
+
+    public void ApplyFilterPanelUserFilter(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            FilterPanelFilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
+            return;
+        }
+
+        var filtered = AvailableUsers.Where(u =>
+            TransliterationHelper.ContainsIgnoreScript(u.Name ?? "", text) ||
+            TransliterationHelper.ContainsIgnoreScript(u.Phone ?? "", text) ||
+            TransliterationHelper.ContainsIgnoreScript(u.Address ?? "", text));
+
+        FilterPanelFilteredUsers = new ObservableCollection<UserViewModel>(filtered);
+    }
+
+    partial void OnTransactionsChanged(ObservableCollection<TransactionViewModel> value)
+    {
+        CalculateTotals();
+    }
+
+    private void CalculateTotals()
+    {
+        TotalIncome = Transactions.Where(t => t.IsIncome).Sum(t => (t.Amount ?? 0m) * (t.ExchangeRate ?? 1m));
+        TotalExpense = Transactions.Where(t => !t.IsIncome).Sum(t => (t.Amount ?? 0m) * (t.ExchangeRate ?? 1m));
+        NetAmount = TotalIncome - TotalExpense;
+    }
 
     #region Load Data
 
@@ -89,12 +164,29 @@ public partial class TransactionPageViewModel : ViewModelBase
             request.Filters["userId"] = [$"={SelectedFilterUser.Id}"];
         }
 
+        if (SelectedTransactionType != TransactionTypeFilter.All)
+        {
+            request.Filters["isIncome"] = [SelectedTransactionType == TransactionTypeFilter.Income ? "true" : "false"];
+        }
+
         Response<List<TransactionResponse>> response = await client.Transactions.Filter(request)
             .Handle(isLoading => IsLoading = isLoading);
 
         if (response.IsSuccess)
         {
             List<TransactionResponse> ordered = response.Data.OrderByDescending(t => t.Date).ToList();
+
+            if (SelectedFilterUser is not null)
+            {
+                ordered = ordered.Where(t => t.UserId == SelectedFilterUser.Id).ToList();
+            }
+             
+            // Client-side PaymentMethod filtering
+            if (SelectedPaymentMethodFilter.HasValue)
+            {
+                ordered = ordered.Where(t => t.PaymentMethod == SelectedPaymentMethodFilter.Value).ToList();
+            }
+            
             Transactions = mapper.Map<ObservableCollection<TransactionViewModel>>(ordered);
 
             foreach (var trans in Transactions)
@@ -104,6 +196,8 @@ public partial class TransactionPageViewModel : ViewModelBase
                 else
                     trans.Expense = trans.Amount;
             }
+            
+            CalculateTotals();
         }
         else
         {
@@ -154,6 +248,8 @@ public partial class TransactionPageViewModel : ViewModelBase
 
             // Filtrlangan ma'lumotni Map qilish
             AvailableUsers = mapper.Map<ObservableCollection<UserViewModel>>(filteredData);
+            FilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
+            FilterPanelFilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
         }
         else
         {
@@ -341,6 +437,8 @@ public partial class TransactionPageViewModel : ViewModelBase
     private void ClearUserFilter()
     {
         SelectedFilterUser = null;
+        FilterPanelUserText = string.Empty;
+        ApplyFilterPanelUserFilter(string.Empty);
     }
 
     private void OnTransactionPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -516,6 +614,96 @@ public partial class TransactionPageViewModel : ViewModelBase
         }
 
         return true;
+    }
+
+    [RelayCommand]
+    private void ExportToExcel()
+    {
+        if (!Transactions.Any())
+        {
+            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo‘q!", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Excel fayllari (*.xlsx)|*.xlsx",
+            FileName = $"KassaAylanmasi_{DateTime.Today:dd.MM.yyyy}.xlsx"
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Kassa Aylanmasi");
+
+            int row = 1;
+
+            // Title
+            ws.Cell(row, 1).Value = "KASSA AYLANMASI HISOBOTI";
+            ws.Range(row, 1, row, 8).Merge().Style
+                .Font.SetBold().Font.SetFontSize(16)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+            row += 2;
+
+            // Date
+            ws.Cell(row, 1).Value = $"Davr: {BeginDate:dd.MM.yyyy} - {EndDate:dd.MM.yyyy}";
+            ws.Range(row, 1, row, 8).Merge().Style.Font.SetFontSize(12);
+            row += 2;
+
+            // Header
+            string[] headers = { "T/r", "Sana", "User", "To'lov turi", "Valyuta", "Kurs", "Kirim", "Chiqim", "Izoh" };
+            for (int i = 0; i < headers.Length; i++)
+                ws.Cell(row, i + 1).Value = headers[i];
+
+            ws.Range(row, 1, row, headers.Length).Style
+                .Font.SetBold()
+                .Fill.SetBackgroundColor(XLColor.LightGray);
+            row++;
+
+            // Data
+            int index = 1;
+            foreach (var t in Transactions)
+            {
+                ws.Cell(row, 1).Value = index++;
+                ws.Cell(row, 2).Value = t.Date.ToString("dd.MM.yyyy");
+                ws.Cell(row, 3).Value = t.User?.Name ?? "-";
+                ws.Cell(row, 4).Value = GetDescription(t.PaymentMethod);
+                ws.Cell(row, 5).Value = t.Currency?.Name ?? "-";
+                ws.Cell(row, 6).Value = t.ExchangeRate;
+                ws.Cell(row, 7).Value = t.Income;
+                ws.Cell(row, 8).Value = t.Expense;
+                ws.Cell(row, 9).Value = t.Description;
+                row++;
+            }
+
+            // Totals
+            row++;
+            ws.Cell(row, 6).Value = "JAMI:";
+            ws.Cell(row, 6).Style.Font.SetBold().Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+            
+            ws.Cell(row, 7).Value = TotalIncome;
+            ws.Cell(row, 7).Style.Font.SetBold().Font.SetFontColor(XLColor.Green);
+
+            ws.Cell(row, 8).Value = TotalExpense;
+            ws.Cell(row, 8).Style.Font.SetBold().Font.SetFontColor(XLColor.Red);
+
+            ws.Columns().AdjustToContents();
+            workbook.SaveAs(dialog.FileName);
+
+            MessageBox.Show("Excel fayl muvaffaqiyatli saqlandi!", "Tayyor", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Xatolik: {ex.Message}");
+        }
+    }
+
+    private string GetDescription(Enum value)
+    {
+        var field = value.GetType().GetField(value.ToString());
+        return field?.GetCustomAttribute<DescriptionAttribute>()?.Description ?? value.ToString();
     }
 
     #endregion

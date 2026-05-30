@@ -59,24 +59,6 @@ public partial class SalePage : Page
 
         Main.NavigateTo(new AddSalePage());
     }
-    private async void BtnPrintSale_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button button || button.Tag is not SaleViewModel sale)
-            return;
-
-        vm.IsLoading = true;
-        try
-        {
-            var printVm = App.AppHost!.Services.GetRequiredService<AddSalePageViewModel>();
-            await printVm.LoadSaleForEditAsync(sale.Id, notifyOnLoad: false);
-            await printVm.ShowPrintPreview();
-        }
-        finally
-        {
-            vm.IsLoading = false;
-        }
-    }
-
     private async void BtnEditSale_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button button || button.Tag is not SaleViewModel sale)

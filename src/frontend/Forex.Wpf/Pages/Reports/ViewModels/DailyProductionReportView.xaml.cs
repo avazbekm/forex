@@ -13,33 +13,5 @@ public partial class DailyProductionReportView : UserControl
     public DailyProductionReportView()
     {
         InitializeComponent();
-        Loaded += Page_Loaded;
-    }
-
-    private void Page_Loaded(object sender, RoutedEventArgs e)
-    {
-        RegisterFocusNavigation();
-        RegisterGlobalShortcuts();
-    }
-
-    private void RegisterFocusNavigation()
-    {
-        FocusNavigator.RegisterElements(
-            [
-                dateBegin.input,
-                dateEnd.input,
-                cbxCustomer,
-                btnPreview,
-                btnPrint,
-                btnClear,
-                btnExport,
-            ]);
-
-        FocusNavigator.FocusElement(cbxCustomer);
-    }
-
-    private void RegisterGlobalShortcuts()
-    {
-        btnPrint.RegisterShortcut(Key.P, ModifierKeys.Control);
     }
 }

@@ -11,3 +11,8 @@ public class Response<T>
     [JsonIgnore]
     public bool IsSuccess => StatusCode >= 200 && StatusCode < 300;
 }
+
+public class PagedResponse<T> : Response<T>
+{
+    public PagedListMetadata? Metadata { get; set; }
+}

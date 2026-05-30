@@ -100,6 +100,7 @@ public partial class HomePage : Page
 
     private void BtnLogout_Click(object sender, RoutedEventArgs e)
     {
+        LoginPage.ClearSavedSession();
         AuthStore.Instance.Logout();
         Main.NavigateTo(new LoginPage());
     }

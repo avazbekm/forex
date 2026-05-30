@@ -25,6 +25,7 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Microsoft.Extensions.DependencyInjection;
 
 public partial class AddSalePageViewModel : ViewModelBase
 {
@@ -55,6 +56,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
         SaleItems.CollectionChanged += (s, e) => RecalculateTotals();
 
+        RecalculateTotals();
+
         _initializationTask = LoadDataAsync();
     }
 
@@ -75,13 +78,22 @@ public partial class AddSalePageViewModel : ViewModelBase
     [ObservableProperty] private SaleItemViewModel? selectedSaleItem = default;
 
     [ObservableProperty] private UserViewModel? customer;
+    [ObservableProperty] private string customerInput = string.Empty;
     [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
     [ObservableProperty] private ObservableCollection<ProductViewModel> availableProducts = [];
 
     // Filtrlanuvchi ro'yxatlar — XAML shu ikki xususiyatga bind qiladi
     [ObservableProperty] private ObservableCollection<UserViewModel> filteredCustomers = [];
-    [ObservableProperty] private ICollectionView filteredProducts;
-    [ObservableProperty] private string productSearchText;
+    [ObservableProperty] private ICollectionView? filteredProducts;
+    [ObservableProperty] private string productSearchText = string.Empty;
+
+
+    [ObservableProperty] private long editingSaleId = 0;
+    [ObservableProperty] private bool isEditingItem;
+    [ObservableProperty] private int originalItemIndex = -1;
+    private SaleItemViewModel? _editingItemSnapshot;
+
+    #region Property changes
 
     partial void OnProductSearchTextChanged(string value)
     {
@@ -99,54 +111,6 @@ public partial class AddSalePageViewModel : ViewModelBase
         FilteredProducts?.Refresh();
     }
 
-    private bool FilterProducts(object item)
-    {
-        if (string.IsNullOrWhiteSpace(ProductSearchText)) return true;
-        if (item is not ProductViewModel p) return false;
-
-        var search = ProductSearchText.Trim();
-        return (p.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
-               (p.Code?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
-    }
-
-    [ObservableProperty] private long editingSaleId = 0;
-    [ObservableProperty] private bool isEditingItem;
-    [ObservableProperty] private int originalItemIndex = -1;
-    private SaleItemViewModel? _editingItemSnapshot;
-
-    // ─────────────────────────────────────────────
-    // Filter public methodlar — code-behind chaqiradi
-    // ─────────────────────────────────────────────
-
-    /// <summary>
-    /// Mahsulotlarni Kod yoki Nomi bo'yicha filtrlaydi.
-    /// null yoki bo'sh qiymat berilsa to'liq ro'yxat ko'rsatiladi.
-    /// </summary>
-    public void ApplyProductFilter(string? searchText)
-    {
-        ProductSearchText = searchText;
-    }
-
-    /// <summary>
-    /// Mijozlarni Ismi bo'yicha filtrlaydi.
-    /// null yoki bo'sh qiymat berilsa to'liq ro'yxat ko'rsatiladi.
-    /// </summary>
-    public void ApplyCustomerFilter(string? searchText)
-    {
-        if (string.IsNullOrWhiteSpace(searchText))
-        {
-            FilteredCustomers = AvailableCustomers;
-            return;
-        }
-
-        var lower = searchText.Trim().ToLower();
-        var results = AvailableCustomers
-            .Where(c => c.Name?.ToLower().Contains(lower) == true)
-            .ToList();
-
-        FilteredCustomers = new ObservableCollection<UserViewModel>(results);
-    }
-
     // ─────────────────────────────────────────────
     // AvailableProducts / AvailableCustomers o'zgarganda filterni yangilaymiz
     // ─────────────────────────────────────────────
@@ -162,6 +126,156 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         FilteredCustomers = value;
     }
+
+
+
+    // ─────────────────────────────────────────────
+    // Property Changes
+    // ─────────────────────────────────────────────
+
+    private void SaleItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SaleItemViewModel.Amount))
+            RecalculateTotals();
+    }
+
+    partial void OnEditingSaleIdChanged(long value)
+    {
+        IsEditing = value > 0;
+    }
+
+    partial void OnTotalAmountChanged(decimal? value)
+    {
+        if (EditingSaleId == 0) saleSession.TotalAmount = value;
+    }
+
+    partial void OnNoteChanged(string value)
+    {
+        if (EditingSaleId == 0) saleSession.Note = value;
+    }
+
+    partial void OnDateChanged(DateTime value)
+    {
+        if (EditingSaleId == 0) saleSession.Date = value;
+    }
+
+    partial void OnFinalAmountChanged(decimal? value)
+    {
+        if (EditingSaleId == 0) saleSession.FinalAmount = value;
+        if (Customer is not null)
+            TotalAmountWithUserBalance = Customer.Balance - FinalAmount;
+    }
+
+    partial void OnCustomerChanged(UserViewModel? value)
+    {
+        if (EditingSaleId == 0) saleSession.SelectedCustomer = value;
+        CustomerInput = value?.Name ?? string.Empty;
+        RecalculateTotalAmountWithUserBalance();
+    }
+
+    #endregion Property changes
+
+    #region Private helpers
+
+    private bool FilterProducts(object item)
+    {
+        if (string.IsNullOrWhiteSpace(ProductSearchText)) return true;
+        if (item is not ProductViewModel p) return false;
+
+        var search = ProductSearchText.Trim();
+        return (p.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (p.Code?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    // ─────────────────────────────────────────────
+    // Filter public methodlar — code-behind chaqiradi
+    // ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Mahsulotlarni Kod yoki Nomi bo'yicha filtrlaydi.
+    /// null yoki bo'sh qiymat berilsa to'liq ro'yxat ko'rsatiladi.
+    /// </summary>
+    public void ApplyProductFilter(string? searchText)
+    {
+        ProductSearchText = searchText ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Mijozlarni Ismi bo'yicha filtrlaydi.
+    /// null yoki bo'sh qiymat berilsa to'liq ro'yxat ko'rsatiladi.
+    /// </summary>
+    public void ApplyCustomerFilter(string? searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            FilteredCustomers = AvailableCustomers;
+            return;
+        }
+
+        var results = AvailableCustomers
+            .Where(c => TransliterationHelper.ContainsIgnoreScript(c.Name, searchText) ||
+                        TransliterationHelper.ContainsIgnoreScript(c.Phone, searchText) ||
+                        TransliterationHelper.ContainsIgnoreScript(c.Address, searchText))
+            .ToList();
+
+        FilteredCustomers = new ObservableCollection<UserViewModel>(results);
+    }
+
+    private void Clear()
+    {
+        saleSession.ClearSession();
+        SaleItems.Clear();
+
+        Customer = null;
+        CustomerInput = string.Empty;
+        ProductSearchText = string.Empty;
+        SelectedSaleItem = null;
+        IsPopupOpen = false;
+        PopupItem = null;
+        Date = DateTime.Now;
+        TotalAmount = null;
+        FinalAmount = null;
+        Note = string.Empty;
+        TotalAmountWithUserBalance = null;
+        EditingSaleId = 0;
+        IsEditingItem = false;
+        OriginalItemIndex = -1;
+        _editingItemSnapshot = null;
+        ClearCurrentSaleItem();
+        RecalculateTotals();
+    }
+
+    private void ClearCurrentSaleItem()
+    {
+        CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
+        CurrentSaleItem = new SaleItemViewModel();
+        CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
+    }
+
+    // ─────────────────────────────────────────────
+    // Private Helpers
+    // ─────────────────────────────────────────────
+
+    private void RecalculateTotals()
+    {
+        TotalAmount = SaleItems.Sum(x => x.Amount ?? 0);
+        FinalAmount = TotalAmount;
+
+        TotalRowsCount = SaleItems.Count;
+        DistinctProductsCount = SaleItems.Select(x => x.Product?.Code).Distinct().Count();
+        TotalBundlesCount = SaleItems.Sum(x => x.BundleCount ?? 0);
+        TotalQuantityCount = SaleItems.Sum(x => x.TotalCount ?? 0);
+    }
+
+    private void RecalculateTotalAmountWithUserBalance()
+    {
+        if (Customer is not null)
+            TotalAmountWithUserBalance = Customer.Balance - TotalAmount;
+    }
+
+    #endregion Private helpers
+
+    #region Load data
 
     // ─────────────────────────────────────────────
     // Data Loading
@@ -337,6 +451,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                     Product = productVM,
                     ProductType = productTypeVM,
                     BundleCount = saleItemResponse.BundleCount,
+                    BundleItemCount = saleItemResponse.BundleItemCount,
                     UnitPrice = saleItemResponse.UnitPrice,
                     Amount = saleItemResponse.Amount,
                     TotalCount = saleItemResponse.TotalCount
@@ -349,6 +464,10 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         RecalculateTotals();
     }
+
+    #endregion Load data
+
+    #region Commands
 
     // ─────────────────────────────────────────────
     // Commands
@@ -428,6 +547,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             Product = CurrentSaleItem.Product,
             ProductType = CurrentSaleItem.ProductType,
             BundleCount = CurrentSaleItem.BundleCount,
+            BundleItemCount = CurrentSaleItem.BundleItemCount,
             UnitPrice = CurrentSaleItem.UnitPrice,
             Amount = CurrentSaleItem.Amount,
             TotalCount = CurrentSaleItem.TotalCount,
@@ -663,98 +783,9 @@ public partial class AddSalePageViewModel : ViewModelBase
         }
     }
 
-    private void Clear()
-    {
-        saleSession.ClearSession();
-        SaleItems = saleSession.CartItems;
+    #endregion Commands
 
-        Customer = null;
-        TotalAmount = null;
-        FinalAmount = null;
-        Note = string.Empty;
-        TotalAmountWithUserBalance = null;
-        EditingSaleId = 0;
-        IsEditingItem = false;
-        OriginalItemIndex = -1;
-        _editingItemSnapshot = null;
-        ClearCurrentSaleItem();
-        RecalculateTotals();
-    }
-
-    private void ClearCurrentSaleItem()
-    {
-        CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
-        CurrentSaleItem = new SaleItemViewModel();
-        CurrentSaleItem.PropertyChanged += SaleItemPropertyChanged;
-    }
-
-    // ─────────────────────────────────────────────
-    // Property Changes
-    // ─────────────────────────────────────────────
-
-    private void SaleItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(SaleItemViewModel.Amount))
-            RecalculateTotals();
-    }
-
-    partial void OnEditingSaleIdChanged(long value)
-    {
-        IsEditing = value > 0;
-    }
-
-    partial void OnTotalAmountChanged(decimal? value)
-    {
-        if (EditingSaleId == 0) saleSession.TotalAmount = value;
-    }
-
-    partial void OnNoteChanged(string value)
-    {
-        if (EditingSaleId == 0) saleSession.Note = value;
-    }
-
-    partial void OnDateChanged(DateTime value)
-    {
-        if (EditingSaleId == 0) saleSession.Date = value;
-    }
-
-    partial void OnFinalAmountChanged(decimal? value)
-    {
-        if (EditingSaleId == 0) saleSession.FinalAmount = value;
-        if (Customer is not null)
-            TotalAmountWithUserBalance = Customer.Balance - FinalAmount;
-    }
-
-    partial void OnCustomerChanged(UserViewModel? value)
-    {
-        if (EditingSaleId == 0) saleSession.SelectedCustomer = value;
-        RecalculateTotalAmountWithUserBalance();
-    }
-
-    // ─────────────────────────────────────────────
-    // Private Helpers
-    // ─────────────────────────────────────────────
-
-    private void RecalculateTotals()
-    {
-        TotalAmount = SaleItems.Sum(x => x.Amount ?? 0);
-        FinalAmount = TotalAmount;
-
-        TotalRowsCount = SaleItems.Count;
-        DistinctProductsCount = SaleItems.Select(x => x.Product?.Code).Distinct().Count();
-        TotalBundlesCount = SaleItems.Sum(x => x.BundleCount ?? 0);
-        TotalQuantityCount = SaleItems.Sum(x => x.TotalCount ?? 0);
-    }
-
-    private void RecalculateTotalAmountWithUserBalance()
-    {
-        if (Customer is not null)
-            TotalAmountWithUserBalance = Customer.Balance - TotalAmount;
-    }
-
-    // ─────────────────────────────────────────────
-    // Generate Print Preview
-    // ─────────────────────────────────────────────
+    #region Generate Document
 
     public async Task ShowPrintPreview()
     {
@@ -785,14 +816,87 @@ public partial class AddSalePageViewModel : ViewModelBase
             var fixedDoc = CreateFixedDocumentForPrint();
 
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(10) };
+
+            // SAQLASH
+            var saveButton = new Button
+            {
+                Content = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.ContentSave, Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center },
+                        new TextBlock { Text = "Saqlash", Margin = new Thickness(6,0,0,0), VerticalAlignment = VerticalAlignment.Center }
+                    }
+                },
+                Margin = new Thickness(0,0,5,0),
+                Padding = new Thickness(12, 6, 12, 6),
+                Background = new SolidColorBrush(Color.FromRgb(100, 100, 100)), 
+                Foreground = Brushes.White,
+                FontSize = 13, FontWeight = FontWeights.SemiBold,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand
+            };
+            saveButton.Click += (s, e) =>
+            {
+                var dlg = new Microsoft.Win32.SaveFileDialog { Filter = "PDF (*.pdf)|*.pdf", FileName = $"Savdo_{Customer?.Name ?? "Naqd"}_{DateTime.Now:dd_MM_yyyy}.pdf" };
+                if (dlg.ShowDialog() == true)
+                {
+                    SaveFixedDocumentToPdf(fixedDoc, dlg.FileName);
+                    MessageBox.Show("Saqlandi!");
+                }
+            };
+            toolbar.Children.Add(saveButton);
+
+            // OCHISH
+            var openButton = new Button
+            {
+                Content = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.FolderOpen, Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center },
+                        new TextBlock { Text = "Ochish", Margin = new Thickness(6,0,0,0), VerticalAlignment = VerticalAlignment.Center }
+                    }
+                },
+                Margin = new Thickness(0,0,5,0),
+                Padding = new Thickness(12, 6, 12, 6),
+                Background = new SolidColorBrush(Color.FromRgb(100, 100, 100)), 
+                Foreground = Brushes.White,
+                FontSize = 13, FontWeight = FontWeights.SemiBold,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand
+            };
+            openButton.Click += (s, e) =>
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string folder = Path.Combine(docs, "Forex", "Savdolar");
+                Directory.CreateDirectory(folder);
+                string fileName = $"Savdo_{Customer?.Name ?? "Naqd"}_{DateTime.Now:dd_MM_yyyy}.pdf";
+                string path = Path.Combine(folder, fileName);
+                SaveFixedDocumentToPdf(fixedDoc, path);
+                try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); } catch {}
+            };
+            toolbar.Children.Add(openButton);
+
+            // ULASHISH
             var shareButton = new Button
             {
-                Content = "Telegram'da ulashish",
-                Padding = new Thickness(15, 5, 15, 5),
+                Content = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                    {
+                        new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.ShareVariant, Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center },
+                        new TextBlock { Text = "Ulashish", Margin = new Thickness(6,0,0,0), VerticalAlignment = VerticalAlignment.Center }
+                    }
+                },
+                Padding = new Thickness(12, 6, 12, 6),
                 Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
                 Foreground = Brushes.White,
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
+                FontSize = 13,
+                FontWeight = FontWeights.SemiBold,
                 Cursor = Cursors.Hand,
                 BorderThickness = new Thickness(0)
             };
@@ -809,11 +913,22 @@ public partial class AddSalePageViewModel : ViewModelBase
                     string fileName = $"Savdo_{customerName}_{DateTime.Now:dd_MM_yyyy}.pdf";
                     string path = Path.Combine(folder, fileName);
 
-                    SaveFixedDocumentToPdf(fixedDoc, path, 96);
+                    SaveFixedDocumentToPdf(fixedDoc, path);
 
                     if (File.Exists(path))
                     {
-                        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
+                        var window = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive);
+                        var viewModel = App.AppHost!.Services.GetRequiredService<TelegramShareViewModel>();
+                        viewModel.PdfFilePath = path;
+                        viewModel.MessageCaption = $"Sotuv: {customerName}\nSana: {DateTime.Now:dd.MM.yyyy}";
+
+                        var shareWindow = new TelegramShareWindow
+                        {
+                            DataContext = viewModel,
+                            Owner = window ?? Application.Current.MainWindow,
+                            WindowStartupLocation = WindowStartupLocation.CenterOwner
+                        };
+                        shareWindow.ShowDialog();
                     }
                 }
                 catch (Exception ex) { MessageBox.Show($"Ulashishda xatolik: {ex.Message}"); }
@@ -850,37 +965,28 @@ public partial class AddSalePageViewModel : ViewModelBase
         const double pageWidth = 793.7;
         const double pageHeight = 1122.5;
         const double margin = 25;
-        const double footerSpace = 60; // Jami qatori + bet raqami uchun joy
+        const double footerSpace = 60;
 
-        string[] headers = { "T/r", "Rasm", "Kod", "Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
-        double[] widths = { 35, 70, 60, 165, 60, 60, 70, 70, 143.7 };
+        // 8 ta ustun: T/r, Rasm, Kod/Nomi (birlashgan), Razmer, Qop soni, Jami soni, Narxi, Jami summa
+        string[] headers = { "T/r", "Rasm", "Kod / Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
+        double[] widths = { 35, 140, 130, 75, 75, 85, 90, 113.7 };
         double tableWidth = pageWidth - margin * 2;
+
+        decimal grandTotalAmount = SaleItems.Sum(x => x.Amount ?? 0);
+        double grandTotalBundle = SaleItems.Sum(x => (double)(x.BundleCount ?? 0));
+        double grandTotalCount = SaleItems.Sum(x => (double)(x.TotalCount ?? 0));
 
         var groupedItems = SaleItems
             .OrderBy(i => i.Product.Code)
             .GroupBy(i => i.Product.Code)
             .ToList();
 
-        decimal grandTotalAmount = SaleItems.Sum(x => x.Amount ?? 0);
-        double grandTotalBundle = SaleItems.Sum(x => (double)(x.BundleCount ?? 0));
-        double grandTotalCount = SaleItems.Sum(x => (double)(x.TotalCount ?? 0));
-        var groupedItems = SaleItems.OrderBy(i => i.Product.Code).GroupBy(i => i.Product.Code).ToList();
-        var flatItems = groupedItems.SelectMany(g => g).ToList();
-
+        // Used for pagination
         int currentGroupIndex = 0;
         int pageNumber = 1;
         int globalTr = 1;
 
         while (currentGroupIndex < groupedItems.Count)
-        string[] headers = { "T/r", "Rasm", "Kod", "Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
-        double[] finalWidths = { 35, 70, 60, 165, 60, 60, 70, 70, 143.7 };
-
-        int maxRowsPerPage = 22;
-        int totalPages = (int)Math.Ceiling((double)(flatItems.Count + 1) / maxRowsPerPage);
-        int processedIndex = 0;
-        int globalTr = 0;
-
-        for (int pageIndex = 0; pageIndex < totalPages; pageIndex++)
         {
             var page = new FixedPage { Width = pageWidth, Height = pageHeight, Background = Brushes.White };
             var container = new StackPanel { Margin = new Thickness(margin, 20, margin, 20) };
@@ -938,10 +1044,7 @@ public partial class AddSalePageViewModel : ViewModelBase
 
             // 0.5 sm = ~19px (96 DPI da 1sm = 37.8px, 0.5sm = 18.9px)
             const double safetyGap = 19.0;
-            int pageCount = Math.Min(maxRowsPerPage, flatItems.Count - processedIndex);
-            var pageItems = flatItems.Skip(processedIndex).Take(pageCount).ToList();
-            var pageGroups = pageItems.GroupBy(i => i.Product.Code).ToList();
-
+            
             while (tempGroupIndex < groupedItems.Count)
             {
                 var group = groupedItems[tempGroupIndex];
@@ -950,9 +1053,9 @@ public partial class AddSalePageViewModel : ViewModelBase
                 double oneRowHeight = CalculateOneRowHeight(group.First(), widths);
 
                 // 2. Guruhda nechta qator bor — shuncha ko'paytirish
-                // (lekin rasm tufayli minimum 72px)
+                // (lekin rasm tufayli minimum 142px)
                 int rowCount = group.Count();
-                double groupHeight = Math.Max(oneRowHeight * rowCount, 72.0);
+                double groupHeight = Math.Max(oneRowHeight * rowCount, 142.0);
 
                 // 3. Oxirgi guruh bo'lsa, Jami qatori uchun ham joy kerak
                 bool isLastGroup = (tempGroupIndex == groupedItems.Count - 1);
@@ -970,91 +1073,119 @@ public partial class AddSalePageViewModel : ViewModelBase
                 tempGroupIndex++;
             }
 
+            // Update current index for next page
+            currentGroupIndex = tempGroupIndex;
+
             // Jadvalni render qilish
             int gridRow = 1;
             foreach (var group in groupsOnPage)
             {
                 int groupStartRow = gridRow;
                 bool isFirstInGroup = true;
+                int groupRowCount = group.Count();
 
                 foreach (var item in group)
                 {
                     grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
                     AddCellToGrid(grid, globalTr.ToString(), gridRow, 0, false, TextAlignment.Center);
-                    AddCellToGrid(grid, item.Product.Code ?? "", gridRow, 2, false, TextAlignment.Left);
-                    AddCellToGrid(grid, item.Product.Name ?? "", gridRow, 3, false, TextAlignment.Left);
-                    AddCellToGrid(grid, item.ProductType.Type ?? "", gridRow, 4, false, TextAlignment.Center);
-                    AddCellToGrid(grid, item.BundleCount?.ToString("N0") ?? "0", gridRow, 5, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.TotalCount?.ToString("N0") ?? "0", gridRow, 6, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.UnitPrice?.ToString("N2") ?? "0.00", gridRow, 7, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.Amount?.ToString("N2") ?? "0.00", gridRow, 8, false, TextAlignment.Right);
-                    AddCellToGrid(grid, globalTr.ToString(), currentRow, 0, false, TextAlignment.Center);
-
+                    
                     if (isFirstInGroup)
-                    if (!imageRendered)
                     {
                         var imgBorder = CreateImageCell(item.Product.DisplayImagePath);
                         Grid.SetRow(imgBorder, groupStartRow);
                         Grid.SetColumn(imgBorder, 1);
-                        Grid.SetRowSpan(imgBorder, group.Count());
+                        Grid.SetRowSpan(imgBorder, groupRowCount);
                         grid.Children.Add(imgBorder);
+                        
+                        // Kod va Nom birlashgan cell (2 qatorlik: yuqorida kod, pastida nomi)
+                        var codeNameBorder = CreateCodeNameCell(item.Product.Code ?? "", item.Product.Name ?? "");
+                        Grid.SetRow(codeNameBorder, groupStartRow);
+                        Grid.SetColumn(codeNameBorder, 2);
+                        Grid.SetRowSpan(codeNameBorder, groupRowCount);
+                        grid.Children.Add(codeNameBorder);
+                        
                         isFirstInGroup = false;
                     }
+                    
+                    // Ustunlar 1 ga kamaydi: Razmer=3, Qop soni=4, Jami soni=5, Narxi=6, Jami summa=7
+                    AddCellToGrid(grid, item.ProductType.Type ?? "", gridRow, 3, false, TextAlignment.Center);
+                    AddCellToGrid(grid, item.BundleCount?.ToString("N0") ?? "0", gridRow, 4, false, TextAlignment.Right);
+                    AddCellToGrid(grid, item.TotalCount?.ToString("N0") ?? "0", gridRow, 5, false, TextAlignment.Right);
+                    AddCellToGrid(grid, item.UnitPrice?.ToString("N2") ?? "0.00", gridRow, 6, false, TextAlignment.Right);
+                    AddCellToGrid(grid, item.Amount?.ToString("N2") ?? "0.00", gridRow, 7, false, TextAlignment.Right);
 
                     gridRow++;
                     globalTr++;
-                    AddCellToGrid(grid, item.Product.Code ?? "", currentRow, 2, false, TextAlignment.Left);
-                    AddCellToGrid(grid, item.Product.Name ?? "", currentRow, 3, false, TextAlignment.Left);
-                    AddCellToGrid(grid, item.ProductType.Type ?? "", currentRow, 4, false, TextAlignment.Center);
-                    AddCellToGrid(grid, item.BundleCount?.ToString("N0") ?? "0", currentRow, 5, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.TotalCount?.ToString("N0") ?? "0", currentRow, 6, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.UnitPrice?.ToString("N2") ?? "0.00", currentRow, 7, false, TextAlignment.Right);
-                    AddCellToGrid(grid, item.Amount?.ToString("N2") ?? "0.00", currentRow, 8, false, TextAlignment.Right);
-
-                    currentRow++;
                 }
             }
 
-            // Jami qatori faqat oxirgi betda
-            if (tempGroupIndex >= groupedItems.Count)
-            processedIndex += pageItems.Count;
-
-            if (pageIndex == totalPages - 1)
+            // Jami qatori faqat oxirgi betda (barcha guruhlar tugagan bo'lsa)
+            if (currentGroupIndex >= groupedItems.Count)
             {
                 grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(35) });
 
+                // 8 ta ustun: JAMI 0-3 ustunlarni egallaydi (4 ta ustun)
                 var totalLabel = CreateCell("JAMI:", true, TextAlignment.Right);
                 totalLabel.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
                 Grid.SetRow(totalLabel, gridRow);
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-                var totalLabel = CreateCell("Jami:", true, TextAlignment.Left);
-                totalLabel.Padding = new Thickness(10, 5, 4, 5);
-                Grid.SetRow(totalLabel, currentRow);
                 Grid.SetColumn(totalLabel, 0);
-                Grid.SetColumnSpan(totalLabel, 5);
+                Grid.SetColumnSpan(totalLabel, 4);
                 grid.Children.Add(totalLabel);
 
-                AddCellToGrid(grid, grandTotalBundle.ToString("N0"), gridRow, 5, true, TextAlignment.Right);
-                AddCellToGrid(grid, grandTotalCount.ToString("N0"), gridRow, 6, true, TextAlignment.Right);
+                // Qop soni: index 4, Jami soni: index 5
+                AddCellToGrid(grid, grandTotalBundle.ToString("N0"), gridRow, 4, true, TextAlignment.Right);
+                AddCellToGrid(grid, grandTotalCount.ToString("N0"), gridRow, 5, true, TextAlignment.Right);
 
+                // Narxi va Jami summa: 6-7 ustunlar (2 ta ustun)
                 var totalSumCell = CreateCell(grandTotalAmount.ToString("N2"), true, TextAlignment.Right);
                 totalSumCell.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
                 Grid.SetRow(totalSumCell, gridRow);
-                Grid.SetColumn(totalSumCell, 7);
+                Grid.SetColumn(totalSumCell, 6);
                 Grid.SetColumnSpan(totalSumCell, 2);
-                grid.Children.Add(totalSumCell);
-                var totalAmountCell = CreateCell(totalAmountSum.ToString("N2"), true, TextAlignment.Right);
-                Grid.SetRow(totalAmountCell, currentRow);
-                Grid.SetColumn(totalAmountCell, 7);
-                Grid.SetColumnSpan(totalAmountCell, 2);
-                if (totalAmountCell.Child is TextBlock tbSum)
+                
+                if (totalSumCell.Child is TextBlock tbSum)
                 {
                     tbSum.FontSize = 14;
                     tbSum.Foreground = new SolidColorBrush(Color.FromRgb(0, 50, 150));
                 }
-                grid.Children.Add(totalAmountCell);
+                
+                grid.Children.Add(totalSumCell);
+                gridRow++;
+                
+                // Mijoz qoldig'i (qarzdorlik/haqdorlik)
+                if (Customer?.Balance is not null)
+                {
+                    grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(35) });
+                    
+                    var balanceLabel = CreateCell("Joriy qoldiq:", true, TextAlignment.Right);
+                    balanceLabel.Background = new SolidColorBrush(Color.FromRgb(230, 240, 255));
+                    Grid.SetRow(balanceLabel, gridRow);
+                    Grid.SetColumn(balanceLabel, 0);
+                    Grid.SetColumnSpan(balanceLabel, 6);
+                    grid.Children.Add(balanceLabel);
+                    
+                    var balanceValue = Customer.Balance.Value - grandTotalAmount;
+                    var balanceText = balanceValue >= 0 
+                        ? $"+{balanceValue:N0} (Haqdor)" 
+                        : $"{balanceValue:N0} (Qarzdor)";
+                    
+                    var balanceCell = CreateCell(balanceText, true, TextAlignment.Right);
+                    balanceCell.Background = new SolidColorBrush(Color.FromRgb(230, 240, 255));
+                    Grid.SetRow(balanceCell, gridRow);
+                    Grid.SetColumn(balanceCell, 6);
+                    Grid.SetColumnSpan(balanceCell, 2);
+                    
+                    if (balanceCell.Child is TextBlock tbBal)
+                    {
+                        tbBal.FontSize = 13;
+                        tbBal.Foreground = balanceValue >= 0 
+                            ? new SolidColorBrush(Color.FromRgb(0, 128, 0)) 
+                            : new SolidColorBrush(Color.FromRgb(200, 0, 0));
+                    }
+                    
+                    grid.Children.Add(balanceCell);
+                }
             }
 
             container.Children.Add(grid);
@@ -1085,16 +1216,16 @@ public partial class AddSalePageViewModel : ViewModelBase
     private double CalculateOneRowHeight(SaleItemViewModel item, double[] widths)
     {
         double rowH = 0;
+        // 8 ta ustun: T/r(0), Rasm(1), Kod/Nomi(2), Razmer(3), Qop soni(4), Jami soni(5), Narxi(6), Jami summa(7)
         var cells = new[]
         {
-        (item.Product.Code     ?? "",        widths[2]),
-        (item.Product.Name     ?? "",        widths[3]),
-        (item.ProductType.Type ?? "",        widths[4]),
-        (item.BundleCount?.ToString("N0") ?? "0",    widths[5]),
-        (item.TotalCount?.ToString("N0")  ?? "0",    widths[6]),
-        (item.UnitPrice?.ToString("N2")   ?? "0.00", widths[7]),
-        (item.Amount?.ToString("N2")      ?? "0.00", widths[8]),
-    };
+            ($"{item.Product.Code}\n{item.Product.Name}", widths[2]),
+            (item.ProductType.Type ?? "",                  widths[3]),
+            (item.BundleCount?.ToString("N0") ?? "0",      widths[4]),
+            (item.TotalCount?.ToString("N0")  ?? "0",      widths[5]),
+            (item.UnitPrice?.ToString("N2")   ?? "0.00",   widths[6]),
+            (item.Amount?.ToString("N2")      ?? "0.00",   widths[7]),
+        };
 
         foreach (var (text, width) in cells)
         {
@@ -1112,8 +1243,6 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         return rowH;
     }
-    private async Task<BitmapSource> DownloadBitmapAsync(string url)
-
     private async Task<BitmapSource?> DownloadBitmapAsync(string url)
     {
         try
@@ -1124,7 +1253,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.StreamSource = ms;
-            bitmap.DecodePixelWidth = 150;
+            bitmap.DecodePixelWidth = 300;
             bitmap.EndInit();
             bitmap.Freeze();
             return bitmap;
@@ -1136,18 +1265,25 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         var border = new Border
         {
-            Width = 70,
-            Height = 70,
+            Width = 140,
+            Height = 140,
             BorderBrush = new SolidColorBrush(Color.FromRgb(230, 230, 230)),
             BorderThickness = new Thickness(1),
             Background = Brushes.White,
             VerticalAlignment = VerticalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center
+            HorizontalAlignment = HorizontalAlignment.Center,
+            ClipToBounds = true
         };
 
         if (!string.IsNullOrEmpty(imagePath) && _imageCache.TryGetValue(imagePath, out var bitmap))
         {
-            var img = new Image { Source = bitmap, Stretch = Stretch.Uniform, Margin = new Thickness(2) };
+            var img = new Image 
+            { 
+                Source = bitmap, 
+                Stretch = Stretch.UniformToFill,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
             RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.HighQuality);
             border.Child = img;
         }
@@ -1178,11 +1314,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
+        // 8 ta ustun: T/r, Rasm, Kod/Nomi, Razmer, Qop soni, Jami soni, Narxi, Jami summa
         TextAlignment[] alignments =
         {
             TextAlignment.Center, TextAlignment.Center, TextAlignment.Left,
-            TextAlignment.Left, TextAlignment.Center, TextAlignment.Right,
-            TextAlignment.Right, TextAlignment.Right, TextAlignment.Right
+            TextAlignment.Center, TextAlignment.Right, TextAlignment.Right,
+            TextAlignment.Right, TextAlignment.Right
         };
 
         for (int i = 0; i < values.Length; i++)
@@ -1218,7 +1355,42 @@ public partial class AddSalePageViewModel : ViewModelBase
         return border;
     }
 
-    private void SaveFixedDocumentToPdf(FixedDocument doc, string path, int dpi = 300)
+    private Border CreateCodeNameCell(string code, string name)
+    {
+        var border = new Border
+        {
+            BorderBrush = Brushes.Gray,
+            BorderThickness = new Thickness(0.5),
+            Background = Brushes.White,
+            Padding = new Thickness(6, 4, 6, 4)
+        };
+
+        var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+
+        var codeBlock = new TextBlock
+        {
+            Text = code,
+            FontSize = 13,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromRgb(0, 100, 180))
+        };
+
+        var nameBlock = new TextBlock
+        {
+            Text = name,
+            FontSize = 11,
+            Foreground = Brushes.DimGray,
+            TextWrapping = TextWrapping.Wrap
+        };
+
+        stack.Children.Add(codeBlock);
+        stack.Children.Add(nameBlock);
+        border.Child = stack;
+
+        return border;
+    }
+
+    private void SaveFixedDocumentToPdf(FixedDocument doc, string path, int dpi = 288)
     {
         try
         {
@@ -1235,20 +1407,13 @@ public partial class AddSalePageViewModel : ViewModelBase
                 fixedPage.UpdateLayout();
 
                 double scale = dpi / 96.0;
-                var bitmap = new RenderTargetBitmap(
-                    (int)(fixedPage.Width * scale),
-                    (int)(fixedPage.Height * scale),
-                    dpi, dpi, PixelFormats.Pbgra32);
+                int pixelWidth = (int)(fixedPage.Width * scale);
+                int pixelHeight = (int)(fixedPage.Height * scale);
 
-                var dv = new DrawingVisual();
-                using (var dc = dv.RenderOpen())
-                {
-                    dc.PushTransform(new ScaleTransform(scale, scale));
-                    dc.DrawRectangle(new VisualBrush(fixedPage), null, new Rect(0, 0, fixedPage.Width, fixedPage.Height));
-                }
-                bitmap.Render(dv);
+                var bitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, dpi, dpi, PixelFormats.Pbgra32);
+                bitmap.Render(fixedPage);
 
-                var encoder = new PngBitmapEncoder();
+                var encoder = new JpegBitmapEncoder { QualityLevel = 95 };
                 encoder.Frames.Add(BitmapFrame.Create(bitmap));
                 using var ms = new MemoryStream();
                 encoder.Save(ms);
@@ -1261,11 +1426,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                 using var xgfx = PdfSharp.Drawing.XGraphics.FromPdfPage(pdfPage);
                 using var ximg = PdfSharp.Drawing.XImage.FromStream(ms);
 
-                double ratio = Math.Min(pdfPage.Width.Point / ximg.PointWidth, pdfPage.Height.Point / ximg.PointHeight);
-                double w = ximg.PointWidth * ratio;
-                double h = ximg.PointHeight * ratio;
-
-                xgfx.DrawImage(ximg, (pdfPage.Width.Point - w) / 2, (pdfPage.Height.Point - h) / 2, w, h);
+                xgfx.DrawImage(ximg, new PdfSharp.Drawing.XRect(0, 0, pdfPage.Width.Point, pdfPage.Height.Point));
             }
 
             pdfDoc.Save(path);
@@ -1275,4 +1436,6 @@ public partial class AddSalePageViewModel : ViewModelBase
             MessageBox.Show($"PDF saqlashda xatolik: {ex.Message}", "Xatolik", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
+
+    #endregion Generate Document
 }

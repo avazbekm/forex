@@ -67,44 +67,51 @@ public partial class AddSalePage : Page
 
     private void SetupCustomerComboBox()
     {
-        cbxCustomerName.StaysOpenOnEdit = true;
-        cbxCustomerName.GotFocus += CustomerComboBox_GotFocus;
-        cbxCustomerName.LostFocus += CustomerComboBox_LostFocus;
+        var combo = cbxCustomerName.InternalComboBox;
+        combo.StaysOpenOnEdit = true;
 
-        if (cbxCustomerName.Template?.FindName("PART_EditableTextBox", cbxCustomerName) is TextBox editBox)
-            SetupCustomerFilterBox(editBox);
-        else
-            cbxCustomerName.Loaded += (_, _) =>
+        // Down/Up tugmalarini FocusNavigator'dan himoyalash
+        combo.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key is Key.Down or Key.Up && combo.IsDropDownOpen)
             {
-                if (cbxCustomerName.Template?.FindName("PART_EditableTextBox", cbxCustomerName) is TextBox tb)
-                    SetupCustomerFilterBox(tb);
+                // ComboBox o'zi handle qilsin, FocusNavigator aralashmasin
+                e.Handled = false; // WPF default behavior ishlaydi
+            }
+        };
+
+        combo.GotFocus += (_, _) =>
+        {
+            vm.ApplyCustomerFilter(null);
+            combo.IsDropDownOpen = true;
+        };
+
+        combo.LostFocus += CustomerComboBox_LostFocus;
+
+        void setupEditBox()
+        {
+            if (combo.Template?.FindName("PART_EditableTextBox", combo) is not TextBox editBox) return;
+
+            bool userTyping = false;
+
+            editBox.PreviewKeyDown += (_, e) =>
+            {
+                userTyping = e.Key is not (Key.Down or Key.Up or Key.Enter or Key.Escape or Key.Tab or Key.Left or Key.Right);
             };
-    }
 
-    private void SetupCustomerFilterBox(TextBox editBox)
-    {
-        bool userTyping = false;
+            editBox.TextChanged += (_, _) =>
+            {
+                if (!userTyping) return;
+                userTyping = false;
 
-        editBox.PreviewKeyDown += (_, e) =>
-        {
-            userTyping = e.Key is not (Key.Down or Key.Up or Key.Enter or Key.Escape or Key.Tab or Key.Left or Key.Right);
-        };
+                var text = editBox.Text?.Trim();
+                vm.ApplyCustomerFilter(text);
+                combo.IsDropDownOpen = true;
+            };
+        }
 
-        editBox.TextChanged += (_, _) =>
-        {
-            if (!userTyping) return;
-            userTyping = false;
-
-            var text = editBox.Text?.Trim();
-            vm.ApplyCustomerFilter(text);
-            cbxCustomerName.IsDropDownOpen = true;
-        };
-    }
-
-    private void CustomerComboBox_GotFocus(object sender, RoutedEventArgs e)
-    {
-        vm.ApplyCustomerFilter(null);
-        cbxCustomerName.IsDropDownOpen = true;
+        if (combo.IsLoaded) setupEditBox();
+        else combo.Loaded += (_, _) => setupEditBox();
     }
 
     private void CustomerComboBox_LostFocus(object sender, RoutedEventArgs e)
@@ -120,7 +127,6 @@ public partial class AddSalePage : Page
             return;
         }
 
-        // Allaqachon to'g'ri tanlangan
         if (cbxCustomerName.SelectedItem is UserViewModel sel &&
             sel.Name.Equals(text, StringComparison.OrdinalIgnoreCase))
         {
@@ -210,6 +216,10 @@ public partial class AddSalePage : Page
                 _productUserIsTyping = false;
 
                 var text = editBox.Text?.Trim();
+                if (vm.CurrentSaleItem is not null)
+                    vm.CurrentSaleItem.Product = null;
+                combo.SelectedItem = null;
+                combo.SelectedIndex = -1;
                 vm.ApplyProductFilter(text);
                 combo.IsDropDownOpen = true;
             };
@@ -231,6 +241,8 @@ public partial class AddSalePage : Page
         if (combo.IsDropDownOpen)
         {
             combo.IsDropDownOpen = false;
+            if (combo.SelectedItem is ProductViewModel selectedProduct)
+                combo.Text = GetProductDisplayText(selectedProduct);
             if (combo.SelectedItem is null)
                 e.Handled = true;
             return;
@@ -238,7 +250,11 @@ public partial class AddSalePage : Page
 
         var text = combo.Text?.Trim();
         if (string.IsNullOrWhiteSpace(text)) return;
-        if (combo.SelectedItem is not null) return;
+        if (combo.SelectedItem is ProductViewModel selectedItem)
+        {
+            combo.Text = GetProductDisplayText(selectedItem);
+            return;
+        }
 
         // Aniq moslik qidiramiz
         var match = vm.AvailableProducts.FirstOrDefault(p =>
@@ -250,6 +266,7 @@ public partial class AddSalePage : Page
             vm.CurrentSaleItem.Product = match;
             combo.SelectedItem = match;
             vm.ApplyProductFilter(null);
+            combo.Text = GetProductDisplayText(match);
             return;
         }
 
@@ -267,14 +284,17 @@ public partial class AddSalePage : Page
 
         if (string.IsNullOrWhiteSpace(text))
         {
+            combo.SelectedItem = null;
+            combo.Text = string.Empty;
             if (vm.CurrentSaleItem is not null) vm.CurrentSaleItem.Product = null;
-            vm.ApplyProductFilter(null);
+            vm.ApplyProductFilter(string.Empty);
             return;
         }
 
-        if (combo.SelectedItem is not null)
+        if (combo.SelectedItem is ProductViewModel selectedProduct)
         {
             vm.ApplyProductFilter(null);
+            combo.Text = GetProductDisplayText(selectedProduct);
             return;
         }
 
@@ -287,6 +307,7 @@ public partial class AddSalePage : Page
             vm.CurrentSaleItem.Product = match;
             combo.SelectedItem = match;
             vm.ApplyProductFilter(null);
+            combo.Text = GetProductDisplayText(match);
             return;
         }
 
@@ -307,13 +328,25 @@ public partial class AddSalePage : Page
 
         combo.PreviewKeyDown += ProductTypeComboBox_PreviewKeyDown;
 
-        combo.GotFocus += (_, _) => combo.IsDropDownOpen = true;
-
         combo.LostFocus += ProductTypeComboBox_LostFocus;
+
+        combo.DropDownOpened += (_, _) =>
+        {
+            if (combo.SelectedItem is not null && vm.CurrentSaleItem?.Product?.ProductTypes?.Count == 1)
+            {
+                combo.IsDropDownOpen = false;
+            }
+        };
 
         void setupEditBox()
         {
             if (combo.Template?.FindName("PART_EditableTextBox", combo) is not TextBox editBox) return;
+
+            editBox.GotKeyboardFocus += (_, _) =>
+            {
+                if (!combo.IsDropDownOpen)
+                    combo.IsDropDownOpen = true;
+            };
 
             editBox.PreviewKeyDown += (_, e) =>
             {
@@ -387,12 +420,7 @@ public partial class AddSalePage : Page
         if (combo.SelectedItem is not null) return;
 
         var types = vm.CurrentSaleItem?.Product?.ProductTypes;
-        if (types is null)
-        {
-            _productTypeGuard = true;
-            RestoreFocusWithSelectAll(combo, keepDropdownOpen: true, onComplete: () => _productTypeGuard = false);
-            return;
-        }
+        if (types is null) return;
 
         var match = types.FirstOrDefault(pt =>
             pt.Type?.Equals(text, StringComparison.OrdinalIgnoreCase) == true);
@@ -404,13 +432,21 @@ public partial class AddSalePage : Page
             return;
         }
 
-        _productTypeGuard = true;
-        RestoreFocusWithSelectAll(combo, keepDropdownOpen: true, onComplete: () => _productTypeGuard = false);
+        combo.Text = "";
+        if (vm.CurrentSaleItem is not null) vm.CurrentSaleItem.ProductType = null;
     }
 
     // ─────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────
+
+    private static string GetProductDisplayText(ProductViewModel product)
+    {
+        if (!string.IsNullOrWhiteSpace(product.Code))
+            return product.Code;
+
+        return product.Name ?? string.Empty;
+    }
 
     /// <summary>
     /// Fokusni belgilangan elementga qaytaradi va barcha matnni tanlaydi.
@@ -449,7 +485,7 @@ public partial class AddSalePage : Page
     {
         FocusNavigator.RegisterElements([
             date.input,
-            cbxCustomerName,
+            cbxCustomerName.InternalComboBox,
             tbxNote,
             cbxProduct.combo,
             cbxProductType.combo,

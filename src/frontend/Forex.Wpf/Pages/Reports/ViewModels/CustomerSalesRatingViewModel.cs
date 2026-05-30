@@ -15,6 +15,14 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using PdfSharp.Drawing;
+using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Forex.Wpf.ViewModels;
+using Forex.Wpf.Windows;
+using System.Windows.Input;
+using System.Diagnostics;
 
 public partial class CustomerSalesRatingViewModel : ViewModelBase
 {
@@ -27,17 +35,18 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
     [ObservableProperty] private UserViewModel? selectedCustomer;
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
+    
+    public bool HasData => CustomerSales?.Count > 0;
 
     public CustomerSalesRatingViewModel(ForexClient client, CommonReportDataService commonData)
     {
         _client = client;
         _commonData = commonData;
-        //PropertyChanged += (_, e) =>
-        //{
-        //    if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedCustomer))
-        //        LoadSalesAsync();
-        //};
-        //LoadSalesAsync();
+    }
+
+    partial void OnCustomerSalesChanged(ObservableCollection<CustomerSaleViewModel> value)
+    {
+        OnPropertyChanged(nameof(HasData));
     }
 
     [RelayCommand] 
@@ -125,12 +134,196 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ClearFilter()
+    private async Task ClearFilter()
     {
         SelectedCustomer = null;
         BeginDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         EndDate = DateTime.Today;
-        LoadSalesAsync();
+        await LoadSalesAsync();
+    }
+
+    [RelayCommand]
+    private void Preview()
+    {
+        if (!CustomerSales.Any())
+        {
+            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var doc = CreateFixedDocument();
+        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
+        var toolbar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(10) };
+
+        // SAQLASH
+        var saveButton = new Button
+        {
+            Content = "Saqlash",
+            Margin = new Thickness(0,0,5,0),
+            Padding = new Thickness(15, 8, 15, 8),
+            Background = Brushes.Gray, Foreground = Brushes.White,
+            FontSize = 14, FontWeight = FontWeights.Bold,
+            BorderThickness = new Thickness(0)
+        };
+        saveButton.Click += (s, e) =>
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog { Filter = "PDF (*.pdf)|*.pdf", FileName = $"MijozlarReytingi_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf" };
+            if (dlg.ShowDialog() == true)
+            {
+                SaveFixedDocumentToPdf(doc, dlg.FileName);
+                MessageBox.Show("Saqlandi!");
+            }
+        };
+        toolbar.Children.Add(saveButton);
+
+        // OCHISH
+        var openButton = new Button
+        {
+            Content = "Ochish",
+            Margin = new Thickness(0,0,5,0),
+            Padding = new Thickness(15, 8, 15, 8),
+            Background = Brushes.Gray, Foreground = Brushes.White,
+            FontSize = 14, FontWeight = FontWeights.Bold,
+            BorderThickness = new Thickness(0)
+        };
+        openButton.Click += (s, e) =>
+        {
+            string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string folder = Path.Combine(docs, "Forex", "Hisobotlar");
+            Directory.CreateDirectory(folder);
+            string fileName = $"MijozlarReytingi_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf";
+            string path = Path.Combine(folder, fileName);
+            SaveFixedDocumentToPdf(doc, path);
+            try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); } catch {}
+        };
+        toolbar.Children.Add(openButton);
+
+        // ULASHISH
+        var shareButton = new Button
+        {
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Children =
+                {
+                    new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.ShareVariant, Width = 20, Height = 20, VerticalAlignment = VerticalAlignment.Center },
+                    new TextBlock { Text = "Ulashish", Margin = new Thickness(8,0,0,0), VerticalAlignment = VerticalAlignment.Center }
+                }
+            },
+            Padding = new Thickness(15, 8, 15, 8),
+            Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
+            Foreground = Brushes.White,
+            FontSize = 14,
+            FontWeight = FontWeights.Bold,
+            Cursor = Cursors.Hand,
+            BorderThickness = new Thickness(0)
+        };
+
+        shareButton.Click += (s, e) =>
+        {
+            try
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string folder = Path.Combine(docs, "Forex", "Hisobotlar");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"MijozlarReytingi_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf";
+                string path = Path.Combine(folder, fileName);
+
+                SaveFixedDocumentToPdf(doc, path);
+
+                if (File.Exists(path))
+                {
+                    var window = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive);
+                    var viewModel = App.AppHost!.Services.GetRequiredService<TelegramShareViewModel>();
+                    viewModel.PdfFilePath = path;
+                    viewModel.MessageCaption = $"Mijozlar savdo reytingi\nDavr: {BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}";
+
+                    var shareWindow = new TelegramShareWindow
+                    {
+                        DataContext = viewModel,
+                        Owner = window ?? Application.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+                    shareWindow.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ulashishda xatolik: {ex.Message}");
+            }
+        };
+
+        toolbar.Children.Add(shareButton);
+
+        var layout = new DockPanel();
+        DockPanel.SetDock(toolbar, Dock.Top);
+        layout.Children.Add(toolbar);
+        layout.Children.Add(viewer);
+
+        var window = new Window
+        {
+            Title = "Mijozlar bo‘yicha savdo reytingi",
+            Width = 1000,
+            Height = 800,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            Content = layout,
+            Owner = Application.Current.MainWindow,
+            ShowInTaskbar = false
+        };
+
+        window.ShowDialog();
+    }
+
+    private void SaveFixedDocumentToPdf(FixedDocument doc, string path, int dpi = 600)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+
+            using var pdfDoc = new PdfSharp.Pdf.PdfDocument();
+
+            foreach (var pageContent in doc.Pages)
+            {
+                var fixedPage = pageContent.GetPageRoot(false);
+                if (fixedPage is null) continue;
+
+                fixedPage.Measure(new Size(fixedPage.Width, fixedPage.Height));
+                fixedPage.Arrange(new Rect(0, 0, fixedPage.Width, fixedPage.Height));
+                fixedPage.UpdateLayout();
+
+                double scale = dpi / 96.0;
+
+                var bitmap = new RenderTargetBitmap(
+                    (int)(fixedPage.Width * scale),
+                    (int)(fixedPage.Height * scale),
+                    dpi, dpi,
+                    PixelFormats.Pbgra32);
+
+                bitmap.Render(fixedPage);
+
+                var encoder = new JpegBitmapEncoder { QualityLevel = 95 };
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+                using var stream = new MemoryStream();
+                encoder.Save(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                using var xImage = XImage.FromStream(stream);
+                var pdfPage = pdfDoc.AddPage();
+                pdfPage.Width = XUnit.FromPoint(fixedPage.Width);
+                pdfPage.Height = XUnit.FromPoint(fixedPage.Height);
+
+                using var gfx = XGraphics.FromPdfPage(pdfPage);
+                gfx.DrawImage(xImage, 0, 0, fixedPage.Width, fixedPage.Height);
+            }
+
+            pdfDoc.Save(path);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"PDF saqlashda xatolik: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -223,29 +416,7 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand]
-    private void Preview()
-    {
-        if (!CustomerSales.Any())
-        {
-            MessageBox.Show("Ko‘rsatish uchun ma’lumot yo‘q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
 
-        var doc = CreateFixedDocument();
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
-
-        var window = new Window
-        {
-            Title = "Mijozlar savdo reytingi",
-            Width = 1000,
-            Height = 800,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            Content = viewer
-        };
-
-        window.ShowDialog();
-    }
 
     // 🔵 A4 PDF/Print hujjat
     private FixedDocument CreateFixedDocument()

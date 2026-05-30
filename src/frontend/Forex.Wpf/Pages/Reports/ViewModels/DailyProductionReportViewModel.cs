@@ -1,4 +1,4 @@
-﻿namespace Forex.Wpf.Pages.Reports.ViewModels;
+namespace Forex.Wpf.Pages.Reports.ViewModels;
 
 using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,6 +16,13 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using PdfSharp.Drawing;
+using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Forex.Wpf.ViewModels;
+using Forex.Wpf.Windows;
+using System.Windows.Input;
 
 public partial class DailyProductionReportViewModel : ViewModelBase
 {
@@ -42,14 +49,6 @@ public partial class DailyProductionReportViewModel : ViewModelBase
         this.mapper = mapper;
         _commonData = commonData;
         _ = LoadProductsAsync();
-
-        //PropertyChanged += (_, e) =>
-        //{
-        //    if (e.PropertyName is nameof(BeginDate) or nameof(EndDate) or nameof(SelectedCode))
-        //        LoadDataCommand.Execute(null);
-        //};
-
-        //LoadDataCommand.Execute(null);
     }
 
     private async Task LoadProductsAsync()
@@ -160,6 +159,137 @@ public partial class DailyProductionReportViewModel : ViewModelBase
         BeginDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
         EndDate = DateTime.Today;
         LoadDataCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    private void Preview()
+    {
+        if (!Items.Any())
+        {
+            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var doc = CreateFixedDocument();
+        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
+        var toolbar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+
+        var shareButton = new Button
+        {
+            Content = "Telegram’da ulashish",
+            Padding = new Thickness(15, 2, 15, 2),
+            Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
+            Foreground = Brushes.White,
+            FontSize = 14,
+            Cursor = Cursors.Hand
+        };
+
+        shareButton.Click += (s, e) =>
+        {
+            try
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string folder = Path.Combine(docs, "Forex");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"Kunlik_Ishlab_Chiqarish_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf";
+                string path = Path.Combine(folder, fileName);
+
+                SaveFixedDocumentToPdf(doc, path, 96);
+
+                if (File.Exists(path))
+                {
+                    var window = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive);
+                    var viewModel = App.AppHost!.Services.GetRequiredService<TelegramShareViewModel>();
+                    viewModel.PdfFilePath = path;
+                    viewModel.MessageCaption = $"Kunlik ishlab chiqarish hisoboti\nDavr: {BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}";
+
+                    var shareWindow = new TelegramShareWindow
+                    {
+                        DataContext = viewModel,
+                        Owner = window ?? Application.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+
+                    shareWindow.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ulashishda xatolik: {ex.Message}");
+            }
+        };
+
+        toolbar.Children.Add(shareButton);
+
+        var layout = new DockPanel();
+        DockPanel.SetDock(toolbar, Dock.Top);
+        layout.Children.Add(toolbar);
+        layout.Children.Add(viewer);
+
+        var window = new Window
+        {
+            Title = "Kunlik ishlab chiqarish hisoboti",
+            Width = 1000,
+            Height = 800,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            Content = layout,
+            Owner = Application.Current.MainWindow,
+            ShowInTaskbar = false
+        };
+
+        window.ShowDialog();
+    }
+
+    private void SaveFixedDocumentToPdf(FixedDocument doc, string path, int dpi = 600)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+
+            using var pdfDoc = new PdfSharp.Pdf.PdfDocument();
+
+            foreach (var pageContent in doc.Pages)
+            {
+                var fixedPage = pageContent.GetPageRoot(false);
+                if (fixedPage is null) continue;
+
+                fixedPage.Measure(new Size(fixedPage.Width, fixedPage.Height));
+                fixedPage.Arrange(new Rect(0, 0, fixedPage.Width, fixedPage.Height));
+                fixedPage.UpdateLayout();
+
+                double scale = dpi / 96.0;
+
+                var bitmap = new RenderTargetBitmap(
+                    (int)(fixedPage.Width * scale),
+                    (int)(fixedPage.Height * scale),
+                    dpi, dpi,
+                    PixelFormats.Pbgra32);
+
+                bitmap.Render(fixedPage);
+
+                var encoder = new JpegBitmapEncoder { QualityLevel = 95 };
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+                using var stream = new MemoryStream();
+                encoder.Save(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                using var xImage = XImage.FromStream(stream);
+                var pdfPage = pdfDoc.AddPage();
+                pdfPage.Width = XUnit.FromPoint(fixedPage.Width);
+                pdfPage.Height = XUnit.FromPoint(fixedPage.Height);
+
+                using var gfx = XGraphics.FromPdfPage(pdfPage);
+                gfx.DrawImage(xImage, 0, 0, fixedPage.Width, fixedPage.Height);
+            }
+
+            pdfDoc.Save(path);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"PDF saqlashda xatolik: {ex.Message}");
+        }
     }
 
     // PRINT
@@ -301,28 +431,7 @@ public partial class DailyProductionReportViewModel : ViewModelBase
         }
     }
 
-    // PREVIEW
-    [RelayCommand]
-    private void Preview()
-    {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Ko‘rsatish uchun ma’lumot yo‘q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
 
-        var doc = CreateFixedDocument();
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
-        var window = new Window
-        {
-            Title = "Kunlik ishlab chiqarish hisoboti",
-            Width = 1050,
-            Height = 820,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            Content = viewer
-        };
-        window.ShowDialog();
-    }
 
     private FixedDocument CreateFixedDocument()
     {

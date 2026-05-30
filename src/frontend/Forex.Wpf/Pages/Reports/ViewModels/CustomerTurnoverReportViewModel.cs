@@ -1,4 +1,4 @@
-﻿namespace Forex.Wpf.Pages.Reports.ViewModels;
+namespace Forex.Wpf.Pages.Reports.ViewModels;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,7 +9,6 @@ using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using PdfSharp.Drawing;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +17,8 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Microsoft.Extensions.DependencyInjection;
+using Forex.Wpf.Windows;
 
 public partial class CustomerTurnoverReportViewModel : ViewModelBase
 {
@@ -28,6 +29,10 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [ObservableProperty] private DateTime beginDate = DateTime.Today;
     [ObservableProperty] private DateTime endDate = DateTime.Today;
 
+    partial void OnSelectedCustomerChanged(UserViewModel? value) => _ = LoadDataAsync();
+    partial void OnBeginDateChanged(DateTime value) => _ = LoadDataAsync();
+    partial void OnEndDateChanged(DateTime value) => _ = LoadDataAsync();
+
     public ObservableCollection<UserViewModel> AvailableCustomers => _commonData.AvailableCustomers;
 
 
@@ -36,19 +41,15 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
     [ObservableProperty] private decimal _beginBalance;
     [ObservableProperty] private decimal _lastBalance;
+    
+    public bool HasData => Operations?.Count > 0;
 
     public CustomerTurnoverReportViewModel(ForexClient client, CommonReportDataService commonData)
     {
         _client = client;
         _commonData = commonData;
 
-        this.PropertyChanged += async (_, e) =>
-        {
-            if (e.PropertyName is nameof(SelectedCustomer) or nameof(BeginDate) or nameof(EndDate))
-                await LoadDataAsync();
-        };
-
-        _ = LoadDataAsync();
+        Operations.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasData));
     }
 
 
@@ -180,7 +181,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         var saveDialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
-            FileName = $"Mijoz_{SelectedCustomer?.Name.Replace(" ", "_")}_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.xlsx"
+            FileName = $"Hisobot_{SelectedCustomer?.Name.Replace(" ", "_")}_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.xlsx"
         };
 
         if (saveDialog.ShowDialog() != true) return;
@@ -303,18 +304,93 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         {
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(10)
+            Margin = new Thickness(10, 8, 10, 8)
         };
 
-        var shareButton = new Button
+        string? savedPdfPath = null;
+
+        // Saqlash tugmasi
+        var saveButton = new Button
         {
-            Content = "Telegram’da ulashish",
-            Padding = new Thickness(15, 2, 15, 2),
-            Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
+            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new Thickness(4),
+            Background = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
             Foreground = Brushes.White,
-            FontSize = 14,
+            BorderThickness = new Thickness(0),
             Cursor = Cursors.Hand
         };
+        var saveContent = new StackPanel { Orientation = Orientation.Horizontal };
+        saveContent.Children.Add(new TextBlock { Text = "💾", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        saveContent.Children.Add(new TextBlock { Text = " Saqlash", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) });
+        saveButton.Content = saveContent;
+
+        saveButton.Click += (s, e) =>
+        {
+            try
+            {
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "PDF fayllar (*.pdf)|*.pdf",
+                    FileName = $"Hisobot_{SelectedCustomer?.Name.Replace(" ", "_")}_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    SaveFixedDocumentToPdf(doc, saveDialog.FileName, 96);
+                    savedPdfPath = saveDialog.FileName;
+                    MessageBox.Show("Fayl muvaffaqiyatli saqlandi!", "Saqlandi", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex) { MessageBox.Show($"Saqlashda xatolik: {ex.Message}"); }
+        };
+
+        // Ochish tugmasi
+        var openButton = new Button
+        {
+            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new Thickness(4),
+            Background = new SolidColorBrush(Color.FromRgb(33, 150, 243)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand
+        };
+        var openContent = new StackPanel { Orientation = Orientation.Horizontal };
+        openContent.Children.Add(new TextBlock { Text = "📂", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        openContent.Children.Add(new TextBlock { Text = " Ochish", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) });
+        openButton.Content = openContent;
+
+        openButton.Click += (s, e) =>
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(savedPdfPath) || !File.Exists(savedPdfPath))
+                {
+                    string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    string folder = Path.Combine(docs, "Forex");
+                    Directory.CreateDirectory(folder);
+                    savedPdfPath = Path.Combine(folder, $"Hisobot_{SelectedCustomer?.Name.Replace(" ", "_")}_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf");
+                    SaveFixedDocumentToPdf(doc, savedPdfPath, 96);
+                }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(savedPdfPath) { UseShellExecute = true });
+            }
+            catch (Exception ex) { MessageBox.Show($"Ochishda xatolik: {ex.Message}"); }
+        };
+
+        // Ulashish tugmasi
+        var shareButton = new Button
+        {
+            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new Thickness(4),
+            Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand
+        };
+        var shareContent = new StackPanel { Orientation = Orientation.Horizontal };
+        shareContent.Children.Add(new TextBlock { Text = "📤", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        shareContent.Children.Add(new TextBlock { Text = " Ulashish", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) });
+        shareButton.Content = shareContent;
 
         shareButton.Click += (s, e) =>
         {
@@ -326,14 +402,26 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                 string folder = Path.Combine(docs, "Forex");
                 Directory.CreateDirectory(folder);
 
-                string fileName = $"Mijoz_{SelectedCustomer.Name.Replace(" ", "_")}_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf";
+                string fileName = $"Hisobot_{SelectedCustomer.Name.Replace(" ", "_")}_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.pdf";
                 string path = Path.Combine(folder, fileName);
 
                 SaveFixedDocumentToPdf(doc, path, 96);
 
                 if (File.Exists(path))
                 {
-                    Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
+                    var window = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive);
+                    var viewModel = App.AppHost!.Services.GetRequiredService<TelegramShareViewModel>();
+                    viewModel.PdfFilePath = path;
+                    viewModel.MessageCaption = $"Mijoz aylanma hisoboti\nMijoz: {SelectedCustomer.Name}\nDavr: {BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}";
+
+                    var shareWindow = new TelegramShareWindow
+                    {
+                        DataContext = viewModel,
+                        Owner = window ?? Application.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+
+                    shareWindow.ShowDialog();
                 }
             }
             catch (Exception ex)
@@ -342,6 +430,8 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             }
         };
 
+        toolbar.Children.Add(saveButton);
+        toolbar.Children.Add(openButton);
         toolbar.Children.Add(shareButton);
 
         var layout = new DockPanel();
@@ -349,15 +439,19 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         layout.Children.Add(toolbar);
         layout.Children.Add(viewer);
 
-        new Window
+        var previewWindow = new Window
         {
-            Title = "Mijoz aylanma hisoboti - Ko‘rish",
+            Title = "Mijoz aylanma hisoboti - Ko'rish",
             Width = 1000,
             Height = 800,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
             Content = layout,
-            Icon = Application.Current.MainWindow?.Icon
-        }.ShowDialog();
+            Icon = Application.Current.MainWindow?.Icon,
+            Owner = Application.Current.MainWindow,
+            ShowInTaskbar = false
+        };
+        
+        previewWindow.ShowDialog();
     }
 
     private FixedDocument CreateFixedDocument()
