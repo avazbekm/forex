@@ -14,25 +14,17 @@
     Background="{DynamicResource PrimaryBackground}"
     mc:Ignorable="d">
 
+	<Grid Margin="10">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="40" />
+			<RowDefinition Height="120" />
+			<RowDefinition Height="50" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="50" />
+		</Grid.RowDefinitions>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
-            <!--  == header:: Back button ==  -->
-            <RowDefinition Height="120" />
-            <!--  == Mijoz ma'lumotlari ==  -->
-            <RowDefinition Height="50" />
-            <!--  == Kiritilayotgan sale item ma'lumotlari qatori ==  -->
-            <RowDefinition Height="*" />
-            <!--  == DataGrid ==  -->
-            <RowDefinition Height="50" />
-            <!--  == footer::Submit button ==  -->
-
-        </Grid.RowDefinitions>
-
-        <!--  Header  -->
-        <Grid Grid.Row="0">
-            <TextBlock
+		<Grid Grid.Row="0">
+			<TextBlock
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 FontSize="18"
@@ -40,7 +32,7 @@
                 Foreground="{DynamicResource PrimaryTextColor}"
                 Text="🛒 Savdo bo'limi" />
 
-            <Button
+			<Button
                 x:Name="btnBack"
                 Grid.Row="0"
                 HorizontalAlignment="Right"
@@ -50,53 +42,34 @@
                 Click="BtnBack_Click"
                 Content="🔙 Orqaga"
                 ToolTip="Orqaga" />
-        </Grid>
+		</Grid>
 
-        <!--  Body  -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MaxWidth="500" />
-                <ColumnDefinition Width="20" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" MaxWidth="500" />
+				<ColumnDefinition Width="20" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="80" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
 
-                <!--  Labels  -->
-                <Label
-                    Grid.Row="0"
-                    VerticalAlignment="Center"
-                    Content="Sana:"
-                    FontSize="14" />
-                <Label
-                    Grid.Row="1"
-                    VerticalAlignment="Center"
-                    Content="Mijoz:"
-                    FontSize="14" />
-                <Label
-                    Grid.Row="2"
-                    VerticalAlignment="Center"
-                    Content="Summa:"
-                    FontSize="14" />
-                <Label
-                    Grid.Row="3"
-                    VerticalAlignment="Center"
-                    Content="Izox:"
-                    FontSize="14" />
+				<Label Grid.Row="0" VerticalAlignment="Center" Content="Sana:" FontSize="14" />
+				<Label Grid.Row="1" VerticalAlignment="Center" Content="Mijoz:" FontSize="14" />
+				<Label Grid.Row="2" VerticalAlignment="Center" Content="Summa:" FontSize="14" />
+				<Label Grid.Row="3" VerticalAlignment="Center" Content="Izox:" FontSize="14" />
 
-                <!--  Sana  -->
-                <Grid Grid.Row="0" Grid.Column="1">
-                    <controls:UserCalendar
+				<Grid Grid.Row="0" Grid.Column="1">
+					<controls:UserCalendar
                         x:Name="date"
                         Width="120"
                         Margin="0,2"
@@ -106,48 +79,38 @@
                         Background="{DynamicResource PrimaryBackground}"
                         FontSize="14"
                         SelectedDate="{Binding Date, Mode=TwoWay}" />
-                </Grid>
+				</Grid>
 
-                <!--  Mijoz  -->
-                <Grid Grid.Row="1" Grid.Column="1">
-                    <Border
-                        Margin="0,2"
-                        BorderBrush="{DynamicResource PrimaryTextColor}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-                        <ComboBox
-                            x:Name="cbxCustomerName"
-                            Padding="5,1"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Center"
-                            BorderThickness="0"
-                            DisplayMemberPath="Name"
-                            FontSize="14"
-                            IsEditable="True"
-                            IsTextSearchEnabled="True"
-                            ItemsSource="{Binding AvailableCustomers}"
-                            LostFocus="CustomerComboBox_LostFocus"
-                            SelectedItem="{Binding Customer}"
-                            Text="{Binding CustomerInput, Mode=TwoWay}" />
+				<Grid Grid.Row="1" Grid.Column="1">
+					<controls:FloatingImageComboBox
+						x:Name="cbxCustomerName"
+						HorizontalAlignment="Stretch"
+						VerticalAlignment="Stretch"
+						IsEditable="True"
+						IsSearchEnabled="True"
+						IsTextSearchEnabled="False"
+						ItemsSource="{Binding FilteredCustomers}"
+						PrimaryTextMemberPath="Name"
+						SecondaryTextMemberPath="PhoneAndAddress"
+						SelectedItem="{Binding Customer}"
+						ShowImage="False"
+						Text="{Binding CustomerInput, Mode=TwoWay}" />
+				</Grid>
 
-                    </Border>
-                </Grid>
+				<Grid Grid.Row="2" Grid.Column="1">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="90" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
 
-                <!--  Valyuta turi  -->
-                <Grid Grid.Row="2" Grid.Column="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="90" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border
+					<Border
                         Grid.Column="0"
                         Margin="0,2,10,2"
                         BorderBrush="{DynamicResource PrimaryTextColor}"
                         BorderThickness="1"
                         CornerRadius="4">
-                        <TextBox
+						<TextBox
                             x:Name="tbxTotalSum"
                             Padding="3,0"
                             HorizontalAlignment="Stretch"
@@ -158,23 +121,22 @@
                             IsTabStop="False"
                             Text="{Binding TotalAmount, StringFormat={}{0:N2}}"
                             TextAlignment="Right" />
+					</Border>
 
-                    </Border>
-
-                    <Label
+					<Label
                         Grid.Column="1"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Content="To'lashga:"
                         FontSize="14" />
 
-                    <Border
+					<Border
                         Grid.Column="2"
                         Margin="0,2,0,2"
                         BorderBrush="{DynamicResource PrimaryTextColor}"
                         BorderThickness="1"
                         CornerRadius="4">
-                        <TextBox
+						<TextBox
                             x:Name="tbxFinalAmount"
                             Padding="3,0"
                             HorizontalAlignment="Stretch"
@@ -185,17 +147,16 @@
                             IsTabStop="False"
                             Text="{Binding FinalAmount, StringFormat={}{0:N2}}"
                             TextAlignment="Right" />
-                    </Border>
-                </Grid>
+					</Border>
+				</Grid>
 
-                <!--  Izox  -->
-                <Grid Grid.Row="3" Grid.Column="1">
-                    <Border
+				<Grid Grid.Row="3" Grid.Column="1">
+					<Border
                         Margin="0,2"
                         BorderBrush="{DynamicResource PrimaryTextColor}"
                         BorderThickness="1"
                         CornerRadius="4">
-                        <TextBox
+						<TextBox
                             x:Name="tbxNote"
                             Padding="3,0"
                             HorizontalAlignment="Stretch"
@@ -204,22 +165,24 @@
                             FontSize="14"
                             Text="{Binding Note}"
                             TextAlignment="Left" />
-                    </Border>
-                </Grid>
-            </Grid>
-            <Grid Grid.Column="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="40" />
-                </Grid.RowDefinitions>
-                <TextBlock
+					</Border>
+				</Grid>
+			</Grid>
+
+			<Grid Grid.Column="2">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="150" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="40" />
+				</Grid.RowDefinitions>
+
+				<TextBlock
                     Grid.Row="0"
                     Padding="0"
                     HorizontalAlignment="Center"
@@ -229,11 +192,8 @@
                     FontWeight="Bold"
                     Text="Mijoz hisobi:" />
 
-                <TextBlock
-                    Grid.Row="1"
-                    VerticalAlignment="Center"
-                    Text="Joriy:" />
-                <TextBox
+				<TextBlock Grid.Row="1" VerticalAlignment="Center" Text="Joriy:" />
+				<TextBox
                     x:Name="beginBalans"
                     Grid.Row="1"
                     Margin="35,2,2,2"
@@ -246,11 +206,8 @@
                     IsTabStop="False"
                     Text="{Binding TotalAmountWithUserBalance, StringFormat={}{0:N2}}" />
 
-                <TextBlock
-                    Grid.Row="2"
-                    VerticalAlignment="Center"
-                    Text="Qoldiq:" />
-                <TextBox
+				<TextBlock Grid.Row="2" VerticalAlignment="Center" Text="Qoldiq:" />
+				<TextBox
                     x:Name="lastBalans"
                     Grid.Row="2"
                     Margin="35,2,2,2"
@@ -262,11 +219,8 @@
                     IsReadOnly="True"
                     Text="{Binding Customer.Balance, StringFormat={}{0:N2}}" />
 
-                <TextBlock
-                    Grid.Row="3"
-                    VerticalAlignment="Center"
-                    Text="Telefon:" />
-                <TextBox
+				<TextBlock Grid.Row="3" VerticalAlignment="Center" Text="Telefon:" />
+				<TextBox
                     x:Name="tel"
                     Grid.Row="3"
                     Margin="42,2,2,2"
@@ -278,27 +232,23 @@
                     IsReadOnly="True"
                     IsTabStop="False"
                     Text="{Binding Customer.Phone}" />
+			</Grid>
+		</Grid>
 
-            </Grid>
-        </Grid>
+		<Grid Grid.Row="2" Margin="0,15,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="0.7*" MaxWidth="95" />
+				<ColumnDefinition Width="1.1*" MinWidth="90" />
+				<ColumnDefinition Width="0.9*" />
+				<ColumnDefinition Width="0.7*" />
+				<ColumnDefinition Width="0.7*" />
+				<ColumnDefinition Width="0.9*" />
+				<ColumnDefinition Width="0.7*" />
+				<ColumnDefinition Width="0.9*" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
 
-        <!--  == Kiritilayotgan Sale Item ma'lumotlari qatori ==  -->
-        <Grid Grid.Row="2" Margin="0,15,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MaxWidth="120" />
-                <ColumnDefinition Width="1.5*" MinWidth="100" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!--  Mahsulot kodi  -->
-
-            <!--  Mahsulot (Rasm, Kod, Nom)  -->
-            <controls:FloatingImageComboBox
+			<controls:FloatingImageComboBox
                 x:Name="cbxProduct"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
@@ -307,72 +257,101 @@
                 ImageMemberPath="ImagePath"
                 ImageWidth="50"
                 IsEditable="True"
-                IsSearchEnabled="True"
-                ItemsSource="{Binding AvailableProducts}"
+                IsTextSearchEnabled="False"
+                ItemsSource="{Binding FilteredProducts}"
+                Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                 Label="Mahsulot"
                 PrimaryTextMemberPath="Code"
                 SecondaryTextMemberPath="Name"
                 SelectedItem="{Binding CurrentSaleItem.Product}"
                 ShowImage="True" />
 
-            <!--  Razmer  -->
-            <controls:FloatingComboBox
+			<controls:FloatingComboBox
                 x:Name="cbxProductType"
                 Grid.Column="2"
                 Margin="2,0"
                 DisplayMemberPath="Type"
-                IsTextSearchEnabled="True"
+                IsTextSearchEnabled="False"
                 ItemsSource="{Binding CurrentSaleItem.Product.ProductTypes}"
                 Label="Razmer"
                 SelectedItem="{Binding CurrentSaleItem.ProductType, UpdateSourceTrigger=PropertyChanged}" />
 
-            <!--  Razmer soni  -->
-            <controls:FloatingInput
-                x:Name="tbxBundle"
+			<controls:FloatingInput
+                x:Name="tbxBundleItemCount"
                 Grid.Column="3"
+                Margin="2,0"
+                IsEnabled="False"
+                Focusable="False"
+                Label="Qopda"
+                Text="{Binding CurrentSaleItem.BundleItemCount, StringFormat={}{0:N0}, UpdateSourceTrigger=PropertyChanged}" />
+
+			<controls:FloatingInput
+                x:Name="tbxBundle"
+                Grid.Column="4"
                 Margin="2,0"
                 Label="Qop soni"
                 Text="{Binding CurrentSaleItem.BundleCount, UpdateSourceTrigger=PropertyChanged}" />
 
-            <!--  Jami soni  -->
-            <controls:FloatingInput
-                x:Name="tbxQuantity"
-                Grid.Column="4"
-                Margin="2,0"
-                IsEnabled="False"
-                Label="Jami soni"
-                Text="{Binding CurrentSaleItem.TotalCount, UpdateSourceTrigger=PropertyChanged}" />
-
-            <!--  Narxi  -->
-            <controls:FloatingInput
+			<controls:FloatingInput
                 x:Name="tbxUnitPrice"
                 Grid.Column="5"
                 Margin="2,0"
                 Label="Narxi"
                 Text="{Binding CurrentSaleItem.UnitPrice, UpdateSourceTrigger=PropertyChanged}" />
 
-            <!--  Jami summa  -->
-            <controls:FloatingInput
-                x:Name="tbxTotalAmount"
+			<controls:FloatingInput
+                x:Name="tbxQuantity"
                 Grid.Column="6"
                 Margin="2,0"
                 IsEnabled="False"
-                Label="Jami summa"
-                Text="{Binding CurrentSaleItem.Amount, UpdateSourceTrigger=PropertyChanged}" />
-            <Button
-                x:Name="btnAdd"
-                Grid.Column="7"
-                Height="30"
-                Margin="2,0"
-                md:ButtonAssist.CornerRadius="4"
-                Background="{DynamicResource OtherBackground}"
-                Command="{Binding AddCommand}"
-                Content="Qo'shish"
-                FontSize="14" />
+                Focusable="False"
+                Label="Jami soni"
+                Text="{Binding CurrentSaleItem.TotalCount, StringFormat={}{0:N0}, UpdateSourceTrigger=PropertyChanged}" />
 
-        </Grid>
-        <Grid Grid.Row="3" Margin="0,5,0,5">
-            <DataGrid
+			<controls:FloatingInput
+                x:Name="tbxTotalAmount"
+                Grid.Column="7"
+                Margin="2,0,8,0"
+                IsEnabled="False"
+                Focusable="False"
+                Label="Jami summa"
+                Text="{Binding CurrentSaleItem.Amount, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+
+			<Grid Grid.Column="8" HorizontalAlignment="Right">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+
+				<Button
+                    x:Name="btnCancel"
+                    Grid.Column="0"
+                    Height="30"
+                    Margin="2,0"
+                    Padding="10,0"
+                    md:ButtonAssist.CornerRadius="4"
+                    Background="#FF5252"
+                    Command="{Binding CancelEditCommand}"
+                    Content="Bekor qilish"
+                    FontSize="14"
+                    Visibility="{Binding IsEditingItem, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+				<Button
+                    x:Name="btnAdd"
+                    Grid.Column="1"
+                    Height="30"
+                    Margin="2,0"
+                    Padding="10,0"
+                    md:ButtonAssist.CornerRadius="4"
+                    Background="{DynamicResource OtherBackground}"
+                    Command="{Binding AddCommand}"
+                    Content="Qo'shish"
+                    FontSize="14" />
+			</Grid>
+		</Grid>
+
+		<Grid Grid.Row="3" Margin="0,5,0,5">
+			<DataGrid
                 x:Name="dataGrid"
                 AlternatingRowBackground="#F9F9F9"
                 AutoGenerateColumns="False"
@@ -388,101 +367,111 @@
                 SelectionMode="Single"
                 SelectionUnit="FullRow">
 
-                <DataGrid.Resources>
-                    <Style x:Key="RightAlignedCellStyle" TargetType="TextBlock">
-                        <Setter Property="TextAlignment" Value="Right" />
-                        <Setter Property="Padding" Value="0,0,5,0" />
-                    </Style>
+				<DataGrid.InputBindings>
+					<MouseBinding
+                        Command="{Binding ViewProductCommand}"
+                        CommandParameter="{Binding SelectedItem, ElementName=dataGrid}"
+                        Gesture="LeftDoubleClick" />
+				</DataGrid.InputBindings>
 
-                    <Style x:Key="CenterAlignedCellStyle" TargetType="TextBlock">
-                        <Setter Property="TextAlignment" Value="Center" />
-                    </Style>
+				<DataGrid.Resources>
+					<Style x:Key="RightAlignedCellStyle" TargetType="TextBlock">
+						<Setter Property="TextAlignment" Value="Right" />
+						<Setter Property="Padding" Value="0,0,5,0" />
+					</Style>
+					<Style x:Key="CenterAlignedCellStyle" TargetType="TextBlock">
+						<Setter Property="TextAlignment" Value="Center" />
+					</Style>
+					<Style TargetType="DataGridColumnHeader">
+						<Setter Property="HorizontalContentAlignment" Value="Center" />
+						<Setter Property="FontWeight" Value="SemiBold" />
+					</Style>
+				</DataGrid.Resources>
 
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="HorizontalContentAlignment" Value="Center" />
-                        <Setter Property="FontWeight" Value="SemiBold" />
-                    </Style>
-                </DataGrid.Resources>
-
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Width="60" Header="T/r">
-                        <DataGridTemplateColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="HorizontalAlignment" Value="Center" />
-                                <Setter Property="VerticalContentAlignment" Value="Center" />
-                            </Style>
-                        </DataGridTemplateColumn.CellStyle>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock
+				<DataGrid.Columns>
+					<DataGridTemplateColumn Width="60" Header="T/r">
+						<DataGridTemplateColumn.CellStyle>
+							<Style TargetType="DataGridCell">
+								<Setter Property="HorizontalAlignment" Value="Center" />
+								<Setter Property="VerticalContentAlignment" Value="Center" />
+							</Style>
+						</DataGridTemplateColumn.CellStyle>
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<TextBlock
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Converter={StaticResource IndexConverter}}" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
                         Width="*"
                         MinWidth="80"
                         Binding="{Binding Product.Code}"
                         Header="Kod" />
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
                         Width="1.5*"
                         MinWidth="100"
                         Binding="{Binding Product.Name}"
                         Header="Nomi" />
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
                         Width="*"
                         Binding="{Binding ProductType.Type}"
                         ElementStyle="{StaticResource CenterAlignedCellStyle}"
                         Header="Razmer" />
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
                         Width="*"
                         Binding="{Binding BundleCount, StringFormat={}{0:N0}}"
                         ElementStyle="{StaticResource RightAlignedCellStyle}"
                         Header="Qop soni" />
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
                         Width="*"
-                        Binding="{Binding TotalCount, StringFormat={}{0:N0}}"
+                        Binding="{Binding BundleItemCount, StringFormat={}{0:N2}}"
                         ElementStyle="{StaticResource RightAlignedCellStyle}"
-                        Header="Jami soni" />
+                        Header="Qopda" />
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
                         Width="*"
                         Binding="{Binding UnitPrice, StringFormat={}{0:N2}}"
                         ElementStyle="{StaticResource RightAlignedCellStyle}"
                         Header="Narxi" />
 
-                    <DataGridTextColumn
+					<DataGridTextColumn
+                        Width="*"
+                        Binding="{Binding TotalCount, StringFormat={}{0:N0}}"
+                        ElementStyle="{StaticResource RightAlignedCellStyle}"
+                        Header="Jami soni" />
+
+					<DataGridTextColumn
                         Width="*"
                         Binding="{Binding Amount, StringFormat={}{0:N2}}"
                         ElementStyle="{StaticResource RightAlignedCellStyle}"
                         Header="Jami summa" />
 
-                    <DataGridTemplateColumn Width="90" Header="Amallar">
-                        <DataGridTemplateColumn.HeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="HorizontalContentAlignment" Value="Center" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                            </Style>
-                        </DataGridTemplateColumn.HeaderStyle>
-                        <DataGridTemplateColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="Padding" Value="4" />
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="DataGridCell">
-                                            <StackPanel
+					<DataGridTemplateColumn Width="90" Header="Amallar">
+						<DataGridTemplateColumn.HeaderStyle>
+							<Style TargetType="DataGridColumnHeader">
+								<Setter Property="HorizontalContentAlignment" Value="Center" />
+								<Setter Property="FontWeight" Value="SemiBold" />
+							</Style>
+						</DataGridTemplateColumn.HeaderStyle>
+						<DataGridTemplateColumn.CellStyle>
+							<Style TargetType="DataGridCell">
+								<Setter Property="Padding" Value="4" />
+								<Setter Property="Template">
+									<Setter.Value>
+										<ControlTemplate TargetType="DataGridCell">
+											<StackPanel
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal">
-                                                <!--  EDIT BUTTON  -->
-                                                <Button
+												<Button
                                                     Width="30"
                                                     Height="26"
                                                     Margin="2,0"
@@ -493,13 +482,9 @@
                                                     FontWeight="Bold"
                                                     Foreground="White"
                                                     ToolTip="Tahrirlash">
-                                                    <md:PackIcon
-                                                        Width="16"
-                                                        Height="16"
-                                                        Kind="Pencil" />
-                                                </Button>
-                                                <!--  DELETE BUTTON  -->
-                                                <Button
+													<md:PackIcon Width="16" Height="16" Kind="Pencil" />
+												</Button>
+												<Button
                                                     Width="30"
                                                     Height="26"
                                                     Margin="2,0"
@@ -511,30 +496,55 @@
                                                     FontWeight="Bold"
                                                     Foreground="White"
                                                     ToolTip="O'chirish">
-                                                    <md:PackIcon
-                                                        Width="16"
-                                                        Height="16"
-                                                        Kind="Delete" />
-                                                </Button>
-                                            </StackPanel>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </DataGridTemplateColumn.CellStyle>
-                    </DataGridTemplateColumn>
-
-
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
+													<md:PackIcon Width="16" Height="16" Kind="Delete" />
+												</Button>
+											</StackPanel>
+										</ControlTemplate>
+									</Setter.Value>
+								</Setter>
+							</Style>
+						</DataGridTemplateColumn.CellStyle>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</DataGrid>
+		</Grid>
 
         <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            VerticalAlignment="Center">
+
+            <TextBlock Text="Qatorlar: " FontWeight="Bold" Margin="0,0,5,0"/>
+            <TextBlock Text="{Binding TotalRowsCount}" Margin="0,0,15,0"/>
+
+            <TextBlock Text="Turli mahsulotlar: " FontWeight="Bold" Margin="0,0,5,0"/>
+            <TextBlock Text="{Binding DistinctProductsCount}" Margin="0,0,15,0"/>
+
+            <TextBlock Text="Jami qoplar: " FontWeight="Bold" Margin="0,0,5,0"/>
+            <TextBlock Text="{Binding TotalBundlesCount}" Margin="0,0,15,0"/>
+
+            <TextBlock Text="Jami soni: " FontWeight="Bold" Margin="0,0,5,0"/>
+            <TextBlock Text="{Binding TotalQuantityCount}"/>
+        </StackPanel>
+
+		<StackPanel
             Grid.Row="4"
             HorizontalAlignment="Right"
             Orientation="Horizontal">
 
-            <Button
+			<Button
+                x:Name="btnClear"
+                Margin="0,0,10,0"
+                md:ElevationAssist.Elevation="Dp24"
+                Background="#FF5722"
+                BorderBrush="#FF5722"
+                Command="{Binding ClearSaleCommand}"
+                Content="Tozalash"
+                Foreground="White"
+                ToolTip="Barcha ma'lumotlarni tozalash" />
+
+			<Button
                 x:Name="btnSubmit"
                 md:ElevationAssist.Elevation="Dp24"
                 Background="{StaticResource SuccessButtonBackground}"
@@ -542,7 +552,89 @@
                 Command="{Binding SubmitCommand}"
                 Content="Yuborish"
                 Foreground="{StaticResource SuccessButtonForeground}" />
-        </StackPanel>
+		</StackPanel>
 
-    </Grid>
+		<Grid
+            Grid.RowSpan="5"
+            Background="#AA000000"
+            IsHitTestVisible="{Binding IsPopupOpen}"
+            PreviewMouseDown="ClosePopup_MouseDown"
+            Visibility="{Binding IsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+			<Border
+                MaxHeight="800"
+                MaxWidth="1200"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="White"
+                CornerRadius="12"
+                Padding="30">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="350" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Info (Left) -->
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock
+                            Margin="0,0,0,5"
+                            FontSize="28"
+                            FontWeight="Bold"
+                            Text="{Binding PopupItem.Product.Name}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,0,0,20"
+                            FontSize="20"
+                            Foreground="Gray"
+                            Text="{Binding PopupItem.Product.Code}" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Razmer:" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" FontSize="16" FontWeight="Bold" Text="{Binding PopupItem.ProductType.Type}" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="1 qopda:" />
+                            <TextBlock Grid.Row="2" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.ProductType.BundleItemCount, StringFormat={}{0} ta}" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Qop soni:" />
+                            <TextBlock Grid.Row="4" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.BundleCount, StringFormat={}{0:N0}}" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Jami soni:" />
+                            <TextBlock Grid.Row="6" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.TotalCount, StringFormat={}{0:N0} ta}" />
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Narxi:" />
+                            <TextBlock Grid.Row="8" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.UnitPrice, StringFormat={}{0:N2}}" />
+
+                            <TextBlock Grid.Row="10" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Jami summa:" />
+                            <TextBlock Grid.Row="10" Grid.Column="2" FontSize="20" FontWeight="Bold" Foreground="Green" Text="{Binding PopupItem.Amount, StringFormat={}{0:N2}}" />
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Image (Right) -->
+                    <Border Grid.Column="2" Width="400" Height="400" Background="#F5F5F5" CornerRadius="8" VerticalAlignment="Center">
+                        <Image Source="{Binding PopupItem.Product.DisplayImagePath}" Stretch="Uniform" />
+                    </Border>
+                </Grid>
+			</Border>
+		</Grid>
+	</Grid>
 </Page>

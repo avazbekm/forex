@@ -17,9 +17,12 @@ public partial class UserViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<ProductEntryViewModel> preparedProducts = [];
     private UserViewModel? selected;
 
-    // UI qismi uchun
     [ObservableProperty] private decimal? balance;
     [ObservableProperty] private decimal? discount;
+
+    public string PhoneAndAddress => string.IsNullOrWhiteSpace(Address)
+        ? Phone
+        : $"{Phone} • {Address}";
 
     #region Property Changes
 
@@ -47,6 +50,9 @@ public partial class UserViewModel : ViewModelBase
         CalculateBalance();
         CalculateDiscount();
     }
+
+    partial void OnPhoneChanged(string value) => OnPropertyChanged(nameof(PhoneAndAddress));
+    partial void OnAddressChanged(string value) => OnPropertyChanged(nameof(PhoneAndAddress));
 
     #endregion Property Changes
 

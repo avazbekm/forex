@@ -27,14 +27,14 @@ public partial class DebtorCreditorReportView : UserControl
     {
         FocusNavigator.RegisterElements(
             [
-                cbxCustomer,
+                txtSearch,
                 btnPreview,
                 btnPrint,
                 btnClear,
                 btnExport,
             ]);
 
-        FocusNavigator.FocusElement(cbxCustomer);
+        FocusNavigator.FocusElement(txtSearch);
     }
 
     private void RegisterGlobalShortcuts()

@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddSingleton(config);
         services.AddScoped<IMapper, ServiceMapper>();
         services.AddSingleton<CommonReportDataService>();
+        services.AddSingleton<SaleSessionService>();
         services.AddSingleton<INavigationService>(sp =>
         {
             var mainWindow = (MainWindow)Application.Current.MainWindow!;

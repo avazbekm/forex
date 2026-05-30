@@ -273,10 +273,25 @@ public static class FocusNavigator
         }
         else if (e.Key is Key.Left or Key.Right or Key.Up or Key.Down)
         {
+            // Check if element is a UserControl containing a ComboBox (like FloatingImageComboBox)
+            ComboBox? innerCombo = element switch
+            {
+                ComboBox cb => cb,
+                UserControl uc => FindVisualChild<ComboBox>(uc),
+                _ => null
+            };
+
+            if (innerCombo != null && innerCombo.IsDropDownOpen && e.Key is Key.Down or Key.Up)
+            {
+                // Let ComboBox handle its own navigation when dropdown is open
+                return;
+            }
+
             nextElement = element switch
             {
                 TextBox tb => HandleTextBoxNavigation(e, tb, currentIdx, shift, context.FocusOrder),
                 ComboBox cb => HandleComboBoxNavigation(e, currentIdx, shift, context.FocusOrder, cb),
+                UserControl uc when innerCombo != null => HandleComboBoxNavigation(e, currentIdx, shift, context.FocusOrder, innerCombo),
                 _ => HandleGeneralNavigation(e, currentIdx, shift, context.FocusOrder)
             };
         }

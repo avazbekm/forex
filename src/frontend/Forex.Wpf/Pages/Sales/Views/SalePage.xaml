@@ -19,6 +19,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  Header  -->
@@ -115,27 +116,18 @@
                 FontSize="16"
                 Text="Mijoz:" />
 
-            <Border
+            <controls:FloatingImageComboBox
                 Grid.Column="12"
-                BorderBrush="{DynamicResource PrimaryTextColor}"
-                BorderThickness="1"
-                CornerRadius="4">
-                <ComboBox
-                    Padding="5,1"
-                    BorderThickness="0"
-                    DisplayMemberPath="Name"
-                    FontSize="14"
-                    IsEditable="True"
-                    IsTextSearchEnabled="True"
-                    ItemsSource="{Binding AvailableCustomers}"
-                    SelectedItem="{Binding SelectedCustomer}">
-                    <ComboBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ComboBox.ItemsPanel>
-                </ComboBox>
-            </Border>
+                Width="200"
+                Height="32"
+                IsEditable="True"
+                IsTextSearchEnabled="False"
+                ItemsSource="{Binding FilteredCustomers}"
+                PrimaryTextMemberPath="Name"
+                SecondaryTextMemberPath="PhoneAndAddress"
+                SelectedItem="{Binding SelectedCustomer}"
+                ShowImage="False"
+                Text="{Binding CustomerSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
             <Button
                 x:Name="btnFilter"
@@ -169,6 +161,15 @@
                 SelectedItem="{Binding SelectedSale}"
                 SelectionMode="Single"
                 SelectionUnit="FullRow">
+
+                <DataGrid.InputBindings>
+                    <MouseBinding Gesture="LeftDoubleClick" 
+                                  Command="{Binding PreviewSaleCommand}" 
+                                  CommandParameter="{Binding SelectedSale}" />
+                    <KeyBinding Key="Delete"
+                                Command="{Binding DeleteCommand}"
+                                CommandParameter="{Binding SelectedItem, ElementName=dataGrid}" />
+                </DataGrid.InputBindings>
 
                 <DataGrid.Resources>
                     <Style x:Key="RightAlignedCellStyle" TargetType="TextBlock">
@@ -247,22 +248,6 @@
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal">
-                                                <Button
-                                                    x:Name="btnPrint"
-                                                    Width="30"
-                                                    Height="26"
-                                                    Margin="2,0"
-                                                    Padding="0"
-                                                    Background="#8BB8E8"
-                                                    Click="BtnPrintSale_Click"
-                                                    IsEnabled="{Binding DataContext.IsLoading, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource InverseBoolToBoolConverter}}"
-                                                    Tag="{Binding}"
-                                                    ToolTip="Chop etish">
-                                                    <md:PackIcon
-                                                        Width="16"
-                                                        Height="16"
-                                                        Kind="Printer" />
-                                                </Button>
                                                 <!--  EDIT BUTTON  -->
                                                 <Button
                                                     x:Name="btnEdit"
@@ -312,5 +297,149 @@
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
+
+        <!--  Pagination  -->
+        <Border
+            Grid.Row="3"
+            Margin="0,10,0,0"
+            Padding="10,8"
+            Background="{DynamicResource SecondaryBackground}"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="1"
+            CornerRadius="4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    Foreground="{DynamicResource SecondaryTextColor}">
+                    <Run Text="Jami: " />
+                    <Run FontWeight="SemiBold" Text="{Binding TotalCount, Mode=OneWay}" />
+                    <Run Text=" ta savdo" />
+                </TextBlock>
+
+                <StackPanel
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Margin="2,0"
+                        Padding="0"
+                        md:ButtonAssist.CornerRadius="4"
+                        Background="Transparent"
+                        BorderThickness="1"
+                        Command="{Binding GoToFirstPageCommand}"
+                        IsEnabled="{Binding CanGoPrevious}"
+                        ToolTip="Birinchi sahifa">
+                        <md:PackIcon Kind="ChevronDoubleLeft" />
+                    </Button>
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Margin="2,0"
+                        Padding="0"
+                        md:ButtonAssist.CornerRadius="4"
+                        Background="Transparent"
+                        BorderThickness="1"
+                        Command="{Binding GoToPreviousPageCommand}"
+                        IsEnabled="{Binding CanGoPrevious}"
+                        ToolTip="Oldingi sahifa">
+                        <md:PackIcon Kind="ChevronLeft" />
+                    </Button>
+
+                    <ItemsControl Margin="4,0" ItemsSource="{Binding VisiblePageNumbers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Width="32"
+                                    Height="32"
+                                    Margin="1,0"
+                                    Padding="0"
+                                    md:ButtonAssist.CornerRadius="4"
+                                    Command="{Binding DataContext.GoToPageCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                    CommandParameter="{Binding}"
+                                    Content="{Binding}">
+                                    <Button.Style>
+                                        <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderThickness" Value="1" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding}" Value="...">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                </DataTrigger>
+                                                <DataTrigger Value="True">
+                                                    <DataTrigger.Binding>
+                                                        <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                                            <Binding />
+                                                            <Binding Path="DataContext.CurrentPage" RelativeSource="{RelativeSource AncestorType=Page}" />
+                                                        </MultiBinding>
+                                                    </DataTrigger.Binding>
+                                                    <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}" />
+                                                    <Setter Property="Foreground" Value="White" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Margin="2,0"
+                        Padding="0"
+                        md:ButtonAssist.CornerRadius="4"
+                        Background="Transparent"
+                        BorderThickness="1"
+                        Command="{Binding GoToNextPageCommand}"
+                        IsEnabled="{Binding CanGoNext}"
+                        ToolTip="Keyingi sahifa">
+                        <md:PackIcon Kind="ChevronRight" />
+                    </Button>
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Margin="2,0"
+                        Padding="0"
+                        md:ButtonAssist.CornerRadius="4"
+                        Background="Transparent"
+                        BorderThickness="1"
+                        Command="{Binding GoToLastPageCommand}"
+                        IsEnabled="{Binding CanGoNext}"
+                        ToolTip="Oxirgi sahifa">
+                        <md:PackIcon Kind="ChevronDoubleRight" />
+                    </Button>
+
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="8,4"
+                        Background="{DynamicResource PrimaryBackground}"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                        <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource SecondaryTextColor}">
+                            <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                            <Run Text=" / " />
+                            <Run Text="{Binding TotalPages, Mode=OneWay}" />
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Page>

@@ -27,6 +27,7 @@ public partial class SaleItemViewModel : ViewModelBase
     partial void OnBundleCountChanged(int? value) => ReCalculateTotalCount();
     partial void OnProductTypeChanged(ProductTypeViewModel value)
     {
+        BundleItemCount = value?.BundleItemCount;
         ReCalculateTotalCount();
         if (value?.UnitPrice is > 0)
             UnitPrice = value.UnitPrice;

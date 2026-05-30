@@ -1,4 +1,4 @@
-﻿namespace Forex.Wpf.Pages.Reports.ViewModels;
+namespace Forex.Wpf.Pages.Reports.ViewModels;
 
 using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using System.Collections.ObjectModel;
@@ -14,40 +15,45 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using PdfSharp.Drawing;
+using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Forex.Wpf.ViewModels;
+using Forex.Wpf.Windows;
+using System.Windows.Input;
 
 public partial class FinishedStockReportViewModel : ViewModelBase
 {
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
 
-    // Serverdan keladigan to'liq ma'lumot
     private readonly ObservableCollection<FinishedStockItemViewModel> _allItems = [];
 
     // UI ga ko'rinadigan filtrlangan ro'yxat
     [ObservableProperty]
     private ObservableCollection<FinishedStockItemViewModel> items = [];
 
-    // ComboBox'lar uchun faqat datagridda mavjud mahsulotlar
     [ObservableProperty]
-    private ObservableCollection<string> availableCodes = [];
+    [NotifyPropertyChangedFor(nameof(TotalAmount))]
+    private string? searchText;
 
     [ObservableProperty]
-    private ObservableCollection<string> availableNames = [];
-
-    [ObservableProperty] private string? selectedCode;
-    [ObservableProperty] private string? selectedName;
-
+    private decimal totalAmount;
+    
+    public bool HasData => Items?.Count > 0;
 
     public FinishedStockReportViewModel(ForexClient client, CommonReportDataService commonData)
     {
         _client = client;
         _commonData = commonData;
 
-        // Har qanday property o'zgarsa avtomatik filter boladi
         this.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(SelectedCode) or nameof(SelectedName))
+            if (e.PropertyName is nameof(SearchText))
                 ApplyFilters();
+            if (e.PropertyName is nameof(Items))
+                OnPropertyChanged(nameof(HasData));
         };
     }
 
@@ -104,7 +110,6 @@ public partial class FinishedStockReportViewModel : ViewModelBase
             }
 
             ApplyFilters();
-            UpdateAvailableFilters(); // ComboBox'larni yangilash
         }
         finally { IsLoading = false; }
     }
@@ -199,7 +204,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand]
+        [RelayCommand]
     private void Preview()
     {
         if (!Items.Any())
@@ -210,6 +215,140 @@ public partial class FinishedStockReportViewModel : ViewModelBase
 
         var doc = CreateFixedDocument();
         var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
+        var toolbar = new StackPanel { 
+            Orientation = Orientation.Horizontal, 
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(10, 8, 10, 8)
+        };
+
+        string? savedPdfPath = null;
+
+        // Saqlash tugmasi
+        var saveButton = new Button
+        {
+            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new Thickness(4),
+            Background = new SolidColorBrush(Color.FromRgb(76, 175, 80)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand
+        };
+        var saveContent = new StackPanel { Orientation = Orientation.Horizontal };
+        saveContent.Children.Add(new TextBlock { Text = "💾", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        saveContent.Children.Add(new TextBlock { Text = " Saqlash", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) });
+        saveButton.Content = saveContent;
+
+        saveButton.Click += (s, e) =>
+        {
+            try
+            {
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "PDF fayllar (*.pdf)|*.pdf",
+                    FileName = $"TayyorMahsulot_{DateTime.Today:dd.MM.yyyy}.pdf",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                };
+                if (saveDialog.ShowDialog() == true)
+                {
+                    SaveFixedDocumentToPdf(doc, saveDialog.FileName, 96);
+                    savedPdfPath = saveDialog.FileName;
+                    MessageBox.Show("Fayl muvaffaqiyatli saqlandi!", "Saqlandi", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex) { MessageBox.Show($"Saqlashda xatolik: {ex.Message}"); }
+        };
+
+        // Ochish tugmasi
+        var openButton = new Button
+        {
+            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new Thickness(4),
+            Background = new SolidColorBrush(Color.FromRgb(33, 150, 243)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand
+        };
+        var openContent = new StackPanel { Orientation = Orientation.Horizontal };
+        openContent.Children.Add(new TextBlock { Text = "📂", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        openContent.Children.Add(new TextBlock { Text = " Ochish", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) });
+        openButton.Content = openContent;
+
+        openButton.Click += (s, e) =>
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(savedPdfPath) || !File.Exists(savedPdfPath))
+                {
+                    string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    string folder = Path.Combine(docs, "Forex");
+                    Directory.CreateDirectory(folder);
+                    savedPdfPath = Path.Combine(folder, $"TayyorMahsulot_{DateTime.Today:dd.MM.yyyy}.pdf");
+                    SaveFixedDocumentToPdf(doc, savedPdfPath, 96);
+                }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(savedPdfPath) { UseShellExecute = true });
+            }
+            catch (Exception ex) { MessageBox.Show($"Ochishda xatolik: {ex.Message}"); }
+        };
+
+        // Ulashish tugmasi
+        var shareButton = new Button
+        {
+            Padding = new Thickness(12, 6, 12, 6),
+            Margin = new Thickness(4),
+            Background = new SolidColorBrush(Color.FromRgb(0, 136, 204)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand
+        };
+        var shareContent = new StackPanel { Orientation = Orientation.Horizontal };
+        shareContent.Children.Add(new TextBlock { Text = "📤", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+        shareContent.Children.Add(new TextBlock { Text = " Ulashish", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) });
+        shareButton.Content = shareContent;
+
+        shareButton.Click += (s, e) =>
+        {
+            try
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string folder = Path.Combine(docs, "Forex");
+                Directory.CreateDirectory(folder);
+
+                string fileName = $"TayyorMahsulot_{DateTime.Today:dd.MM.yyyy}.pdf";
+                string path = Path.Combine(folder, fileName);
+
+                SaveFixedDocumentToPdf(doc, path, 96);
+
+                if (File.Exists(path))
+                {
+                    var activeWin = Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive);
+                    var viewModel = App.AppHost!.Services.GetRequiredService<TelegramShareViewModel>();
+                    viewModel.PdfFilePath = path;
+                    viewModel.MessageCaption = $"Tayyor mahsulot qoldig'i\nSana: {DateTime.Today:dd.MM.yyyy}";
+
+                    var shareWindow = new TelegramShareWindow
+                    {
+                        DataContext = viewModel,
+                        Owner = activeWin ?? Application.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+
+                    shareWindow.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ulashishda xatolik: {ex.Message}");
+            }
+        };
+
+        toolbar.Children.Add(saveButton);
+        toolbar.Children.Add(openButton);
+        toolbar.Children.Add(shareButton);
+
+        var layout = new DockPanel();
+        DockPanel.SetDock(toolbar, Dock.Top);
+        layout.Children.Add(toolbar);
+        layout.Children.Add(viewer);
 
         var window = new Window
         {
@@ -217,18 +356,69 @@ public partial class FinishedStockReportViewModel : ViewModelBase
             Width = 1000,
             Height = 800,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            Content = viewer
+            Content = layout,
+            Owner = Application.Current.MainWindow,
+            ShowInTaskbar = false
         };
 
         window.ShowDialog();
     }
 
+    private void SaveFixedDocumentToPdf(FixedDocument doc, string path, int dpi = 600)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+
+            using var pdfDoc = new PdfSharp.Pdf.PdfDocument();
+
+            foreach (var pageContent in doc.Pages)
+            {
+                var fixedPage = pageContent.GetPageRoot(false);
+                if (fixedPage is null) continue;
+
+                fixedPage.Measure(new Size(fixedPage.Width, fixedPage.Height));
+                fixedPage.Arrange(new Rect(0, 0, fixedPage.Width, fixedPage.Height));
+                fixedPage.UpdateLayout();
+
+                double scale = dpi / 96.0;
+
+                var bitmap = new RenderTargetBitmap(
+                    (int)(fixedPage.Width * scale),
+                    (int)(fixedPage.Height * scale),
+                    dpi, dpi,
+                    PixelFormats.Pbgra32);
+
+                bitmap.Render(fixedPage);
+
+                var encoder = new JpegBitmapEncoder { QualityLevel = 95 };
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+                using var stream = new MemoryStream();
+                encoder.Save(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                using var xImage = XImage.FromStream(stream);
+                var pdfPage = pdfDoc.AddPage();
+                pdfPage.Width = XUnit.FromPoint(fixedPage.Width);
+                pdfPage.Height = XUnit.FromPoint(fixedPage.Height);
+
+                using var gfx = XGraphics.FromPdfPage(pdfPage);
+                gfx.DrawImage(xImage, 0, 0, fixedPage.Width, fixedPage.Height);
+            }
+
+            pdfDoc.Save(path);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"PDF saqlashda xatolik: {ex.Message}");
+        }
+    }
+
     [RelayCommand]
     private void ClearFilter()
     {
-        SelectedCode = null;
-        SelectedName = null;
-        // ApplyFilters avtomatik ishlaydi
+        SearchText = null;
     }
 
     #endregion Commands
@@ -237,29 +427,15 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     {
         var result = _allItems.AsEnumerable();
 
-        if (!string.IsNullOrEmpty(SelectedName))
-            result = result.Where(x => x.Name == SelectedName);
-
-        if (!string.IsNullOrEmpty(SelectedCode))
-            result = result.Where(x => x.Code == SelectedCode);
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            result = result.Where(x =>
+                TransliterationHelper.ContainsIgnoreScript(x.Code ?? "", SearchText) ||
+                TransliterationHelper.ContainsIgnoreScript(x.Name ?? "", SearchText));
+        }
 
         Items = new ObservableCollection<FinishedStockItemViewModel>(result);
-    }
-
-    // ComboBox'lar uchun mavjud filterlarni yangilash
-    private void UpdateAvailableFilters()
-    {
-        // Faqat _allItems'dan unique Code va Name'larni olamiz
-        var codes = _allItems.Select(x => x.Code).Distinct().OrderBy(x => x).ToList();
-        var names = _allItems.Select(x => x.Name).Distinct().OrderBy(x => x).ToList();
-
-        AvailableCodes.Clear();
-        foreach (var code in codes)
-            AvailableCodes.Add(code);
-
-        AvailableNames.Clear();
-        foreach (var name in names)
-            AvailableNames.Add(name);
+        TotalAmount = Items.Sum(x => x.TotalAmount);
     }
 
     // PDF/Print uchun document yaratish (PASTDAN 25mm BO'SH JOY!)
@@ -404,6 +580,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
 
         return doc;
     }
+
     private void AddRow(Grid grid, bool isHeader, params string[] values)
     {
         int row = grid.RowDefinitions.Count;

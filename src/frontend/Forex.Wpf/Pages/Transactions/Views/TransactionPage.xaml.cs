@@ -14,11 +14,13 @@ public partial class TransactionPage : Page
 {
     private static readonly Regex NumericRegex = new(@"^[0-9]+$", RegexOptions.Compiled);
     private static MainWindow Main => (MainWindow)Application.Current.MainWindow;
+    private readonly TransactionPageViewModel vm;
 
     public TransactionPage()
     {
         InitializeComponent();
-        DataContext = App.AppHost!.Services.GetRequiredService<TransactionPageViewModel>();
+        vm = App.AppHost!.Services.GetRequiredService<TransactionPageViewModel>();
+        DataContext = vm;
 
         Loaded += Page_Loaded;
     }
@@ -26,8 +28,56 @@ public partial class TransactionPage : Page
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
         this.ResizeWindow(1100, 750);
+        SetupUserComboBox();
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
+    }
+
+    private void SetupUserComboBox()
+    {
+        var combo = cbUser.InternalComboBox;
+        combo.StaysOpenOnEdit = true;
+
+        // Down/Up tugmalarini FocusNavigator'dan himoyalash
+        combo.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key is Key.Down or Key.Up && combo.IsDropDownOpen)
+            {
+                // ComboBox o'zi handle qilsin
+                e.Handled = false;
+            }
+        };
+
+        void setupEditBox()
+        {
+            if (combo.Template?.FindName("PART_EditableTextBox", combo) is not TextBox editBox) return;
+
+            bool userTyping = false;
+
+            editBox.PreviewKeyDown += (_, e) =>
+            {
+                userTyping = e.Key is not (Key.Down or Key.Up or Key.Enter or Key.Escape or Key.Tab or Key.Left or Key.Right);
+            };
+
+            editBox.TextChanged += (_, _) =>
+            {
+                if (!userTyping) return;
+                userTyping = false;
+
+                var text = editBox.Text?.Trim();
+                vm.ApplyUserFilter(text);
+                combo.IsDropDownOpen = true;
+            };
+        }
+
+        combo.GotFocus += (_, _) =>
+        {
+            vm.ApplyUserFilter(null);
+            combo.IsDropDownOpen = true;
+        };
+
+        if (combo.IsLoaded) setupEditBox();
+        else combo.Loaded += (_, _) => setupEditBox();
     }
 
     private void RegisterGlobalShortcuts()
@@ -54,7 +104,7 @@ public partial class TransactionPage : Page
     {
         FocusNavigator.RegisterElements(
         [
-            cbUser,
+            cbUser.InternalComboBox,
             cbCurrency,
             tbKirim,
             cbPaymentMethod,
@@ -65,7 +115,7 @@ public partial class TransactionPage : Page
             btnSubmit,
             btnCancel
         ]);
-        FocusNavigator.SetFocusRedirect(btnSubmit, cbUser);
+        FocusNavigator.SetFocusRedirect(btnSubmit, cbUser.InternalComboBox);
     }
 
     private void NumericTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)

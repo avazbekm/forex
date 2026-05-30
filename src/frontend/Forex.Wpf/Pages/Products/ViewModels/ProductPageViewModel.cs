@@ -9,6 +9,7 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Common.Extensions;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Common.Messages;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
@@ -440,9 +441,10 @@ public partial class ProductPageViewModel : ViewModelBase
     private bool MatchesSearch(ProductEntryViewModel e)
     {
         if (string.IsNullOrWhiteSpace(SearchText)) return true;
-        return e.ProductType?.Product?.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true
-            || e.ProductType?.Product?.Code?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true
-            || e.ProductType?.Type?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true;
+        var search = SearchText.Trim();
+        return TransliterationHelper.ContainsIgnoreScript(e.ProductType?.Product?.Name ?? string.Empty, search)
+            || TransliterationHelper.ContainsIgnoreScript(e.ProductType?.Product?.Code ?? string.Empty, search)
+            || TransliterationHelper.ContainsIgnoreScript(e.ProductType?.Type ?? string.Empty, search);
     }
 
     #endregion Helpers

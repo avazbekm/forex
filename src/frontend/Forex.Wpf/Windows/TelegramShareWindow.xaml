@@ -1,0 +1,44 @@
+<Window x:Class="Forex.Wpf.Windows.TelegramShareWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Telegram orqali ulashish" Height="260" Width="380"
+        WindowStyle="ToolWindow" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="White">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="📨" FontSize="24" VerticalAlignment="Center"/>
+            <TextBlock Text="Telegram orqali ulashish" 
+                       FontSize="18" FontWeight="Bold" Margin="10,0,0,0"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,15,0,0">
+            <TextBlock Text="Yo'riqnoma:" FontWeight="Bold" Margin="0,0,0,8" FontSize="13"/>
+            <TextBlock Text="1. 'Davom etish' tugmasini bosing" FontSize="13" Margin="0,2"/>
+            <TextBlock Text="2. Telegram ochiladi, chatni tanlang" FontSize="13" Margin="0,2"/>
+            <TextBlock Text="3. Ctrl+V bosib faylni yuboring" FontSize="13" Margin="0,2"/>
+        </StackPanel>
+
+        <Button Grid.Row="2" Command="{Binding ShareCommand}" 
+                HorizontalAlignment="Center"
+                Background="#0088cc" BorderThickness="0"
+                Foreground="White" FontWeight="Bold"
+                Padding="20,10" Margin="0,10,0,0"
+                MinWidth="140" Height="40">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="➤" FontSize="14" VerticalAlignment="Center"/>
+                <TextBlock Text="Davom etish" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14"/>
+            </StackPanel>
+        </Button>
+    </Grid>
+</Window>

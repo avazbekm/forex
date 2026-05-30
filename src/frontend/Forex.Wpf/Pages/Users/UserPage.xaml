@@ -291,6 +291,21 @@
                 Foreground="{DynamicResource PrimaryTextColor}"
                 ToolTip="Yangilash"
                 Visibility="Collapsed" />
+                
+            <Button
+                x:Name="btnCancel"
+                MinWidth="50"
+                Margin="3,0,0,3"
+                Padding="3,1,2,1"
+                md:ButtonAssist.CornerRadius="4"
+                Background="#FF5252"
+                BorderThickness="0"
+                Click="BtnCancel_Click"
+                Content="❌ Bekor qilish"
+                FontWeight="Bold"
+                Foreground="White"
+                ToolTip="Bekor qilish"
+                Visibility="Collapsed" />
         </WrapPanel>
 
         <!--  📋 Jadval  -->

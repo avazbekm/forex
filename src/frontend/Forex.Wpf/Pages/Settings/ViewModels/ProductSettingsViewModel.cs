@@ -6,6 +6,7 @@ using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Common.Interfaces;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using Mapster;
@@ -26,11 +27,14 @@ public partial class ProductSettingsViewModel : ViewModelBase
         this.client = client;
         this.mapper = mapper;
         this.dialogService = dialogService;
-        _ = LoadProductsAsync();
+        _ = LoadDataAsync();
     }
 
     [ObservableProperty]
     private ObservableCollection<ProductViewModel> products = [];
+
+    [ObservableProperty]
+    private ObservableCollection<UnitMeasuerViewModel> unitMeasures = [];
 
     [ObservableProperty]
     private ProductViewModel? selectedProduct;
@@ -57,6 +61,18 @@ public partial class ProductSettingsViewModel : ViewModelBase
         ProductsView?.Refresh();
     }
 
+    private async Task LoadDataAsync()
+    {
+        await Task.WhenAll(LoadProductsAsync(), LoadUnitMeasuresAsync());
+    }
+
+    private async Task LoadUnitMeasuresAsync()
+    {
+        var response = await client.UnitMeasures.GetAllAsync();
+        if (response.IsSuccess)
+            UnitMeasures = mapper.Map<ObservableCollection<UnitMeasuerViewModel>>(response.Data);
+    }
+
     private async Task LoadProductsAsync()
     {
         var response = await client.Products.GetAllAsync().Handle(l => IsLoading = l);
@@ -79,16 +95,24 @@ public partial class ProductSettingsViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(SearchText))
             return true;
 
-        var search = SearchText.ToLower();
+        var search = SearchText.Trim();
 
-        return product.Code?.ToLower().Contains(search) == true ||
-               product.Name?.ToLower().Contains(search) == true;
+        return TransliterationHelper.ContainsIgnoreScript(product.Code ?? string.Empty, search) ||
+               TransliterationHelper.ContainsIgnoreScript(product.Name ?? string.Empty, search);
     }
 
     [RelayCommand]
     private void AddProduct()
     {
         var newProduct = new ProductViewModel { Name = "Yangi mahsulot", Code = "" };
+
+        if (UnitMeasures.Any())
+        {
+            var defaultUnit = UnitMeasures.First();
+            newProduct.UnitMeasure = defaultUnit;
+            newProduct.UnitMeasureId = defaultUnit.Id;
+        }
+
         Products.Insert(0, newProduct);
         SelectedProduct = newProduct;
     }

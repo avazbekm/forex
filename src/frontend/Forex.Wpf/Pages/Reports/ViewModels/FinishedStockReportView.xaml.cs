@@ -5,9 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-/// <summary>
-/// Interaction logic for FinishedStockReportView.xaml
-/// </summary>
 public partial class FinishedStockReportView : UserControl
 {
     public FinishedStockReportView()
@@ -26,11 +23,11 @@ public partial class FinishedStockReportView : UserControl
     {
         FocusNavigator.RegisterElements(
             [
-            cbxProductCode,
-            cbxProductName,
+            txtSearch,
+            btnLoad,
+            btnClear,
             btnPreview,
             btnPrint,
-            btnClear,
             btnExport,
         ]);
     }

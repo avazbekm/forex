@@ -25,8 +25,6 @@ public partial class SemiFinishedStockReportView : UserControl
     private void RegisterFocusNavigation()
     {
         FocusNavigator.RegisterElements([
-            cbxSemiProductCode,
-            cbxSemiProductName,
             btnPreview,
             btnPrint,
             btnClear,

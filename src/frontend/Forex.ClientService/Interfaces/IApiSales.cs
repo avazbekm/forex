@@ -17,7 +17,8 @@ public interface IApiSales
     Task<Response<bool>> Delete(long id);
 
     [Post("/sales/filter")]
-    Task<Response<List<SaleResponse>>> Filter(FilteringRequest request);
+    Task<IApiResponse<Response<List<SaleResponse>>>> Filter(FilteringRequest request);
+    
     [Get("/sales")]
     Task<Response<List<SaleResponse>>> GetAll();
 }

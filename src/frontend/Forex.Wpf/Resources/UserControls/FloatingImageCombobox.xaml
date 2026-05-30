@@ -38,8 +38,9 @@
                 ItemsSource="{Binding ItemsSource, ElementName=Root}"
                 Loaded="ComboBox_Loaded"
                 SelectedItem="{Binding SelectedItem, ElementName=Root, Mode=TwoWay}"
-                Text="{Binding Text, ElementName=Root, Mode=TwoWay}"
-                TextSearch.TextPath="{Binding PrimaryTextMemberPath, ElementName=Root}">
+                Text="{Binding Text, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextSearch.TextPath="{Binding PrimaryTextMemberPath, ElementName=Root}"
+                IsTextSearchEnabled="{Binding IsTextSearchEnabled, ElementName=Root}">
 
                 <ComboBox.Resources>
                     <Style x:Key="ComboBoxPopupStyle" TargetType="Popup">
@@ -48,7 +49,7 @@
                 </ComboBox.Resources>
 
                 <ComboBox.ItemContainerStyle>
-                    <Style TargetType="ComboBoxItem">
+                    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
                         <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
                         <Setter Property="Panel.ZIndex" Value="0" />
                         <EventSetter Event="Loaded" Handler="Item_Loaded" />

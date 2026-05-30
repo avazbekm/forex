@@ -13,6 +13,7 @@
     <conv:NumberToBoolConverter x:Key="NumberToBoolConverter" />
     <conv:RowNumberConverter x:Key="RowNumber" />
     <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+    <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
     <conv:InverseNullToVisibilityConverter x:Key="InverseNullToVisibility" />
     <conv:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
     <conv:BalanceToColorConverter x:Key="BalanceToColorConverter" />
@@ -20,5 +21,6 @@
     <conv:ArrayMultiValueConverter x:Key="ArrayMultiValueConverter" />
     <conv:IndexConverter x:Key="IndexConverter" />
     <conv:UniversalImageResolver x:Key="UniversalImageResolver" />
+    <conv:EqualityConverter x:Key="EqualityConverter" />
 
 </ResourceDictionary>
