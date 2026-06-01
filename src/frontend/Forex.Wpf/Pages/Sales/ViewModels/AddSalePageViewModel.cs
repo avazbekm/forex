@@ -1165,7 +1165,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                     Grid.SetColumnSpan(balanceLabel, 6);
                     grid.Children.Add(balanceLabel);
                     
-                    var balanceValue = Customer.Balance.Value - grandTotalAmount;
+                    var balanceValue = Customer.Balance.Value - (EditingSaleId == 0 ? grandTotalAmount : 0);
                     var balanceText = balanceValue >= 0 
                         ? $"+{balanceValue:N0} (Haqdor)" 
                         : $"{balanceValue:N0} (Qarzdor)";
