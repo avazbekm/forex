@@ -20,7 +20,6 @@ using System.Windows.Media.Imaging;
 using PdfSharp.Drawing;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
-using Forex.Wpf.ViewModels;
 using Forex.Wpf.Windows;
 using System.Windows.Input;
 

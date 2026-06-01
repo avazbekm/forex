@@ -17,15 +17,15 @@ public partial class SaleItemViewModel : ViewModelBase
     [ObservableProperty] private decimal? benifit;
     [ObservableProperty] private decimal? amount;
 
-    [ObservableProperty] private ProductViewModel product = default!;
-    [ObservableProperty] private ProductTypeViewModel productType = default!;
-    [ObservableProperty] private SaleViewModel sale = default!;
+    [ObservableProperty] private ProductViewModel? product;
+    [ObservableProperty] private ProductTypeViewModel? productType;
+    [ObservableProperty] private SaleViewModel? sale;
 
     #region Property Changes
 
     partial void OnUnitPriceChanged(decimal? value) => RecalculateTotalAmount();
     partial void OnBundleCountChanged(int? value) => ReCalculateTotalCount();
-    partial void OnProductTypeChanged(ProductTypeViewModel value)
+    partial void OnProductTypeChanged(ProductTypeViewModel? value)
     {
         BundleItemCount = value?.BundleItemCount;
         ReCalculateTotalCount();
