@@ -600,7 +600,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             if (result == MessageBoxResult.No) return;
         }
 
-        SelectedSaleItem.ProductType.AvailableCount += (SelectedSaleItem.TotalCount ?? 0);
+        SelectedSaleItem.ProductType!.AvailableCount += (SelectedSaleItem.TotalCount ?? 0);
 
         CurrentSaleItem.PropertyChanged -= SaleItemPropertyChanged;
 
@@ -638,7 +638,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             return;
         }
 
-        _editingItemSnapshot.ProductType.AvailableCount -= (_editingItemSnapshot.TotalCount ?? 0);
+        _editingItemSnapshot.ProductType!.AvailableCount -= (_editingItemSnapshot.TotalCount ?? 0);
 
         if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
             SaleItems.Insert(OriginalItemIndex, _editingItemSnapshot);
@@ -666,7 +666,7 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         if (result == MessageBoxResult.No) return;
 
-        item.ProductType.AvailableCount += (item.TotalCount ?? 0);
+        item.ProductType!.AvailableCount += (item.TotalCount ?? 0);
         item.PropertyChanged -= SaleItemPropertyChanged;
         SaleItems.Remove(item);
         RecalculateTotals();
@@ -735,7 +735,7 @@ public partial class AddSalePageViewModel : ViewModelBase
             Note = Note,
             SaleItems = [.. SaleItems.Select(item => new SaleItemRequest
         {
-            ProductTypeId = item.ProductType.Id,
+            ProductTypeId = item.ProductType!.Id,
             BundleCount = (int)item.BundleCount!,
             UnitPrice = (decimal)item.UnitPrice!,
             Amount = (decimal)item.Amount!
@@ -798,8 +798,10 @@ public partial class AddSalePageViewModel : ViewModelBase
         try
         {
             var uniqueUrls = SaleItems
-                .Select(i => i.Product.DisplayImagePath)
-                .Where(url => !string.IsNullOrEmpty(url) && !_imageCache.ContainsKey(url))
+                .Select(i => i.Product?.DisplayImagePath)
+                .Where(url => !string.IsNullOrEmpty(url))
+                .Select(url => url!)
+                .Where(url => !_imageCache.ContainsKey(url))
                 .Distinct()
                 .ToList();
 
@@ -977,8 +979,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         double grandTotalCount = SaleItems.Sum(x => (double)(x.TotalCount ?? 0));
 
         var groupedItems = SaleItems
-            .OrderBy(i => i.Product.Code)
-            .GroupBy(i => i.Product.Code)
+            .OrderBy(i => i.Product?.Code ?? string.Empty)
+            .GroupBy(i => i.Product?.Code ?? string.Empty)
             .ToList();
 
         // Used for pagination
@@ -1092,14 +1094,14 @@ public partial class AddSalePageViewModel : ViewModelBase
                     
                     if (isFirstInGroup)
                     {
-                        var imgBorder = CreateImageCell(item.Product.DisplayImagePath);
+                        var imgBorder = CreateImageCell(item.Product?.DisplayImagePath ?? string.Empty);
                         Grid.SetRow(imgBorder, groupStartRow);
                         Grid.SetColumn(imgBorder, 1);
                         Grid.SetRowSpan(imgBorder, groupRowCount);
                         grid.Children.Add(imgBorder);
                         
                         // Kod va Nom birlashgan cell (2 qatorlik: yuqorida kod, pastida nomi)
-                        var codeNameBorder = CreateCodeNameCell(item.Product.Code ?? "", item.Product.Name ?? "");
+                        var codeNameBorder = CreateCodeNameCell(item.Product?.Code ?? "", item.Product?.Name ?? "");
                         Grid.SetRow(codeNameBorder, groupStartRow);
                         Grid.SetColumn(codeNameBorder, 2);
                         Grid.SetRowSpan(codeNameBorder, groupRowCount);
@@ -1109,7 +1111,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                     }
                     
                     // Ustunlar 1 ga kamaydi: Razmer=3, Qop soni=4, Jami soni=5, Narxi=6, Jami summa=7
-                    AddCellToGrid(grid, item.ProductType.Type ?? "", gridRow, 3, false, TextAlignment.Center);
+                    AddCellToGrid(grid, item.ProductType?.Type ?? "", gridRow, 3, false, TextAlignment.Center);
                     AddCellToGrid(grid, item.BundleCount?.ToString("N0") ?? "0", gridRow, 4, false, TextAlignment.Right);
                     AddCellToGrid(grid, item.TotalCount?.ToString("N0") ?? "0", gridRow, 5, false, TextAlignment.Right);
                     AddCellToGrid(grid, item.UnitPrice?.ToString("N2") ?? "0.00", gridRow, 6, false, TextAlignment.Right);
@@ -1165,7 +1167,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                     Grid.SetColumnSpan(balanceLabel, 6);
                     grid.Children.Add(balanceLabel);
                     
-                    var balanceValue = Customer.Balance.Value - grandTotalAmount;
+                    var balanceValue = Customer.Balance.Value - (EditingSaleId == 0 ? grandTotalAmount : 0);
                     var balanceText = balanceValue >= 0 
                         ? $"+{balanceValue:N0} (Haqdor)" 
                         : $"{balanceValue:N0} (Qarzdor)";
@@ -1219,8 +1221,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         // 8 ta ustun: T/r(0), Rasm(1), Kod/Nomi(2), Razmer(3), Qop soni(4), Jami soni(5), Narxi(6), Jami summa(7)
         var cells = new[]
         {
-            ($"{item.Product.Code}\n{item.Product.Name}", widths[2]),
-            (item.ProductType.Type ?? "",                  widths[3]),
+            ($"{item.Product?.Code ?? string.Empty}\n{item.Product?.Name ?? string.Empty}", widths[2]),
+            (item.ProductType?.Type ?? "",                               widths[3]),
             (item.BundleCount?.ToString("N0") ?? "0",      widths[4]),
             (item.TotalCount?.ToString("N0")  ?? "0",      widths[5]),
             (item.UnitPrice?.ToString("N2")   ?? "0.00",   widths[6]),

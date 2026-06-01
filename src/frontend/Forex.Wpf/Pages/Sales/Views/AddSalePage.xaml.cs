@@ -21,7 +21,6 @@ public partial class AddSalePage : Page
     // BeginInvoke ichida reset bo'ladi, ya'ni fokus to'liq qaytguncha flag saqlanib qoladi.
     private bool _customerGuard;
     private bool _productGuard;
-    private bool _productTypeGuard;
 
     // Foydalanuvchi haqiqatdan yozayotganini aniqlash uchun flag (arrow/enter emas)
     private bool _productUserIsTyping;
@@ -406,8 +405,6 @@ public partial class AddSalePage : Page
 
     private void ProductTypeComboBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (_productTypeGuard) return;
-
         var combo = cbxProductType.combo;
         var text = combo.Text?.Trim();
 
