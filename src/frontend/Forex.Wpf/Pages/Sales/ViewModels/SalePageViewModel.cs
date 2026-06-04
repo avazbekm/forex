@@ -25,7 +25,10 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
             if (e.PropertyName is nameof(BeginDate) or nameof(EndDate))
             {
                 CurrentPage = 1;
-                _ = LoadSalesAsync();
+                _ = Task.WhenAll(
+                    LoadSalesAsync(),
+                    LoadSalesSummaryAsync()
+                );
             }
         };
 
@@ -47,6 +50,9 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     [ObservableProperty] private int totalCount;
     [ObservableProperty] private int pageSize = 20;
     [ObservableProperty] private ObservableCollection<object> visiblePageNumbers = [];
+    
+    [ObservableProperty] private decimal totalSalesAmount;
+    [ObservableProperty] private int totalItemsSold;
 
     public bool CanGoPrevious => CurrentPage > 1;
     public bool CanGoNext => CurrentPage < TotalPages;
@@ -122,7 +128,8 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     {
         await Task.WhenAll(
             LoadCustomersAsync(),
-            LoadSalesAsync()
+            LoadSalesAsync(),
+            LoadSalesSummaryAsync()
             );
     }
 
@@ -183,10 +190,12 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
                 TotalCount = response.Metadata.TotalCount;
                 TotalPages = response.Metadata.TotalPages;
             }
-            else
+            else if (TotalCount == 0)
             {
                 TotalCount = response.Data?.Count ?? 0;
-                TotalPages = TotalCount < PageSize ? CurrentPage : CurrentPage + 1;
+                TotalPages = PageSize > 0
+                    ? Math.Max(1, (int)Math.Ceiling((double)TotalCount / PageSize))
+                    : 1;
             }
             
             OnPropertyChanged(nameof(CanGoPrevious));
@@ -195,6 +204,37 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
         else
         {
             WarningMessage = response.Message ?? "Savdolarni yuklashda xatolik.";
+        }
+    }
+
+    private async Task LoadSalesSummaryAsync()
+    {
+        FilteringRequest request = new()
+        {
+            Page = 0,
+            PageSize = 0,
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"]
+            }
+        };
+
+        if (SelectedCustomer is not null)
+        {
+            request.Filters["customerId"] = [SelectedCustomer.Id.ToString()];
+        }
+
+        var response = await client.Sales.Filter(request)
+            .Handle();
+
+        if (response.IsSuccess && response.Data is not null)
+        {
+            TotalSalesAmount = response.Data.Sum(s => s.TotalAmount);
+            TotalItemsSold = response.Data.Sum(s => s.TotalCount);
+            TotalCount = response.Data.Count;
+            TotalPages = PageSize > 0
+                ? Math.Max(1, (int)Math.Ceiling((double)TotalCount / PageSize))
+                : 1;
         }
     }
 
@@ -224,7 +264,10 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     private async Task FilterSales()
     {
         CurrentPage = 1;
-        await LoadSalesAsync();
+        await Task.WhenAll(
+            LoadSalesAsync(),
+            LoadSalesSummaryAsync()
+        );
     }
 
 
@@ -309,7 +352,10 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     partial void OnSelectedCustomerChanged(UserViewModel? value)
     {
         CurrentPage = 1;
-        _ = LoadSalesAsync();
+        _ = Task.WhenAll(
+            LoadSalesAsync(),
+            LoadSalesSummaryAsync()
+        );
     }
 
     #endregion

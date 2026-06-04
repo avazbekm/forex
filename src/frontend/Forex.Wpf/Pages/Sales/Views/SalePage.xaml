@@ -316,11 +316,17 @@
 
                 <TextBlock
                     VerticalAlignment="Center"
-                    FontSize="14"
+                    FontSize="13"
                     Foreground="{DynamicResource SecondaryTextColor}">
                     <Run Text="Jami: " />
                     <Run FontWeight="SemiBold" Text="{Binding TotalCount, Mode=OneWay}" />
-                    <Run Text=" ta savdo" />
+                    <Run Text=" ta savdo | " />
+                    <Run Text="Summa: " />
+                    <Run FontWeight="SemiBold" Text="{Binding TotalSalesAmount, StringFormat={}{0:N2}, Mode=OneWay}" />
+                    <Run Text=" so'm | " />
+                    <Run Text="Dona: " />
+                    <Run FontWeight="SemiBold" Text="{Binding TotalItemsSold, Mode=OneWay}" />
+                    <Run Text=" ta" />
                 </TextBlock>
 
                 <StackPanel

@@ -127,7 +127,7 @@ public static class ApiExtensions
             PagedListMetadata? metadata = null;
             
             // Try different header variations
-            var headerKeys = new[] { "X-Pagination", "x-pagination", "Pagination", "pagination" };
+            var headerKeys = new[] { "X-Pagination", "x-pagination", "Pagination", "pagination", "X-Paging", "x-paging" };
             string? paginationJson = null;
 
             foreach (var key in headerKeys)
