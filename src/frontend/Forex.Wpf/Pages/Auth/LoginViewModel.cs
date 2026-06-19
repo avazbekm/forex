@@ -7,8 +7,11 @@ using Forex.Wpf.Pages.Common;
 
 public class LoginViewModel(IApiAuth apiAuth) : ViewModelBase
 {
+    public bool LastFailureWasConnectionError { get; private set; }
+
     public async Task<bool> LoginAsync(string login, string password)
     {
+        LastFailureWasConnectionError = false;
         //if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
         //{
         //    ErrorMessage = "Login va parol majburiy.";
@@ -20,6 +23,7 @@ public class LoginViewModel(IApiAuth apiAuth) : ViewModelBase
 
         if (resp.StatusCode != 200)
         {
+            LastFailureWasConnectionError = resp.StatusCode is 0 or 404;
             ErrorMessage = resp.Message;
             return false;
         }

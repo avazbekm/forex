@@ -31,25 +31,17 @@ public class UpdateTransactionCommandHandler(
 
         try
         {
-            // 1) Mavjud tranzaksiyani olish
             var existingTransaction = await context.Transactions
-                .Include(t => t.Shop)
-                    .ThenInclude(s => s.ShopAccounts)
-                .Include(t => t.OperationRecord) // OperationRecord ham yuklanadi
+                .Include(t => t.OperationRecord)
                 .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken)
                 ?? throw new NotFoundException(nameof(Transaction), nameof(request.Id), request.Id);
 
-            // 2) Eski ma'lumotlarni revert qilish
             await RevertUserAccountAsync(existingTransaction, cancellationToken);
-            RevertShopAccount(existingTransaction);
 
-            // 3) Yangi ma'lumotlarni qo'llash
             await UpdateTransactionAsync(existingTransaction, request, cancellationToken);
             await UpdateUserAccountAsync(request, existingTransaction, cancellationToken);
-            UpdateShopAccount(existingTransaction, request);
             await UpdateCurrencyExchangeRate(request.CurrencyId, request.ExchangeRate);
 
-            // 4) Commit
             await context.CommitTransactionAsync(cancellationToken);
             return true;
         }
@@ -65,7 +57,6 @@ public class UpdateTransactionCommandHandler(
         UpdateTransactionCommand request,
         CancellationToken cancellationToken)
     {
-        // Transaction ma'lumotlarini yangilash
         existingTransaction.Amount = request.Amount;
         existingTransaction.ExchangeRate = request.ExchangeRate;
         existingTransaction.Discount = request.Discount;
@@ -76,28 +67,28 @@ public class UpdateTransactionCommandHandler(
         existingTransaction.UserId = request.UserId;
         existingTransaction.CurrencyId = request.CurrencyId;
 
-        // OperationRecord'ni yangilash
         var description = await GenerateDescription(existingTransaction);
         var amount = existingTransaction.Amount * existingTransaction.ExchangeRate +
                     (existingTransaction.IsIncome ? existingTransaction.Discount : 0);
+        var operationAmount = existingTransaction.IsIncome ? amount : -amount;
 
         if (existingTransaction.OperationRecord is not null)
         {
-            // mavjudini yangilash
-            existingTransaction.OperationRecord.Amount = amount;
+            existingTransaction.OperationRecord.Amount = operationAmount;
             existingTransaction.OperationRecord.Date = existingTransaction.Date.ToUtcSafe();
             existingTransaction.OperationRecord.Description = description;
             existingTransaction.OperationRecord.Type = OperationType.Transaction;
+            existingTransaction.OperationRecord.UserId = existingTransaction.UserId;
         }
         else
         {
-            // yangisini yaratish
             existingTransaction.OperationRecord = new OperationRecord
             {
-                Amount = amount,
+                Amount = operationAmount,
                 Date = existingTransaction.Date.ToUtcSafe(),
                 Description = description,
-                Type = OperationType.Transaction
+                Type = OperationType.Transaction,
+                UserId = existingTransaction.UserId
             };
         }
     }
@@ -130,8 +121,6 @@ public class UpdateTransactionCommandHandler(
         currency.ExchangeRate = exchangeRate;
     }
 
-    #region Revert Operations
-
     private async Task RevertUserAccountAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         var uzsCurrency = await context.Currencies
@@ -149,25 +138,6 @@ public class UpdateTransactionCommandHandler(
         else
             userAccount.Balance += delta;
     }
-
-    private static void RevertShopAccount(Transaction transaction)
-    {
-        var shopAccount = transaction.Shop.ShopAccounts
-            .FirstOrDefault(sa => sa.CurrencyId == transaction.CurrencyId)
-            ?? throw new NotFoundException("Shop account not found");
-
-        if (transaction.PaymentMethod == PaymentMethod.Naqd)
-        {
-            if (transaction.IsIncome)
-                shopAccount.Balance -= transaction.Amount;
-            else
-                shopAccount.Balance += transaction.Amount;
-        }
-    }
-
-    #endregion
-
-    #region Apply New Operations
 
     private async Task UpdateUserAccountAsync(
         UpdateTransactionCommand request,
@@ -203,33 +173,4 @@ public class UpdateTransactionCommandHandler(
         else
             userAccount.Balance -= delta;
     }
-
-    private static void UpdateShopAccount(Transaction transaction, UpdateTransactionCommand request)
-    {
-        var shopAccount = transaction.Shop.ShopAccounts
-            .FirstOrDefault(sh => sh.CurrencyId == request.CurrencyId);
-
-        if (shopAccount is null)
-        {
-            transaction.Shop.ShopAccounts.Add(shopAccount = new ShopAccount
-            {
-                CurrencyId = request.CurrencyId,
-                OpeningBalance = 0,
-                Balance = 0,
-                Discount = 0
-            });
-        }
-
-        if (request.PaymentMethod == PaymentMethod.Naqd)
-        {
-            if (transaction.IsIncome)
-                shopAccount.Balance += request.Amount;
-            else
-                shopAccount.Balance -= request.Amount;
-            if (shopAccount.Balance < 0)
-                throw new ConflictException("Do'kon kassasida mablag' yetarli emas!");
-        }
-    }
-
-    #endregion
 }

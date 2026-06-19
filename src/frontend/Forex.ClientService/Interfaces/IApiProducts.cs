@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,21 +7,21 @@ using Refit;
 
 public interface IApiProducts
 {
-    [Get("/products")]
+    [Get("/api/products")]
     Task<Response<List<ProductResponse>>> GetAllAsync();
 
-    [Get("/products/{id}")]
+    [Get("/api/products/{id}")]
     Task<Response<ProductResponse>> GetById(long id);
 
-    [Post("/products")]
+    [Post("/api/products")]
     Task<Response<long?>> Create([Body] ProductRequest request);
 
-    [Put("/products")]
+    [Put("/api/products")]
     Task<Response<bool>> Update([Body] ProductRequest request);
 
-    [Delete("/products/{id}")]
+    [Delete("/api/products/{id}")]
     Task<Response<bool>> Delete(long id);
 
-    [Post("/products/filter")]
+    [Post("/api/products/filter")]
     Task<Response<List<ProductResponse>>> Filter(FilteringRequest request);
 }

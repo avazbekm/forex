@@ -33,13 +33,10 @@ public class UpdateSaleCommandHandler(
         {
             var sale = await LoadSaleWithRelationsAsync(request.Id, ct);
 
-            // 1) Revert previous effects (balance, stock, items)
             await RevertSaleEffectsAsync(sale, ct);
 
-            // 2) Apply new data deterministically
             await ApplyNewSaleDataAsync(sale, request, ct);
 
-            // 3) Commit
             return await context.CommitTransactionAsync(ct);
         }
         catch
@@ -48,8 +45,6 @@ public class UpdateSaleCommandHandler(
             throw;
         }
     }
-
-    // --- Load ---
 
     private async Task<Sale> LoadSaleWithRelationsAsync(long id, CancellationToken ct)
     {
@@ -64,54 +59,39 @@ public class UpdateSaleCommandHandler(
 
     private async Task RevertSaleEffectsAsync(Sale sale, CancellationToken ct)
     {
-        // 1) Return account balance
         var userAccount = sale.Customer.Accounts.FirstOrDefault()
             ?? throw new NotFoundException(nameof(UserAccount), nameof(sale.CustomerId), sale.CustomerId);
         userAccount.Balance += sale.TotalAmount;
 
-        // 2) Return product residues
         var productTypeIds = sale.SaleItems.Select(si => si.ProductTypeId).Distinct().ToList();
         var productResidues = await LoadProductResiduesAsync(productTypeIds, ct);
         RestoreProductResidues(sale.SaleItems, productResidues);
 
-        // 3) Remove old items (navigation and DbSet)
         context.SaleItems.RemoveRange(sale.SaleItems);
         sale.SaleItems.Clear();
-
-        // Note: keep existing OperationRecord to update; do not remove it here.
     }
-
-    // --- Apply ---
 
     private async Task ApplyNewSaleDataAsync(Sale sale, UpdateSaleCommand request, CancellationToken ct)
     {
-        // 1) Account balance apply
         var userAccount = await GetOrCreateUserAccountAsync(request.CustomerId, request.TotalAmount, ct);
         userAccount.Balance -= request.TotalAmount;
 
-        // 2) Load residues for new items
         var productTypeIds = request.SaleItems.Select(i => i.ProductTypeId).Distinct().ToList();
         var productResidues = await LoadProductResiduesAsync(productTypeIds, ct);
 
-        // 3) Update scalar fields only
         sale.Date = request.Date.ToUtcSafe();
         sale.CustomerId = request.CustomerId;
         sale.TotalAmount = request.TotalAmount;
         sale.Note = request.Note;
 
-        // 4) Build new items (BundleCount > 0)
         var saleItems = BuildSaleItems(request.SaleItems, productResidues, sale);
 
-        // 5) Deduct residues using consistent bundle sizing (latest entry)
         DeductProductResidues(request.SaleItems, productResidues);
 
-        // 6) Recalculate totals
         CalculateSaleTotals(sale, saleItems);
 
-        // 7) Attach items via navigation only
         sale.SaleItems = saleItems;
 
-        // 8) Update or create OperationRecord (no manual Id assignment)
         var description = await GenerateDescriptionAsync(saleItems, ct);
 
         if (sale.OperationRecord is not null)
@@ -120,6 +100,7 @@ public class UpdateSaleCommandHandler(
             sale.OperationRecord.Date = sale.Date;
             sale.OperationRecord.Description = description;
             sale.OperationRecord.Type = OperationType.Sale;
+            sale.OperationRecord.UserId = sale.CustomerId;
         }
         else
         {
@@ -129,15 +110,12 @@ public class UpdateSaleCommandHandler(
                 Date = sale.Date,
                 Description = description,
                 Type = OperationType.Sale,
-                // If you have a FK like SaleId in OperationRecord, set it here:
-                // SaleId = sale.Id
+                UserId = sale.CustomerId
             };
         }
 
         context.Sales.Update(sale);
     }
-
-    // --- Helpers ---
 
     private async Task<string> GenerateDescriptionAsync(List<SaleItem> saleItems, CancellationToken ct)
     {

@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,21 +7,21 @@ using Refit;
 
 public interface IApiCurrency
 {
-    [Post("/currencies")]
+    [Post("/api/currencies")]
     Task<Response<long?>> CreateAsync([Body] CurrencyRequest request);
 
-    [Put("/currencies​")]
+    [Put("/api/currencies")]
     Task<Response<bool>> UpdateAsync([Body] CurrencyRequest request);
 
-    [Put("/currencies/all")]
+    [Put("/api/currencies/all")]
     Task<Response<bool>> SaveAllAsync(List<CurrencyRequest> dtoList);
 
-    [Delete("/currencies​/{id}")]
+    [Delete("/api/currencies/{id}")]
     Task<Response<bool>> DeleteAsync(long id);
 
-    [Get("/currencies/{id}")]
+    [Get("/api/currencies/{id}")]
     Task<Response<CurrencyResponse>> GetByIdAsync(long id);
 
-    [Get("/currencies")]
+    [Get("/api/currencies")]
     Task<Response<List<CurrencyResponse>>> GetAllAsync();
 }

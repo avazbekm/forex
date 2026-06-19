@@ -3,7 +3,6 @@
 using Forex.Application.Common.Exceptions;
 using Forex.Application.Common.Interfaces;
 using Forex.Domain.Entities;
-using Forex.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +21,6 @@ public class DeleteTransactionCommandHandler(
             var transaction = await LoadTransactionAsync(request.TransactionId, ct);
 
             await RevertUserAccountAsync(transaction, ct);
-            RevertShopAccount(transaction);
 
             RemoveOperationRecord(transaction);
             RemoveTransaction(transaction);
@@ -39,8 +37,6 @@ public class DeleteTransactionCommandHandler(
     private async Task<Transaction> LoadTransactionAsync(long transactionId, CancellationToken ct)
     {
         return await context.Transactions
-            .Include(t => t.Shop)
-                .ThenInclude(s => s.ShopAccounts)
             .Include(t => t.OperationRecord)
             .FirstOrDefaultAsync(t => t.Id == transactionId, ct)
             ?? throw new NotFoundException(nameof(Transaction), nameof(transactionId), transactionId);
@@ -63,24 +59,6 @@ public class DeleteTransactionCommandHandler(
             userAccount.Balance -= delta;
         else
             userAccount.Balance += delta;
-    }
-
-    private static void RevertShopAccount(Transaction transaction)
-    {
-        var shopAccount = transaction.Shop.ShopAccounts
-            .FirstOrDefault(sa => sa.CurrencyId == transaction.CurrencyId)
-            ?? throw new NotFoundException(nameof(ShopAccount), nameof(transaction.CurrencyId), transaction.CurrencyId);
-
-        if (transaction.PaymentMethod == PaymentMethod.Naqd)
-        {
-            if (transaction.IsIncome)
-                shopAccount.Balance -= transaction.Amount;
-            else
-                shopAccount.Balance += transaction.Amount;
-
-            if (shopAccount.Balance < 0)
-                throw new ConflictException("Do'kon kassasida mablag' yetarli emas!");
-        }
     }
 
     private void RemoveOperationRecord(Transaction transaction)

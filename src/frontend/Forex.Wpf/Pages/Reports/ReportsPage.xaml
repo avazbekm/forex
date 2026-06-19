@@ -40,8 +40,8 @@
                 SelectedIndex="0"
                 TabStripPlacement="Top">
 
-                <!--  1. Mijoz aylanmasi  -->
-                <TabItem Header="Mijoz aylanmasi">
+                <!--  1. Aylanma  -->
+                <TabItem Header="Aylanma">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="IsVisibleChanged">
                             <i:InvokeCommandAction Command="{Binding CustomerTurnoverVM.PreviewCommand}" />

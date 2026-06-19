@@ -3,11 +3,13 @@ namespace Forex.Wpf.Pages.Reports.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
+using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using PdfSharp.Drawing;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
@@ -26,14 +28,36 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     private readonly CommonReportDataService _commonData;
 
     [ObservableProperty] private UserViewModel? selectedCustomer;
+    [ObservableProperty] private TurnoverPartyFilter selectedPartyFilter = TurnoverPartyFilter.All;
     [ObservableProperty] private DateTime beginDate = DateTime.Today;
     [ObservableProperty] private DateTime endDate = DateTime.Today;
 
     partial void OnSelectedCustomerChanged(UserViewModel? value) => _ = LoadDataAsync();
+    partial void OnSelectedPartyFilterChanged(TurnoverPartyFilter value)
+    {
+        ApplyPartyFilter();
+        _ = LoadDataAsync();
+        OnPropertyChanged(nameof(SelectedPartyFilterOption));
+    }
+
     partial void OnBeginDateChanged(DateTime value) => _ = LoadDataAsync();
     partial void OnEndDateChanged(DateTime value) => _ = LoadDataAsync();
 
-    public ObservableCollection<UserViewModel> AvailableCustomers => _commonData.AvailableCustomers;
+    public ObservableCollection<UserViewModel> AvailableCustomers { get; } = [];
+
+    public IReadOnlyList<TurnoverPartyFilterOption> PartyFilterOptions { get; } =
+    [
+        new(TurnoverPartyFilter.Customers, "Mijozlar"),
+        new(TurnoverPartyFilter.Suppliers, "Ta'minotchilar"),
+        new(TurnoverPartyFilter.Consolidators, "Vositachilar"),
+        new(TurnoverPartyFilter.All, "Barchasi")
+    ];
+
+    public TurnoverPartyFilterOption SelectedPartyFilterOption
+    {
+        get => PartyFilterOptions.First(p => p.Value == SelectedPartyFilter);
+        set => SelectedPartyFilter = value.Value;
+    }
 
 
     public ObservableCollection<TurnoversViewModel> Operations { get; } = [];
@@ -50,6 +74,8 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         _commonData = commonData;
 
         Operations.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasData));
+        _commonData.AvailableCustomers.CollectionChanged += OnCommonCustomersChanged;
+        ApplyPartyFilter();
     }
 
 
@@ -78,8 +104,12 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             .GetTurnover(requset)
             .Handle(l => IsLoading = l);
 
-        if (!response.IsSuccess)
+        if (!response.IsSuccess || response.Data is null)
+        {
+            BeginBalance = 0;
+            LastBalance = 0;
             return;
+        }
 
 
         var data = response.Data;
@@ -93,24 +123,27 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             decimal debit = 0;
             decimal credit = 0;
 
-            // SOTUV → har doim Credit (chiqim)
             if (op.Type == ClientService.Enums.OperationType.Sale)
             {
-                debit = -op.Amount;
+                debit = Math.Abs(op.Amount);
             }
-            // TO‘LOV → Transaction bo‘lsa → IsIncome ga qarab, bo‘lmasa Amount ga qarab
             else if (op.Type == ClientService.Enums.OperationType.Transaction)
             {
                 if (op.Transaction is not null)
                 {
-                    credit = op.Transaction.IsIncome == true ? op.Amount : 0;
+                    credit = op.Transaction.IsIncome == true ? Math.Abs(op.Amount) : 0;
                     debit = op.Transaction.IsIncome == false ? Math.Abs(op.Amount) : 0;
                 }
                 else
                 {
-                    debit = op.Amount < 0 ? op.Amount : 0;
+                    debit = op.Amount < 0 ? Math.Abs(op.Amount) : 0;
                     credit = op.Amount > 0 ? Math.Abs(op.Amount) : 0;
                 }
+            }
+            else if (op.Type == ClientService.Enums.OperationType.Supply)
+            {
+                credit = op.Amount > 0 ? op.Amount : 0;
+                debit = op.Amount < 0 ? Math.Abs(op.Amount) : 0;
             }
 
             Operations.Add(new TurnoversViewModel
@@ -284,6 +317,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void ClearFilter()
     {
+        SelectedPartyFilter = TurnoverPartyFilter.All;
         SelectedCustomer = null;
         BeginDate = DateTime.Today.AddMonths(-1);
         EndDate = DateTime.Today;
@@ -295,6 +329,30 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     #endregion Commands
 
     #region Private Helpers
+
+    private void OnCommonCustomersChanged(object? sender, NotifyCollectionChangedEventArgs e) => ApplyPartyFilter();
+
+    private void ApplyPartyFilter()
+    {
+        var selectedId = SelectedCustomer?.Id;
+        var users = _commonData.AvailableCustomers.Where(MatchesPartyFilter).OrderBy(u => u.Name).ToList();
+
+        AvailableCustomers.Clear();
+        foreach (var user in users)
+            AvailableCustomers.Add(user);
+
+        SelectedCustomer = selectedId is null
+            ? null
+            : AvailableCustomers.FirstOrDefault(u => u.Id == selectedId.Value);
+    }
+
+    private bool MatchesPartyFilter(UserViewModel user) => SelectedPartyFilter switch
+    {
+        TurnoverPartyFilter.Customers => user.Role == UserRole.Mijoz,
+        TurnoverPartyFilter.Suppliers => user.Role == UserRole.Taminotchi,
+        TurnoverPartyFilter.Consolidators => user.Role == UserRole.Vositachi,
+        _ => user.Role is UserRole.Mijoz or UserRole.Taminotchi or UserRole.Vositachi
+    };
 
     private void ShowPreviewWindow(FixedDocument doc)
     {
@@ -893,3 +951,13 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
     #endregion Private Helpers
 }
+
+public enum TurnoverPartyFilter
+{
+    All,
+    Customers,
+    Suppliers,
+    Consolidators
+}
+
+public sealed record TurnoverPartyFilterOption(TurnoverPartyFilter Value, string Text);

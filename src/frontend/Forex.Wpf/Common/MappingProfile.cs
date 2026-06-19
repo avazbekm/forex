@@ -84,6 +84,13 @@ public static class MappingProfile
         config.NewConfig<CurrencyResponse, CurrencyViewModel>();
         config.NewConfig<UserAccountResponse, UserAccountViewModel>();
 
+        // Supply
+        config.NewConfig<SupplyResponse, SupplyViewModel>()
+            .Map(dest => dest.Date, src => src.Date.ToLocalTime());
+        config.NewConfig<SupplyViewModel, SupplyRequest>()
+            .Map(dest => dest.UserId, src => src.User.Id)
+            .Map(dest => dest.CurrencyId, src => src.Currency.Id);
+
         // 🔹 Transaction
         config.NewConfig<TransactionResponse, TransactionViewModel>()
             .Map(dest => dest.Date, src => src.Date.ToLocalTime())

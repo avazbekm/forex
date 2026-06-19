@@ -40,6 +40,10 @@
             <TabItem Header="O'lchov birliklari">
                 <controls:UnitMeasureSettingsControl />
             </TabItem>
+
+            <TabItem Header="Server">
+                <controls:ServerSettingsControl />
+            </TabItem>
         </TabControl>
     </Grid>
 </Page>

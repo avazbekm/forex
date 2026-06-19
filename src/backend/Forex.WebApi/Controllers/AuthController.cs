@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 [AllowAnonymous]
 public class AuthController : BaseController
 {
+    [HttpGet("ping")]
+    public IActionResult Ping()
+        => Ok(new Response { Data = "OK" });
+
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterCommand command)
         => Ok(new Response { Data = await Mediator.Send(command, Ct) });

@@ -2,6 +2,7 @@
 
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Home;
+using Forex.Wpf.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Controls;
@@ -103,6 +104,18 @@ public partial class LoginPage : Page
         }
         else
         {
+            if (viewModel.LastFailureWasConnectionError)
+            {
+                var urlWindow = App.AppHost!.Services.GetRequiredService<ServerUrlWindow>();
+                urlWindow.Owner = Application.Current.MainWindow;
+
+                if (urlWindow.ShowDialog() == true)
+                {
+                    await PerformLogin(login, password);
+                    return;
+                }
+            }
+
             lblError.Text = viewModel.ErrorMessage;
             lblError.Visibility = Visibility.Visible;
         }

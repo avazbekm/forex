@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-    Title="Kassa boshqaruvi"
+    Title="O'tkazmalar"
     d:DesignHeight="700"
     d:DesignWidth="1000"
     mc:Ignorable="d">
@@ -24,7 +24,7 @@
         <!--  Header  -->
         <Grid Grid.Row="0" Margin="5">
             <Label
-                Content="🏦 Kassa amaliyotlari"
+                Content="O'tkazmalar"
                 FontSize="20"
                 FontWeight="Bold"
                 Foreground="{StaticResource SecondaryTextColor}" />
@@ -37,62 +37,6 @@
                     Click="BtnBack_Click"
                     Content="🔙 Orqaga" />
         </Grid>
-
-        <!--  Shop Accounts Cards  -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding AvailableShopAccounts}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel
-                        HorizontalAlignment="Stretch"
-                        ItemHeight="100"
-                        ItemWidth="320"
-                        Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <md:Card
-                        Width="280"
-                        Margin="10"
-                        VerticalContentAlignment="Center"
-                        md:ShadowAssist.Darken="True"
-                        Background="{DynamicResource MaterialDesignPaper}"
-                        BorderThickness="3"
-                        Foreground="{DynamicResource PrimaryTextColor}"
-                        UniformCornerRadius="6">
-                        <StackPanel>
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                FontSize="18"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource PrimaryTextColor}"
-                                Text="{Binding Currency.Name}" />
-
-                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                <TextBlock
-                                    FontSize="16"
-                                    FontWeight="Medium"
-                                    Foreground="{DynamicResource PrimaryTextColor}"
-                                    Text="Qoldiq:" />
-                                <TextBlock
-                                    Margin="10,0,0,0"
-                                    FontSize="16"
-                                    FontWeight="Bold"
-                                    Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                    Text="{Binding Balance, StringFormat=N2}" />
-                                <TextBlock
-                                    Margin="8,0,0,0"
-                                    FontSize="16"
-                                    FontWeight="Bold"
-                                    Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                    Text="{Binding Currency.Code}" />
-                            </StackPanel>
-                        </StackPanel>
-                    </md:Card>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
 
         <!--  Transaction Form  -->
         <Grid Grid.Row="2" Margin="0,5">
@@ -482,25 +426,19 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,15,5">
-                    <TextBlock VerticalAlignment="Center" Text="Mijoz:" Margin="0,0,5,0" FontWeight="SemiBold"/>
-                    <controls:FloatingImageComboBox 
-                        Width="200" Height="30"
-                        ItemsSource="{Binding FilterPanelFilteredUsers}" 
-                        SelectedItem="{Binding SelectedFilterUser}"
-                        PrimaryTextMemberPath="Name"
-                        SecondaryTextMemberPath="PhoneAndAddress"
-                        ShowImage="False"
-                        IsEditable="True"
-                        IsTextSearchEnabled="False"
-                        Text="{Binding FilterPanelUserText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    
-                    <Button Margin="5,0,0,0" Padding="4" Width="30" Height="30"
-                            Style="{StaticResource MaterialDesignToolButton}"
-                            Command="{Binding ClearUserFilterCommand}" 
-                            ToolTip="Filterni tozalash"
-                            Visibility="{Binding SelectedFilterUser, Converter={StaticResource NullToVisibilityConverter}}">
-                        <md:PackIcon Kind="Close" />
-                    </Button>
+                    <TextBlock VerticalAlignment="Center" Text="Hisob turi:" Margin="0,0,5,0" FontWeight="SemiBold"/>
+                    <ComboBox Width="130" Height="30" FontSize="14" Padding="5,2"
+                              DisplayMemberPath="Text"
+                              ItemsSource="{Binding UserRoleFilterOptions}" 
+                              SelectedItem="{Binding SelectedUserRoleFilter}" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,15,5">
+                    <TextBlock VerticalAlignment="Center" Text="Shaxs:" Margin="0,0,5,0" FontWeight="SemiBold"/>
+                    <ComboBox Width="200" Height="30" FontSize="14" Padding="5,2"
+                              DisplayMemberPath="Text"
+                              ItemsSource="{Binding FilterPanelUserOptions}" 
+                              SelectedItem="{Binding SelectedFilterUser}" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,15,5">
@@ -520,24 +458,8 @@
                     <TextBlock VerticalAlignment="Center" Text="To'lov usuli:" Margin="0,0,5,0" FontWeight="SemiBold"/>
                     <ComboBox Width="120" Height="30" FontSize="14" Padding="5,2"
                               ItemsSource="{Binding AvailablePaymentMethodFilters}" 
-                              SelectedItem="{Binding SelectedPaymentMethodFilter}">
-                         <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                                                    <Setter Property="Text" Value="Barchasi" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                              DisplayMemberPath="Text"
+                              SelectedItem="{Binding SelectedPaymentMethodFilter}" />
                 </StackPanel>
 
                 </WrapPanel>

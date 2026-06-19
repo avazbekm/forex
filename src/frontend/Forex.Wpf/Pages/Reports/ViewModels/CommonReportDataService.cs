@@ -39,7 +39,7 @@ public partial class CommonReportDataService : ViewModelBase
         {
             Filters = new()
             {
-                ["role"] = ["mijoz"],
+                ["role"] = ["in:Mijoz,Taminotchi,Vositachi"],
                 ["accounts"] = ["include:currency"]
             }
         };

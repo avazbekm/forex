@@ -1,7 +1,8 @@
-﻿namespace Forex.ClientService.Enums;
+namespace Forex.ClientService.Enums;
 
 public enum OperationType
 {
     Sale = 1,
-    Transaction = 2
+    Transaction = 2,
+    Supply = 3
 }

@@ -56,7 +56,8 @@ public class CreateSaleCommandHandler(
                 Amount = -sale.TotalAmount,
                 Date = sale.Date,
                 Description = description,
-                Type = OperationType.Sale
+                Type = OperationType.Sale,
+                UserId = sale.CustomerId
             };
 
             await context.CommitTransactionAsync(ct);

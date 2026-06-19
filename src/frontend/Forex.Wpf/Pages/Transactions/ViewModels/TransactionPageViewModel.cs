@@ -48,31 +48,40 @@ public partial class TransactionPageViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<UserViewModel> filteredUsers = [];
     [ObservableProperty] private string userFilterText = string.Empty;
     [ObservableProperty] private ObservableCollection<UserViewModel> filterPanelFilteredUsers = [];
+    [ObservableProperty] private ObservableCollection<TransactionUserFilterOption> filterPanelUserOptions = [];
     [ObservableProperty] private string filterPanelUserText = string.Empty;
     [ObservableProperty] private ObservableCollection<CurrencyViewModel> availableCurrencies = [];
-    [ObservableProperty] private ObservableCollection<ShopAccountViewModel> availableShopAccounts = [];
     [ObservableProperty] private TransactionViewModel transaction = new();
-    [ObservableProperty] private UserViewModel? selectedFilterUser;
-    [ObservableProperty] private PaymentMethod? selectedPaymentMethodFilter;
+    [ObservableProperty] private TransactionUserFilterOption selectedFilterUser = TransactionUserFilterOption.All;
+    [ObservableProperty] private UserRoleFilterOption selectedUserRoleFilter = UserRoleFilterOption.All;
+    [ObservableProperty] private PaymentMethodFilterOption selectedPaymentMethodFilter = PaymentMethodFilterOption.All;
 
     [ObservableProperty] private TransactionTypeFilter selectedTransactionType = TransactionTypeFilter.All;
 
     public static IEnumerable<TransactionTypeFilter> TransactionTypes => Enum.GetValues<TransactionTypeFilter>();
+    public IReadOnlyList<UserRoleFilterOption> UserRoleFilterOptions { get; } =
+    [
+        UserRoleFilterOption.All,
+        new(UserRole.Mijoz, "Mijoz"),
+        new(UserRole.Taminotchi, "Ta'minotchi"),
+        new(UserRole.Vositachi, "Vositachi"),
+        new(UserRole.Hodim, "Hodim")
+    ];
 
     partial void OnSelectedTransactionTypeChanged(TransactionTypeFilter value) => _ = LoadTransactionsAsync();
-    partial void OnSelectedPaymentMethodFilterChanged(PaymentMethod? value) => _ = LoadTransactionsAsync();
-    partial void OnSelectedFilterUserChanged(UserViewModel? value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedPaymentMethodFilterChanged(PaymentMethodFilterOption value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedFilterUserChanged(TransactionUserFilterOption value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedUserRoleFilterChanged(UserRoleFilterOption value) => _ = LoadTransactionsAsync();
 
     public static IEnumerable<PaymentMethod> AvailablePaymentMethods => Enum.GetValues<PaymentMethod>();
-    public static IEnumerable<PaymentMethod?> AvailablePaymentMethodFilters
-    {
-        get
-        {
-            yield return null;
-            foreach (var method in Enum.GetValues<PaymentMethod>())
-                yield return method;
-        }
-    }
+    public IReadOnlyList<PaymentMethodFilterOption> AvailablePaymentMethodFilters { get; } =
+    [
+        PaymentMethodFilterOption.All,
+        new(PaymentMethod.Naqd, "Naqd"),
+        new(PaymentMethod.MobilIlova, "Mobil ilova"),
+        new(PaymentMethod.Plastik, "Plastik"),
+        new(PaymentMethod.HisobRaqam, "Hisob raqam")
+    ];
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
 
@@ -139,7 +148,6 @@ public partial class TransactionPageViewModel : ViewModelBase
     private async Task LoadDataAsync()
     {
         await Task.WhenAll(
-            LoadShopCashes(),
             LoadUsersAsync(),
             LoadCurrenciesAsync(),
             LoadTransactionsAsync()
@@ -155,13 +163,12 @@ public partial class TransactionPageViewModel : ViewModelBase
                 ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
                 ["user"] = ["include"],
                 ["currency"] = ["include"],
-                ["shopAccount"] = ["include"]
             }
         };
 
-        if (SelectedFilterUser != null)
+        if (SelectedFilterUser.User != null)
         {
-            request.Filters["userId"] = [$"={SelectedFilterUser.Id}"];
+            request.Filters["userId"] = [$"={SelectedFilterUser.User.Id}"];
         }
 
         if (SelectedTransactionType != TransactionTypeFilter.All)
@@ -176,15 +183,19 @@ public partial class TransactionPageViewModel : ViewModelBase
         {
             List<TransactionResponse> ordered = response.Data.OrderByDescending(t => t.Date).ToList();
 
-            if (SelectedFilterUser is not null)
+            if (SelectedFilterUser.User is not null)
             {
-                ordered = ordered.Where(t => t.UserId == SelectedFilterUser.Id).ToList();
+                ordered = ordered.Where(t => t.UserId == SelectedFilterUser.User.Id).ToList();
             }
-             
-            // Client-side PaymentMethod filtering
-            if (SelectedPaymentMethodFilter.HasValue)
+
+            if (SelectedUserRoleFilter.Role is not null)
             {
-                ordered = ordered.Where(t => t.PaymentMethod == SelectedPaymentMethodFilter.Value).ToList();
+                ordered = ordered.Where(t => t.User?.Role == SelectedUserRoleFilter.Role).ToList();
+            }
+
+            if (SelectedPaymentMethodFilter.Method.HasValue)
+            {
+                ordered = ordered.Where(t => t.PaymentMethod == SelectedPaymentMethodFilter.Method.Value).ToList();
             }
             
             Transactions = mapper.Map<ObservableCollection<TransactionViewModel>>(ordered);
@@ -202,21 +213,6 @@ public partial class TransactionPageViewModel : ViewModelBase
         else
         {
             WarningMessage = response.Message ?? "Tranzaksiyalarni yuklashda xatolik.";
-        }
-    }
-
-    private async Task LoadShopCashes()
-    {
-        Response<List<ShopResponse>> response = await client.Shops.GetAllAsync().Handle(isLoading => IsLoading = isLoading);
-
-        if (response.IsSuccess)
-        {
-            IEnumerable<ShopAccountResponse> accounts = response.Data.SelectMany(sh => sh.ShopAccounts);
-            AvailableShopAccounts = mapper.Map<ObservableCollection<ShopAccountViewModel>>(accounts);
-        }
-        else
-        {
-            WarningMessage = response.Message ?? "Do'kon kassalarini yuklashda xatolik.";
         }
     }
 
@@ -250,6 +246,8 @@ public partial class TransactionPageViewModel : ViewModelBase
             AvailableUsers = mapper.Map<ObservableCollection<UserViewModel>>(filteredData);
             FilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
             FilterPanelFilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
+            FilterPanelUserOptions = new ObservableCollection<TransactionUserFilterOption>(
+                new[] { TransactionUserFilterOption.All }.Concat(AvailableUsers.OrderBy(u => u.Name).Select(TransactionUserFilterOption.FromUser)));
         }
         else
         {
@@ -436,7 +434,7 @@ public partial class TransactionPageViewModel : ViewModelBase
     [RelayCommand]
     private void ClearUserFilter()
     {
-        SelectedFilterUser = null;
+        SelectedFilterUser = TransactionUserFilterOption.All;
         FilterPanelUserText = string.Empty;
         ApplyFilterPanelUserFilter(string.Empty);
     }
@@ -628,7 +626,7 @@ public partial class TransactionPageViewModel : ViewModelBase
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
-            FileName = $"KassaAylanmasi_{DateTime.Today:dd.MM.yyyy}.xlsx"
+            FileName = $"Otkazmalar_{DateTime.Today:dd.MM.yyyy}.xlsx"
         };
 
         if (dialog.ShowDialog() != true) return;
@@ -636,12 +634,12 @@ public partial class TransactionPageViewModel : ViewModelBase
         try
         {
             using var workbook = new XLWorkbook();
-            var ws = workbook.Worksheets.Add("Kassa Aylanmasi");
+            var ws = workbook.Worksheets.Add("O'tkazmalar");
 
             int row = 1;
 
             // Title
-            ws.Cell(row, 1).Value = "KASSA AYLANMASI HISOBOTI";
+            ws.Cell(row, 1).Value = "O'TKAZMALAR HISOBOTI";
             ws.Range(row, 1, row, 8).Merge().Style
                 .Font.SetBold().Font.SetFontSize(16)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
@@ -707,4 +705,20 @@ public partial class TransactionPageViewModel : ViewModelBase
     }
 
     #endregion
+}
+
+public sealed record TransactionUserFilterOption(UserViewModel? User, string Text)
+{
+    public static TransactionUserFilterOption All { get; } = new(null, "Barchasi");
+    public static TransactionUserFilterOption FromUser(UserViewModel user) => new(user, user.Name);
+}
+
+public sealed record UserRoleFilterOption(UserRole? Role, string Text)
+{
+    public static UserRoleFilterOption All { get; } = new(null, "Barchasi");
+}
+
+public sealed record PaymentMethodFilterOption(PaymentMethod? Method, string Text)
+{
+    public static PaymentMethodFilterOption All { get; } = new(null, "Barchasi");
 }

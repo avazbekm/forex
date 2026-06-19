@@ -44,6 +44,22 @@ public static class ApiExtensions
                 Message = apiEx.ReasonPhrase ?? apiEx.Message
             };
         }
+        catch (HttpRequestException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
         catch (Exception ex)
         {
             return new Response<T>
@@ -99,6 +115,22 @@ public static class ApiExtensions
             {
                 StatusCode = (int)apiEx.StatusCode,
                 Message = apiEx.ReasonPhrase ?? apiEx.Message
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
             };
         }
         catch (Exception ex)
@@ -186,6 +218,22 @@ public static class ApiExtensions
             {
                 StatusCode = (int)apiEx.StatusCode,
                 Message = apiEx.ReasonPhrase ?? apiEx.Message
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            return new PagedResponse<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            return new PagedResponse<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
             };
         }
         catch (Exception ex)

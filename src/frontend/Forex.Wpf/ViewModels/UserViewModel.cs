@@ -1,6 +1,7 @@
 ﻿namespace Forex.Wpf.ViewModels;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using Forex.ClientService.Enums;
 using Forex.Wpf.Pages.Common;
 using System.Collections.ObjectModel;
 
@@ -12,6 +13,7 @@ public partial class UserViewModel : ViewModelBase
     [ObservableProperty] private string email = string.Empty;
     [ObservableProperty] private string address = string.Empty;
     [ObservableProperty] private string description = string.Empty;
+    [ObservableProperty] private UserRole role;
 
     [ObservableProperty] private ObservableCollection<UserAccountViewModel> accounts = [];
     [ObservableProperty] private ObservableCollection<ProductEntryViewModel> preparedProducts = [];
@@ -39,6 +41,7 @@ public partial class UserViewModel : ViewModelBase
                 Email = value.Email;
                 Address = value.Address;
                 Description = value.Description;
+                Role = value.Role;
                 Accounts = new ObservableCollection<UserAccountViewModel>(value.Accounts ?? []);
                 PreparedProducts = new ObservableCollection<ProductEntryViewModel>(value.PreparedProducts ?? []);
             }

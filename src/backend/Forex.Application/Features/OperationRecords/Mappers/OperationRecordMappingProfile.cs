@@ -17,5 +17,6 @@ public class OperationRecordMappingProfile : Profile
         CreateMap<Sale, SaleForOperationDto>();
 
         CreateMap<Transaction, TransactionForOperationDto>();
+        CreateMap<Supply, SupplyForOperationDto>();
     }
 }

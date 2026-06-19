@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 public class SemiProductsController
     : QueryControllers<SemiProductDto, GetAllSemiProductsQuery, GetSemiProductByIdQuery>
 {
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateSemiProductCommand command)
+        => Ok(new Response { Data = await Mediator.Send(command, Ct) });
 
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id)

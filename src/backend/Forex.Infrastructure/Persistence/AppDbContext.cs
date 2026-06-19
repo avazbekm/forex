@@ -43,6 +43,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CompanyInfo> CompanyInfo { get; set; }
     public DbSet<SocialLink> SocialLinks { get; set; }
     public DbSet<OperationRecord> OperationRecords { get; set; }
+    public DbSet<Supply> Supplies { get; set; }
 
     private IDbContextTransaction? currentTransaction;
 
@@ -110,6 +111,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasDiscriminator<string>("AccountType")
             .HasValue<UserAccount>("Customer")
             .HasValue<ShopAccount>("ShopCash");
+
+        modelBuilder.Entity<Supply>()
+            .HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Supply>()
+            .HasOne(s => s.Currency)
+            .WithMany()
+            .HasForeignKey(s => s.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<OperationRecord>()
+            .HasOne(o => o.User)
+            .WithMany()
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Ignore<System.Transactions.Transaction>();
     }

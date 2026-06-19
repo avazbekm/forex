@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,15 +7,15 @@ using Refit;
 
 public interface IApiProcesses
 {
-    [Post("/processes")]
+    [Post("/api/processes")]
     Task<Response<long?>> CreateAsync(List<EntryToProcessRequest> request);
 
-    [Put("/processes")]
+    [Put("/api/processes")]
     Task<Response<bool>> EditAsync(EntryToProcessRequest request);
 
-    [Delete("/processes/{id}")]
+    [Delete("/api/processes/{id}")]
     Task<Response<bool>> DeleteAsync(long id);
 
-    [Post("/processes/filter")]
+    [Post("/api/processes/filter")]
     Task<Response<List<InProcessResponse>>> Filter(FilteringRequest request);
 }

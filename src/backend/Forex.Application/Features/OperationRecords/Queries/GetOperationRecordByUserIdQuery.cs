@@ -1,7 +1,6 @@
-﻿namespace Forex.Application.Features.OperationRecords.Queries;
+namespace Forex.Application.Features.OperationRecords.Queries;
 
 using AutoMapper;
-using Forex.Application.Common.Exceptions;
 using Forex.Application.Common.Extensions;
 using Forex.Application.Common.Interfaces;
 using Forex.Application.Features.OperationRecords.DTOs;
@@ -45,10 +44,9 @@ public class GetOperationRecordByUserIdQueryHandler(IAppDbContext _context, IMap
     private async Task<decimal> GetOpeningBalanceAsync(long userId, CancellationToken ct)
     {
         var account = await _context.UserAccounts
-            .FirstOrDefaultAsync(a => a.UserId == userId, ct)
-            ?? throw new NotFoundException("UserAccount", nameof(userId), userId);
+            .FirstOrDefaultAsync(a => a.UserId == userId, ct);
 
-        return account.OpeningBalance;
+        return account?.OpeningBalance ?? 0;
     }
 
     private async Task<List<OperationRecord>> GetAllUserOperationRecordsAsync(long userId, CancellationToken ct)
@@ -56,9 +54,12 @@ public class GetOperationRecordByUserIdQueryHandler(IAppDbContext _context, IMap
         return await _context.OperationRecords
             .Include(x => x.Sale)
             .Include(x => x.Transaction)
+            .Include(x => x.Supply)
             .Where(or =>
+                or.UserId == userId ||
                 (or.Sale != null && or.Sale.CustomerId == userId) ||
-                (or.Transaction != null && or.Transaction.UserId == userId)
+                (or.Transaction != null && or.Transaction.UserId == userId) ||
+                (or.Supply != null && or.Supply.UserId == userId)
             )
             .ToListAsync(ct);
     }

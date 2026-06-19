@@ -4,12 +4,11 @@ using Forex.ClientService;
 using Forex.ClientService.Services;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Auth;
-using Forex.Wpf.Pages.Processes;
 using Forex.Wpf.Pages.Products;
 using Forex.Wpf.Pages.Reports;
 using Forex.Wpf.Pages.Sales;
-using Forex.Wpf.Pages.SemiProducts.Views;
 using Forex.Wpf.Pages.Settings;
+using Forex.Wpf.Pages.Supply.Views;
 using Forex.Wpf.Pages.Transactions.Views;
 using Forex.Wpf.Pages.Users;
 using Forex.Wpf.Windows;
@@ -57,10 +56,10 @@ public partial class HomePage : Page
         btnSale.RegisterShortcut(Key.F1);
         btnCash.RegisterShortcut(Key.F2);
         btnProduct.RegisterShortcut(Key.F3);
-        //btnSemiProductEntry.RegisterShortcut(Key.F4);
-        btnUser.RegisterShortcut(Key.F4);
-        btnReports.RegisterShortcut(Key.F5);
-        btnSettings.RegisterShortcut(Key.F6);
+        btnSupply.RegisterShortcut(Key.F4);
+        btnUser.RegisterShortcut(Key.F5);
+        btnReports.RegisterShortcut(Key.F6);
+        btnSettings.RegisterShortcut(Key.F7);
     }
 
     private void RegisterFocusNavigation()
@@ -70,7 +69,7 @@ public partial class HomePage : Page
             btnSale,
             btnCash,
             btnProduct,
-            btnSemiProductEntry,
+            btnSupply,
             btnUser,
             btnReports,
             btnSettings,
@@ -92,8 +91,8 @@ public partial class HomePage : Page
     private void BtnSettings_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new SettingsPage());
 
-    private void BtnSemiProduct_Click(object sender, RoutedEventArgs e)
-        => Main.NavigateTo(new SemiProductPage());
+    private void BtnSupply_Click(object sender, RoutedEventArgs e)
+        => Main.NavigateTo(new SupplyPage());
 
     private void btnReports_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new ReportsPage());
@@ -104,9 +103,6 @@ public partial class HomePage : Page
         AuthStore.Instance.Logout();
         Main.NavigateTo(new LoginPage());
     }
-
-    private void btnProcess_Click(object sender, RoutedEventArgs e)
-          => Main.NavigateTo(new ProcessPage());
 
     private void BtnOverdue_Click(object sender, RoutedEventArgs e)
     {

@@ -52,13 +52,36 @@
                         </StackPanel>
                     </StackPanel>
 
+                    <!--<StackPanel Margin="0,0,20,0">
+                        <TextBlock
+                            Margin="0,0,0,5"
+                            FontSize="12"
+                            Foreground="#666"
+                            Text="Aylanma turi" />
+                        <Border
+                            Height="36"
+                            BorderBrush="#DDD"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <ComboBox
+                                Width="160"
+                                Padding="8,0"
+                                VerticalContentAlignment="Center"
+                                BorderThickness="0"
+                                DisplayMemberPath="Text"
+                                FontSize="14"
+                                ItemsSource="{Binding PartyFilterOptions}"
+                                SelectedItem="{Binding SelectedPartyFilterOption, Mode=TwoWay}" />
+                        </Border>
+                    </StackPanel>-->
+
                     <!-- Customer -->
                     <StackPanel Margin="0,0,20,0">
                         <TextBlock
                             Margin="0,0,0,5"
                             FontSize="12"
                             Foreground="#666"
-                            Text="Mijozni tanlang" />
+                            Text="Shaxsni tanlang" />
                         <Border
                             Height="36"
                             BorderBrush="#DDD"

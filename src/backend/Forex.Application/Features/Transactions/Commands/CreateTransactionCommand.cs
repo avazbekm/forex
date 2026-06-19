@@ -34,7 +34,6 @@ public class CreateTransactionCommandHandler(
         {
             var transaction = await CreateTransactionAsync(request, cancellationToken);
             await UpdateUserAccountAsync(request, transaction, cancellationToken);
-            UpdateShopAccount(transaction);
             await UpdateCurrencyExchangeRate(transaction.CurrencyId, transaction.ExchangeRate);
 
             await context.CommitTransactionAsync(cancellationToken);
@@ -58,7 +57,6 @@ public class CreateTransactionCommandHandler(
     private async Task<Transaction> CreateTransactionAsync(CreateTransactionCommand request, CancellationToken cancellationToken)
     {
         var shop = await context.Shops
-            .Include(sh => sh.ShopAccounts)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (shop is null)
@@ -69,16 +67,6 @@ public class CreateTransactionCommandHandler(
                 NormalizedName = "DEFAULT"
             };
 
-            var shopAccount = new ShopAccount
-            {
-                CurrencyId = request.CurrencyId,
-                OpeningBalance = 0,
-                Balance = 0,
-                Discount = 0,
-                Shop = shop,
-            };
-
-            context.ShopCashAccounts.Add(shopAccount);
             context.Shops.Add(shop);
         }
 
@@ -93,7 +81,8 @@ public class CreateTransactionCommandHandler(
             Amount = transaction.IsIncome ? amount : -amount,
             Date = transaction.Date,
             Description = description,
-            Type = OperationType.Transaction
+            Type = OperationType.Transaction,
+            UserId = transaction.UserId
         };
 
         context.Transactions.Add(transaction);
@@ -152,31 +141,5 @@ public class CreateTransactionCommandHandler(
             userAccount.Balance += delta;
         else
             userAccount.Balance -= delta;
-    }
-
-    private static void UpdateShopAccount(Transaction transaction)
-    {
-        var shopAccount = transaction.Shop.ShopAccounts.FirstOrDefault(sh => sh.CurrencyId == transaction.CurrencyId);
-
-        if (shopAccount is null)
-        {
-            transaction.Shop.ShopAccounts.Add(shopAccount = new ShopAccount
-            {
-                CurrencyId = transaction.CurrencyId,
-                OpeningBalance = 0,
-                Balance = 0,
-                Discount = 0
-            });
-        }
-
-        if (transaction.PaymentMethod == PaymentMethod.Naqd)
-        {
-            if (transaction.IsIncome)
-                shopAccount.Balance += transaction.Amount;
-            else
-                shopAccount.Balance -= transaction.Amount;
-            if (shopAccount.Balance < 0)
-                throw new ConflictException("Do'kon kassasida mablag' yetarli emas!");
-        }
     }
 }

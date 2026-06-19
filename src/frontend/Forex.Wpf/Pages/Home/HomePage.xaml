@@ -347,7 +347,7 @@
                     FontWeight="Medium"
                     Foreground="{DynamicResource MainMenuTextColor}"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
-                    💵 To'lov
+                    O'tkazmalar
                 </Button>
 
                 <Button
@@ -367,46 +367,22 @@
                 </Button>
 
                 <Button
-                    x:Name="btnProcess"
-                    Height="120"
-                    MinWidth="220"
-                    Margin="10"
-                    md:ButtonAssist.CornerRadius="10"
-                    md:ElevationAssist.Elevation="Dp24"
-                    Background="Black"
-                    Click="btnProcess_Click"
-                    FontSize="24"
-                    FontWeight="Medium"
-                    Foreground="{DynamicResource MainMenuTextColor}"
-                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}"
-                    Visibility="Collapsed">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center">🗜</TextBlock>
-                        <TextBlock TextAlignment="Center" TextWrapping="Wrap">
-                            Ishlab<LineBreak />
-                            chiqarish</TextBlock>
-                    </StackPanel>
-                </Button>
-
-                <Button
-                    x:Name="btnSemiProductEntry"
+                    x:Name="btnSupply"
                     Height="120"
                     MinWidth="220"
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
                     Background="#FF8E24AA"
-                    Click="BtnSemiProduct_Click"
+                    Click="BtnSupply_Click"
                     FontSize="24"
                     FontWeight="Medium"
                     Foreground="{DynamicResource MainMenuTextColor}"
-                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}"
-                    Visibility="Collapsed">
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center">📦</TextBlock>
                         <TextBlock TextAlignment="Center" TextWrapping="Wrap">
-                            Yarim tayyor<LineBreak />
-                            mahsulot</TextBlock>
+                            Ta'minot</TextBlock>
                     </StackPanel>
                 </Button>
 

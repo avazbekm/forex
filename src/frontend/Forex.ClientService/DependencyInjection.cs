@@ -15,18 +15,18 @@ public static class DependencyInjection
         services.AddSingleton<AuthStore>();
 
         services.AddSingleton<IFileStorageClient, FileStorageClient>();
+        services.AddSingleton(_ => new ApiEndpointStore(config.GetValue<string>("ApiBaseUrl")!));
 
         services.AddTransient<AuthHeaderHandler>();
 
-        string apiBaseUrl = config.GetValue<string>("ApiBaseUrl")!;
-        services.AddAllRefitClients(apiBaseUrl);
+        services.AddAllRefitClients();
 
         services.AddSingleton<ForexClient>();
 
         return services;
     }
 
-    private static IServiceCollection AddAllRefitClients(this IServiceCollection services, string baseUrl)
+    private static IServiceCollection AddAllRefitClients(this IServiceCollection services)
     {
         var assembly = typeof(IApiAuth).Assembly;
         var refitInterfaces = assembly.GetTypes()
@@ -36,7 +36,11 @@ public static class DependencyInjection
         foreach (var apiInterface in refitInterfaces)
         {
             services.AddRefitClient(apiInterface)
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
+                .ConfigureHttpClient((sp, c) =>
+                {
+                    c.BaseAddress = sp.GetRequiredService<ApiEndpointStore>().BaseUri;
+                    c.Timeout = TimeSpan.FromSeconds(10);
+                })
                 .AddHttpMessageHandler<AuthHeaderHandler>();
         }
 

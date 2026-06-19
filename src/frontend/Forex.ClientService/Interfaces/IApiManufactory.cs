@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Responses;
@@ -6,18 +6,18 @@ using Refit;
 
 public interface IApiManufactory
 {
-    [Get("/manufactories")]
+    [Get("/api/manufactories")]
     Task<Response<List<ManufactoryResponse>>> GetAll();
 
-    [Get("/manufactories/{id}")]
+    [Get("/api/manufactories/{id}")]
     Task<Response<ManufactoryResponse>> GetById(long id);
 
-    [Post("/manufactories")]
+    [Post("/api/manufactories")]
     Task<Response<long?>> Create([Body] ManufactoryResponse dto);
 
-    [Put("/manufactories")]
+    [Put("/api/manufactories")]
     Task<Response<bool>> Update([Body] ManufactoryResponse dto);
 
-    [Delete("/manufactories/{id}")]
+    [Delete("/api/manufactories/{id}")]
     Task<Response<bool>> Delete(long id);
 }

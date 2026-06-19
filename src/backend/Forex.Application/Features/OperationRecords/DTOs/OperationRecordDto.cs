@@ -11,7 +11,9 @@ public record OperationRecordDto
     public DateTime Date { get; set; }
     public decimal Amount { get; set; }
     public string Description { get; set; } = string.Empty;
+    public long? UserId { get; set; }
 
     public SaleForOperationDto? Sale { get; set; }
     public TransactionForOperationDto? Transaction { get; set; }
+    public SupplyForOperationDto? Supply { get; set; }
 }

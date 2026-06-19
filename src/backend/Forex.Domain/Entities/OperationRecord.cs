@@ -10,7 +10,11 @@ public class OperationRecord : Auditable
     public DateTime Date { get; set; }
     public decimal Amount { get; set; }
     public string Description { get; set; } = string.Empty;
+    public long? UserId { get; set; }
+    public User? User { get; set; }
 
     public Sale? Sale { get; set; }
     public Transaction? Transaction { get; set; }
+    public long? SupplyId { get; set; }
+    public Supply? Supply { get; set; }
 }

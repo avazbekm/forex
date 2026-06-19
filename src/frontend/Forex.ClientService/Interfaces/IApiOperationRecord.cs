@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,6 +7,6 @@ using Refit;
 
 public interface IApiOperationRecord
 {
-    [Post("/operation-records")]
+    [Post("/api/operation-records")]
     Task<Response<OperationRecordTurnoverDto>> GetTurnover([Body] TurnoverRequest request);
 }

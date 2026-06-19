@@ -41,6 +41,7 @@ public interface IAppDbContext
     DbSet<CompanyInfo> CompanyInfo { get; set; }
     DbSet<SocialLink> SocialLinks { get; set; }
     DbSet<OperationRecord> OperationRecords { get; set; }
+    DbSet<Supply> Supplies { get; set; }
 
     Task<bool> SaveAsync(CancellationToken cancellation);
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
