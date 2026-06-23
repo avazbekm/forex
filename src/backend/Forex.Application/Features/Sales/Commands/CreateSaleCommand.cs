@@ -2,6 +2,7 @@
 
 using AutoMapper;
 using Forex.Application.Common.Exceptions;
+using Forex.Application.Common.Extensions;
 using Forex.Application.Common.Interfaces;
 using Forex.Application.Features.Sales.SaleItems.Commands;
 using Forex.Domain.Entities;
@@ -31,12 +32,13 @@ public class CreateSaleCommandHandler(
 
         try
         {
-            var userAccount = await GetOrCreateUserAccountAsync(request.CustomerId, request.TotalAmount, ct);
-            userAccount.Balance -= request.TotalAmount;
+            var customer = await context.Users.FirstOrDefaultAsync(u => u.Id == request.CustomerId, ct)
+                ?? throw new NotFoundException(nameof(User), nameof(request.CustomerId), request.CustomerId);
 
             var productResidues = await LoadProductResiduesAsync(request.SaleItems, ct);
 
             var sale = CreateSale(request);
+            sale.CurrencyId = customer.SettlementCurrencyId;
 
             var saleItems = BuildSaleItems(request.SaleItems, productResidues, sale);
 
@@ -49,11 +51,21 @@ public class CreateSaleCommandHandler(
             context.Sales.Add(sale);
             context.SaleItems.AddRange(saleItems);
 
-            var description = await GenerateDescription(sale);
+            var currencyCode = await context.Currencies
+                .Where(c => c.Id == sale.CurrencyId)
+                .Select(c => c.Code)
+                .FirstOrDefaultAsync(ct) ?? string.Empty;
+
+            var description = await GenerateDescription(sale, currencyCode);
+
+            var (rate, _) = await context.ApplyToSettlementAsync(
+                sale.CustomerId, sale.CurrencyId, 1m, -sale.TotalAmount, ct);
 
             sale.OperationRecord = new()
             {
                 Amount = -sale.TotalAmount,
+                Rate = rate,
+                CurrencyId = sale.CurrencyId,
                 Date = sale.Date,
                 Description = description,
                 Type = OperationType.Sale,
@@ -70,7 +82,7 @@ public class CreateSaleCommandHandler(
         }
     }
 
-    private async Task<string> GenerateDescription(Sale sale)
+    private async Task<string> GenerateDescription(Sale sale, string currencyCode)
     {
         StringBuilder text = new();
 
@@ -81,31 +93,10 @@ public class CreateSaleCommandHandler(
                       .FirstOrDefaultAsync(pt => pt.Id == item.ProductTypeId)
                       ?? throw new NotFoundException(nameof(ProductType), nameof(item.ProductTypeId), item.ProductTypeId);
 
-            text.AppendLine($"Kodi: {productType.Product.Code} ({productType.Type}), Soni: {item.TotalCount}, Narxi: {item.UnitPrice}, Jami: {item.Amount} UZS");
+            text.AppendLine($"Kodi: {productType.Product.Code} ({productType.Type}), Soni: {item.TotalCount}, Narxi: {item.UnitPrice}, Jami: {item.Amount} {currencyCode}");
         }
 
         return text.ToString().TrimEnd();
-    }
-
-    private async Task<UserAccount> GetOrCreateUserAccountAsync(long customerId, decimal initialBalance, CancellationToken ct)
-    {
-        var user = await context.Users
-            .Include(u => u.Accounts)
-            .FirstOrDefaultAsync(u => u.Id == customerId, ct)
-            ?? throw new NotFoundException(nameof(User), nameof(customerId), customerId);
-
-        var account = user.Accounts.FirstOrDefault();
-        if (account is not null) return account;
-
-        var newAccount = new UserAccount
-        {
-            UserId = user.Id,
-            Balance = initialBalance
-        };
-
-        context.UserAccounts.Add(newAccount);
-        await context.SaveAsync(ct);
-        return newAccount;
     }
 
     private async Task<List<ProductResidue>> LoadProductResiduesAsync(List<SaleItemCommand> saleItems, CancellationToken ct)
@@ -137,7 +128,6 @@ public class CreateSaleCommandHandler(
                 ?? throw new NotFoundException(nameof(ProductEntry), nameof(residue.ProductTypeId), residue.ProductTypeId);
 
             var totalCount = cmd.BundleCount * entry.BundleItemCount;
-            var benifit = (cmd.UnitPrice - entry.UnitPrice) * totalCount;
 
             items.Add(new SaleItem
             {
@@ -146,8 +136,6 @@ public class CreateSaleCommandHandler(
                 TotalCount = totalCount,
                 UnitPrice = cmd.UnitPrice,
                 Amount = cmd.Amount,
-                CostPrice = entry.UnitPrice * totalCount,
-                Benifit = benifit,
                 ProductTypeId = cmd.ProductTypeId,
                 Sale = sale
             });
@@ -170,8 +158,6 @@ public class CreateSaleCommandHandler(
 
     private static void CalculateSaleTotals(Sale sale, List<SaleItem> items)
     {
-        sale.CostPrice = items.Sum(s => s.CostPrice);
-        sale.BenifitPrice = items.Sum(s => s.Benifit);
         sale.TotalCount = items.Sum(s => s.TotalCount);
     }
 }

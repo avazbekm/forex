@@ -118,6 +118,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(o => o.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<OperationRecord>()
+            .HasOne(o => o.Currency)
+            .WithMany()
+            .HasForeignKey(o => o.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.SettlementCurrency)
+            .WithMany()
+            .HasForeignKey(u => u.SettlementCurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Sale>()
+            .HasOne(s => s.Currency)
+            .WithMany()
+            .HasForeignKey(s => s.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Ignore<System.Transactions.Transaction>();
     }
 }

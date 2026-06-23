@@ -22,7 +22,8 @@ public class GetOperationRecordByUserIdQueryHandler(IAppDbContext _context, IMap
         GetOperationRecordByUserIdQuery request,
         CancellationToken ct)
     {
-        var openingBalance = await GetOpeningBalanceAsync(request.UserId, ct);
+        var account = await GetSettlementAccountAsync(request.UserId, ct);
+        var openingBalance = account?.OpeningBalance ?? 0;
 
         var allRecords = await GetAllUserOperationRecordsAsync(request.UserId, ct);
 
@@ -37,21 +38,27 @@ public class GetOperationRecordByUserIdQueryHandler(IAppDbContext _context, IMap
         {
             BeginBalance = beginBalance,
             EndBalance = endBalance,
+            SettlementCurrencyId = account?.CurrencyId ?? 0,
+            SettlementCurrencyCode = account?.Currency?.Code,
             OperationRecords = operationsInRange
         };
     }
 
-    private async Task<decimal> GetOpeningBalanceAsync(long userId, CancellationToken ct)
+    private async Task<UserAccount?> GetSettlementAccountAsync(long userId, CancellationToken ct)
     {
-        var account = await _context.UserAccounts
-            .FirstOrDefaultAsync(a => a.UserId == userId, ct);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user is null)
+            return null;
 
-        return account?.OpeningBalance ?? 0;
+        return await _context.UserAccounts
+            .Include(a => a.Currency)
+            .FirstOrDefaultAsync(a => a.UserId == userId && a.CurrencyId == user.SettlementCurrencyId, ct);
     }
 
     private async Task<List<OperationRecord>> GetAllUserOperationRecordsAsync(long userId, CancellationToken ct)
     {
         return await _context.OperationRecords
+            .Include(x => x.Currency)
             .Include(x => x.Sale)
             .Include(x => x.Transaction)
             .Include(x => x.Supply)
@@ -68,7 +75,7 @@ public class GetOperationRecordByUserIdQueryHandler(IAppDbContext _context, IMap
     {
         var turnover = all
             .Where(or => isEndDate ? or.Date < date.AddDays(1).ToUtcSafe() : or.Date < date.ToUtcSafe())
-            .Sum(or => or.Amount);
+            .Sum(or => or.Amount * or.Rate);
 
         return openingBalance + turnover;
     }

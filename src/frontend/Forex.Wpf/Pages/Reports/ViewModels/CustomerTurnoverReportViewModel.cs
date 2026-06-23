@@ -65,7 +65,8 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
     [ObservableProperty] private decimal _beginBalance;
     [ObservableProperty] private decimal _lastBalance;
-    
+    [ObservableProperty] private string? _settlementCurrencyCode;
+
     public bool HasData => Operations?.Count > 0;
 
     public CustomerTurnoverReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -117,33 +118,35 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
         BeginBalance = data.BeginBalance;
         LastBalance = data.EndBalance;
+        SettlementCurrencyCode = data.SettlementCurrencyCode;
 
         foreach (var op in data.OperationRecords.OrderBy(o => o.Date))
         {
+            var amount = op.SettlementAmount;
             decimal debit = 0;
             decimal credit = 0;
 
             if (op.Type == ClientService.Enums.OperationType.Sale)
             {
-                debit = Math.Abs(op.Amount);
+                debit = Math.Abs(amount);
             }
             else if (op.Type == ClientService.Enums.OperationType.Transaction)
             {
                 if (op.Transaction is not null)
                 {
-                    credit = op.Transaction.IsIncome == true ? Math.Abs(op.Amount) : 0;
-                    debit = op.Transaction.IsIncome == false ? Math.Abs(op.Amount) : 0;
+                    credit = op.Transaction.IsIncome == true ? Math.Abs(amount) : 0;
+                    debit = op.Transaction.IsIncome == false ? Math.Abs(amount) : 0;
                 }
                 else
                 {
-                    debit = op.Amount < 0 ? Math.Abs(op.Amount) : 0;
-                    credit = op.Amount > 0 ? Math.Abs(op.Amount) : 0;
+                    debit = amount < 0 ? Math.Abs(amount) : 0;
+                    credit = amount > 0 ? Math.Abs(amount) : 0;
                 }
             }
             else if (op.Type == ClientService.Enums.OperationType.Supply)
             {
-                credit = op.Amount > 0 ? op.Amount : 0;
-                debit = op.Amount < 0 ? Math.Abs(op.Amount) : 0;
+                credit = amount > 0 ? amount : 0;
+                debit = amount < 0 ? Math.Abs(amount) : 0;
             }
 
             Operations.Add(new TurnoversViewModel
@@ -257,7 +260,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             ws.Range(row, 1, row, 3).Merge().Style
                 .Font.SetBold().Font.SetFontSize(14)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Center);
-            ws.Cell(row, 4).Value = BeginBalance.ToString("N2");
+            ws.Cell(row, 4).Value = $"{BeginBalance:N2} {SettlementCurrencyCode}".Trim();
             ws.Cell(row, 4).Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(ClosedXML.Excel.XLColor.DarkBlue)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Right);
             row++;
@@ -297,7 +300,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             ws.Range(row, 1, row, 3).Merge().Style
                 .Font.SetBold().Font.SetFontSize(15)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Center);
-            ws.Cell(row, 4).Value = LastBalance.ToString("N2");
+            ws.Cell(row, 4).Value = $"{LastBalance:N2} {SettlementCurrencyCode}".Trim();
             ws.Cell(row, 4).Style.Font.SetBold().Font.SetFontSize(18)
                 .Font.SetFontColor(LastBalance >= 0 ? ClosedXML.Excel.XLColor.DarkGreen : ClosedXML.Excel.XLColor.DarkRed)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Right);
@@ -563,7 +566,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             // 2. Boshlang'ich qoldiq (Faqat 1-sahifada)
             if (isFirstPage)
             {
-                var initialBalanceGrid = CreateBalanceRow(finalColWidths, "Boshlang‘ich qoldiq", BeginBalance.ToString("N2"));
+                var initialBalanceGrid = CreateBalanceRow(finalColWidths, "Boshlang‘ich qoldiq", $"{BeginBalance:N2} {SettlementCurrencyCode}".Trim());
                 container.Children.Add(initialBalanceGrid);
                 currentY += balanceRowHeight;
             }
@@ -638,7 +641,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                     "");
                 container.Children.Add(totalGrid);
 
-                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", LastBalance.ToString("N2"));
+                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", $"{LastBalance:N2} {SettlementCurrencyCode}".Trim());
                 container.Children.Add(lastBalanceGrid);
             }
 
@@ -647,7 +650,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                 var totalGrid = CreateRow(finalColWidths, true, "JAMI", "", "", "");
                 container.Children.Add(totalGrid);
 
-                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", BeginBalance.ToString("N2"));
+                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", $"{BeginBalance:N2} {SettlementCurrencyCode}".Trim());
                 container.Children.Add(lastBalanceGrid);
             }
 

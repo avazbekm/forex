@@ -19,16 +19,24 @@ public sealed record UserResponse
 
     public IList<UserAccountResponse> Accounts { get; set; } = default!;
 
+    public long SettlementCurrencyId { get; set; }
+    public CurrencyResponse? SettlementCurrency { get; set; }
+
 
     [JsonIgnore]
     public bool IsEditing { get; set; }
 
-    // 🟢 Hisob qoldiq (birinchi account bo‘yicha)
     [JsonIgnore]
-    public decimal? FirstBalance => Accounts?.FirstOrDefault()?.Balance;
+    public UserAccountResponse? SettlementAccount =>
+        Accounts?.FirstOrDefault(a => a.CurrencyId == SettlementCurrencyId) ?? Accounts?.FirstOrDefault();
 
-    // 🟢 Valyuta nomi (birinchi account bo‘yicha)
     [JsonIgnore]
-    public string? FirstCurrencyName => Accounts?.FirstOrDefault()?.Currency?.Name;
+    public decimal? FirstBalance => SettlementAccount?.Balance;
+
+    [JsonIgnore]
+    public string? FirstCurrencyName => SettlementAccount?.Currency?.Name ?? SettlementCurrency?.Name;
+
+    [JsonIgnore]
+    public string? FirstCurrencyCode => SettlementAccount?.Currency?.Code ?? SettlementCurrency?.Code;
 
 }

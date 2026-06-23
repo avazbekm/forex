@@ -21,6 +21,8 @@ public partial class UserViewModel : ViewModelBase
 
     [ObservableProperty] private decimal? balance;
     [ObservableProperty] private decimal? discount;
+    [ObservableProperty] private long settlementCurrencyId;
+    [ObservableProperty] private string? currencyCode;
 
     public string PhoneAndAddress => string.IsNullOrWhiteSpace(Address)
         ? Phone
@@ -54,6 +56,12 @@ public partial class UserViewModel : ViewModelBase
         CalculateDiscount();
     }
 
+    partial void OnSettlementCurrencyIdChanged(long value)
+    {
+        CalculateBalance();
+        CalculateDiscount();
+    }
+
     partial void OnPhoneChanged(string value) => OnPropertyChanged(nameof(PhoneAndAddress));
     partial void OnAddressChanged(string value) => OnPropertyChanged(nameof(PhoneAndAddress));
 
@@ -61,20 +69,19 @@ public partial class UserViewModel : ViewModelBase
 
     #region Private Helpers
 
+    private UserAccountViewModel? SettlementAccount =>
+        Accounts.FirstOrDefault(x => x.CurrencyId == SettlementCurrencyId) ?? Accounts.FirstOrDefault();
+
     private void CalculateBalance()
     {
-        if (Accounts.Any())
-            Balance = Accounts
-                .Where(x => x.Currency is not null && x.Currency.Code == "UZS")
-                .Sum(x => x.Balance);
+        var account = SettlementAccount;
+        Balance = account?.Balance ?? 0;
+        CurrencyCode = account?.Currency?.Code;
     }
 
     private void CalculateDiscount()
     {
-        if (Accounts.Any())
-            Discount = Accounts
-                .Where(x => x.Currency is not null && x.Currency.Code == "UZS")
-                .Sum(x => x.Discount);
+        Discount = SettlementAccount?.Discount ?? 0;
     }
 
     #endregion Private Helpers

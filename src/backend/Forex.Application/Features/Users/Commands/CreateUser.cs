@@ -55,8 +55,8 @@ public class CreateUserCommandHandler(
             user.PasswordHash = hasher.HashPassword(request.Password);
         }
 
-        // 5. Valyuta va Account mantiqini ishlash
-        await AssignCurrencyByRole(user, request.Role, cancellationToken);
+        // 5. Asosiy valyuta va hisob
+        await AssignSettlementCurrency(user, request.Role, cancellationToken);
 
         context.Users.Add(user);
         await context.SaveAsync(cancellationToken);
@@ -64,11 +64,35 @@ public class CreateUserCommandHandler(
         return user.Id;
     }
 
-    private async Task AssignCurrencyByRole(User user, UserRole role, CancellationToken ct)
+    private async Task AssignSettlementCurrency(User user, UserRole role, CancellationToken ct)
+    {
+        var account = user.Accounts.FirstOrDefault();
+
+        Currency? currency = account is not null && account.CurrencyId > 0
+            ? await context.Currencies.FirstOrDefaultAsync(c => c.Id == account.CurrencyId, ct)
+            : null;
+
+        currency ??= await ResolveCurrencyByRole(role, ct);
+
+        user.SettlementCurrency = currency;
+
+        if (account is null)
+        {
+            account = new UserAccount();
+            user.Accounts.Add(account);
+        }
+
+        account.Currency = currency;
+        if (currency.Id != 0)
+            account.CurrencyId = currency.Id;
+        account.Balance = account.OpeningBalance;
+    }
+
+    private async Task<Currency> ResolveCurrencyByRole(UserRole role, CancellationToken ct)
     {
         Currency? currency;
 
-        if (role == UserRole.Vositachi)
+        if (role == UserRole.Vositachi || role == UserRole.Taminotchi)
         {
             currency = await context.Currencies
                 .FirstOrDefaultAsync(c => c.NormalizedName == "Dollar".ToNormalized(), ct);
@@ -110,15 +134,6 @@ public class CreateUserCommandHandler(
                 throw new AppException("So'm standart valyuta sifatida tanlanishi shart!");
         }
 
-        // Agar foydalanuvchining hisob raqamlari (Accounts) bo'lsa, birinchisiga valyutani bog'laymiz
-        if (user.Accounts.Count != 0)
-        {
-            user.Accounts.First().Currency = currency;
-        }
-        else
-        {
-            // Hisob raqami bo'lmasa, yangi hisob ochamiz
-            user.Accounts.Add(new UserAccount { Currency = currency });
-        }
+        return currency;
     }
 }

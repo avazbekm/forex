@@ -2,6 +2,7 @@
 
 using AutoMapper;
 using Forex.Application.Common.Exceptions;
+using Forex.Application.Common.Extensions;
 using Forex.Application.Common.Interfaces;
 using Forex.Domain.Entities;
 using Forex.Domain.Enums;
@@ -33,8 +34,6 @@ public class CreateTransactionCommandHandler(
         try
         {
             var transaction = await CreateTransactionAsync(request, cancellationToken);
-            await UpdateUserAccountAsync(request, transaction, cancellationToken);
-            await UpdateCurrencyExchangeRate(transaction.CurrencyId, transaction.ExchangeRate);
 
             await context.CommitTransactionAsync(cancellationToken);
             return transaction.Id;
@@ -44,14 +43,6 @@ public class CreateTransactionCommandHandler(
             await context.RollbackTransactionAsync(cancellationToken);
             throw;
         }
-    }
-
-    private async Task UpdateCurrencyExchangeRate(long currencyId, decimal exchangeRate)
-    {
-        var currency = await context.Currencies.FirstOrDefaultAsync(c => c.Id == currencyId)
-            ?? throw new NotFoundException(nameof(Currency), nameof(currencyId), currencyId);
-
-        currency.ExchangeRate = exchangeRate;
     }
 
     private async Task<Transaction> CreateTransactionAsync(CreateTransactionCommand request, CancellationToken cancellationToken)
@@ -74,11 +65,24 @@ public class CreateTransactionCommandHandler(
         transaction.Shop = shop;
 
         var description = await GenerateDescription(transaction);
-        var amount = transaction.Amount * transaction.ExchangeRate + (transaction.IsIncome ? transaction.Discount : 0);
+
+        var discountInOp = transaction.IsIncome && transaction.Discount > 0 && transaction.ExchangeRate != 0
+            ? transaction.Discount / transaction.ExchangeRate
+            : 0m;
+        var signedAmount = transaction.IsIncome
+            ? transaction.Amount + discountInOp
+            : -transaction.Amount;
+
+        var (rate, account) = await context.ApplyToSettlementAsync(
+            transaction.UserId, transaction.CurrencyId, transaction.ExchangeRate, signedAmount, cancellationToken);
+
+        account.DueDate = DateTime.SpecifyKind(request.DueDate, DateTimeKind.Utc);
 
         transaction.OperationRecord = new()
         {
-            Amount = transaction.IsIncome ? amount : -amount,
+            Amount = signedAmount,
+            Rate = rate,
+            CurrencyId = transaction.CurrencyId,
             Date = transaction.Date,
             Description = description,
             Type = OperationType.Transaction,
@@ -108,38 +112,5 @@ public class CreateTransactionCommandHandler(
             _ => "Noma'lum to'lov usuli",
         }) + "\n"
         + transaction.Description;
-    }
-
-    private async Task UpdateUserAccountAsync(CreateTransactionCommand request, Transaction transaction, CancellationToken cancellationToken)
-    {
-        var uzsCurrency = await context.Currencies
-            .FirstOrDefaultAsync(c => c.Code == "UZS", cancellationToken)
-            ?? throw new NotFoundException(nameof(Currency), nameof(Currency.Code), "UZS");
-
-        var userAccount = await context.UserAccounts
-            .FirstOrDefaultAsync(a => a.UserId == request.UserId && a.CurrencyId == uzsCurrency.Id, cancellationToken);
-
-        if (userAccount is null)
-        {
-            userAccount = new UserAccount
-            {
-                UserId = request.UserId,
-                CurrencyId = uzsCurrency.Id,
-                OpeningBalance = 0,
-                Balance = 0,
-                Discount = 0
-            };
-            context.UserAccounts.Add(userAccount);
-        }
-
-        var amountInUZS = request.Amount * request.ExchangeRate;
-        var delta = amountInUZS + request.Discount;
-
-        userAccount.DueDate = DateTime.SpecifyKind(request.DueDate, DateTimeKind.Utc);
-
-        if (request.IsIncome)
-            userAccount.Balance += delta;
-        else
-            userAccount.Balance -= delta;
     }
 }

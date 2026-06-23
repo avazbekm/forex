@@ -24,7 +24,7 @@
         <!--  Header  -->
         <Grid Grid.Row="0" Margin="5">
             <Label
-                Content="O'tkazmalar"
+                Content="💰 To'lovlar boshqaruvi"
                 FontSize="20"
                 FontWeight="Bold"
                 Foreground="{StaticResource SecondaryTextColor}" />

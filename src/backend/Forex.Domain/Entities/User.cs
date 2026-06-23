@@ -39,6 +39,9 @@ public class User : Auditable
     public DateTime? VerifiedAt { get; set; }
     public string? PreferencesJson { get; set; } // flexible storage for UI settings
 
+    public long SettlementCurrencyId { get; set; }
+    public Currency SettlementCurrency { get; set; } = default!;
+
     // Bog‘lanishlar
     public ICollection<UserAccount> Accounts { get; set; } = [];
     public ICollection<Sale> Sales { get; set; } = [];

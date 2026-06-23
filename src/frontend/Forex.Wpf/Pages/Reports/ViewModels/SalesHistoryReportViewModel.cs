@@ -33,6 +33,9 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [ObservableProperty]
     private decimal totalSalesAmount;
 
+    [ObservableProperty]
+    private string totalsSummary = string.Empty;
+
     public ObservableCollection<UserViewModel> AvailableCustomers => commonData.AvailableCustomers;
     public ObservableCollection<ProductViewModel> AvailableProducts => commonData.AvailableProducts;
 
@@ -71,6 +74,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             {
                 ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
                 ["customer"] = ["include"],
+                ["currency"] = ["include"],
                 ["saleItems"] = ["include:productType.product.unitMeasure"]
             },
             Descending = true,
@@ -103,7 +107,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                     TotalCount = item.TotalCount,
                     UnitMeasure = product.UnitMeasure?.Name ?? "dona",
                     UnitPrice = item.UnitPrice,
-                    Amount = item.Amount
+                    Amount = item.Amount,
+                    CurrencyCode = sale.CurrencyCode
                 });
             }
         }
@@ -376,6 +381,10 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             result = result.Where(x => x.Code == SelectedCode.Code);
         FilteredItems = new ObservableCollection<SaleHistoryItemViewModel>(result);
         TotalSalesAmount = FilteredItems.Sum(x => x.Amount);
+        TotalsSummary = string.Join("    ", FilteredItems
+            .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode!)
+            .OrderBy(g => g.Key)
+            .Select(g => $"{g.Key}: {g.Sum(x => x.Amount):N2}"));
     }
 
     private FixedDocument CreateFixedDocument()

@@ -15,4 +15,5 @@ public class SaleHistoryItemViewModel
     public string UnitMeasure { get; set; } = default!;
     public decimal UnitPrice { get; set; }
     public decimal Amount { get; set; }
+    public string? CurrencyCode { get; set; }
 }

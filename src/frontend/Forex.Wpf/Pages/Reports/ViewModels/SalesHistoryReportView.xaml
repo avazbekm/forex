@@ -307,12 +307,23 @@
 
                 <DataGridTextColumn
                     Width="120"
-                    Binding="{Binding TotalAmount, StringFormat=N2}"
+                    Binding="{Binding Amount, StringFormat=N2}"
                     Header="Summa">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right" />
                             <Setter Property="Padding" Value="0,0,8,0" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn
+                    Width="70"
+                    Binding="{Binding CurrencyCode}"
+                    Header="Valyuta">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -346,8 +357,7 @@
                     FontWeight="Bold"
                     Foreground="#2E7D32">
                     <Run Text="Umumiy summa: " />
-                    <Run Text="{Binding TotalSalesAmount, StringFormat=N2, Mode=OneWay}" />
-                    <Run Text=" so'm" />
+                    <Run Text="{Binding TotalsSummary, Mode=OneWay}" />
                 </TextBlock>
             </Grid>
         </Border>

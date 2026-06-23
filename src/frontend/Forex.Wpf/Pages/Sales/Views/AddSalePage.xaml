@@ -190,7 +190,7 @@
                     FontSize="12"
                     FontStyle="Italic"
                     FontWeight="Bold"
-                    Text="Mijoz hisobi:" />
+                    Text="{Binding Customer.CurrencyCode, StringFormat='Mijoz hisobi ({0}):', FallbackValue='Mijoz hisobi:', TargetNullValue='Mijoz hisobi:'}" />
 
 				<TextBlock Grid.Row="1" VerticalAlignment="Center" Text="Joriy:" />
 				<TextBox

@@ -267,6 +267,12 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding CurrencyCode}"
+                    ElementStyle="{StaticResource CenterAlignedCellStyle}"
+                    Header="Valyuta" />
             </DataGrid.Columns>
         </DataGrid>
 
@@ -282,29 +288,18 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock
                     Margin="0,0,30,0"
+                    VerticalAlignment="Center"
                     FontSize="14"
                     FontWeight="SemiBold"
                     Foreground="#555"
                     Text="{Binding FilteredItems.Count, StringFormat='Jami yozuvlar: {0} ta'}" />
-                    
+
                 <TextBlock
-                    Margin="0,0,30,0"
+                    VerticalAlignment="Center"
                     FontSize="14"
                     FontWeight="Medium"
-                    Foreground="#2E7D32"
-                    Text="{Binding TotalDebtor, StringFormat='Jami debitor: {0:N2}'}" />
-                    
-                <TextBlock
-                    Margin="0,0,30,0"
-                    FontSize="14"
-                    FontWeight="Medium"
-                    Foreground="#D32F2F"
-                    Text="{Binding TotalCreditor, StringFormat='Jami kreditor: {0:N2}'}" />
-                    
-                <TextBlock
-                    FontSize="15"
-                    FontWeight="Bold"
-                    Text="{Binding TotalBalance, StringFormat='Umumiy balans: {0:N2}'}" />
+                    Foreground="#333"
+                    Text="{Binding TotalsSummary}" />
             </StackPanel>
         </Border>
     </Grid>

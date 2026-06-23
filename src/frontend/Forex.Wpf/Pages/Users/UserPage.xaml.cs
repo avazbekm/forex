@@ -412,6 +412,10 @@ public partial class UserPage : Page
         tbDebt.Text = "";
         tbAccount.Text = "";
 
+        cbxValutaType.IsEnabled = true;
+        tbAccount.IsEnabled = true;
+        tbDebt.IsEnabled = true;
+
         // 🔴 User default qiymat
         cbRole.SelectedItem = "User";
         isCreatingNewUser = false; // 🔴 Reset
@@ -514,11 +518,17 @@ public partial class UserPage : Page
         // Accountlar qismi... (o'zgarishsiz qoladi)
         if (currentUser.Accounts != null && currentUser.Accounts.Count > 0)
         {
-            var account = currentUser.Accounts[0];
+            var account = currentUser.Accounts.FirstOrDefault(a => a.CurrencyId == currentUser.SettlementCurrencyId)
+                ?? currentUser.Accounts[0];
             cbxValutaType.SelectedValue = account.CurrencyId;
             if (account.Balance < 0) { tbDebt.Text = Math.Abs(account.Balance).ToString("N2"); tbAccount.Text = ""; }
             else if (account.Balance > 0) { tbAccount.Text = account.Balance.ToString("N2"); tbDebt.Text = ""; }
         }
+
+        // Asosiy valyuta va balans faqat yaratishda; tahrirda bloklanadi
+        cbxValutaType.IsEnabled = false;
+        tbAccount.IsEnabled = false;
+        tbDebt.IsEnabled = false;
 
         btnSave.Visibility = Visibility.Collapsed;
         btnUpdate.Visibility = Visibility.Visible;
