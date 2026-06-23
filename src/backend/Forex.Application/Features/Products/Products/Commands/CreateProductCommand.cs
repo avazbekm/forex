@@ -91,9 +91,7 @@ public class CreateProductCommandHandler(
                     UnitPrice = typeCmd.UnitPrice,
                     Product = product,
                     Currency = defaultCurrency,
-                    ProductTypeItems = [],
-                    ProductEntries = [],
-                    EntryToProcesses = []
+                    ProductEntries = []
                 };
 
                 context.ProductTypes.Add(productType);

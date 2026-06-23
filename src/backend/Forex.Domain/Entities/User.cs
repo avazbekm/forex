@@ -43,6 +43,5 @@ public class User : Auditable
     public ICollection<UserAccount> Accounts { get; set; } = [];
     public ICollection<Sale> Sales { get; set; } = [];
     public ICollection<Transaction> Transactions { get; set; } = [];
-    public ICollection<Invoice> Invoices { get; set; } = [];
     public ICollection<UserNotification> Notifications { get; set; } = [];
 }

@@ -63,7 +63,6 @@ public static class DependencyInjection
             provider.GetRequiredService<INavigationService>(),
             provider.GetRequiredService<SalesHistoryReportViewModel>(),
             provider.GetRequiredService<FinishedStockReportViewModel>(),
-            provider.GetRequiredService<SemiFinishedStockReportViewModel>(),
             provider.GetRequiredService<DebtorCreditorReportViewModel>(),
             provider.GetRequiredService<EmployeeBalanceReportViewModel>(),
             provider.GetRequiredService<CustomerTurnoverReportViewModel>(),

@@ -1,7 +1,5 @@
 ﻿namespace Forex.Application.Features.Products.ProductTypes.Commands;
 
-using Forex.Application.Features.Products.ProductTypeItems.Commands;
-
 public record ProductTypeCommand
 {
     public long Id { get; set; }
@@ -10,5 +8,4 @@ public record ProductTypeCommand
     public decimal UnitPrice { get; set; }
     public int Count { get; set; }
     public int BundleCount { get; set; }
-    public ICollection<ProductTypeItemCommand> ProductTypeItems { get; set; } = default!;
 }

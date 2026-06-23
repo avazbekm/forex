@@ -14,6 +14,6 @@ public class GetUnitMeasureByIdQueryHandler(
     : IRequestHandler<GetUnitMeasureByIdQuery, UnitMeasureDto>
 {
     public async Task<UnitMeasureDto> Handle(GetUnitMeasureByIdQuery request, CancellationToken cancellationToken)
-        => mapper.Map<UnitMeasureDto>(await context.Manufactories
+        => mapper.Map<UnitMeasureDto>(await context.UnitMeasures
             .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken));
 }

@@ -58,13 +58,9 @@ public class CreateProductEntryCommandHandler(
 
             product.ProductionOrigin = request.ProductionOrigin;
 
-            await TryDeductFromInProcessAsync(productType, request.Count, cancellationToken);
-
             var residue = await UpdateProductResidueAsync(productType, request.Count, shop, cancellationToken);
 
-            var costPrice = CalculateCostPrice(productType);
-
-            var entry = SaveProductEntry(request, productType, shop, residue, costPrice, defaultCurrency);
+            var entry = SaveProductEntry(request, productType, shop, residue, defaultCurrency);
 
             await context.CommitTransactionAsync(cancellationToken);
             return entry.Id;
@@ -200,9 +196,6 @@ public class CreateProductEntryCommandHandler(
             productType = await context.ProductTypes
                 .Include(pt => pt.Product)
                 .Include(pt => pt.ProductResidue)
-                .Include(pt => pt.ProductTypeItems)
-                    .ThenInclude(ti => ti.SemiProduct)
-                        .ThenInclude(sp => sp!.SemiProductEntries)
                 .FirstOrDefaultAsync(pt => pt.Id == productTypeCommand.Id && pt.ProductId == product.Id, ct);
         }
 
@@ -211,9 +204,6 @@ public class CreateProductEntryCommandHandler(
             productType = await context.ProductTypes
                 .Include(pt => pt.Product)
                 .Include(pt => pt.ProductResidue)
-                .Include(pt => pt.ProductTypeItems)
-                    .ThenInclude(ti => ti.SemiProduct)
-                        .ThenInclude(sp => sp!.SemiProductEntries)
                 .FirstOrDefaultAsync(pt => pt.Type == productTypeCommand.Type && pt.ProductId == product.Id, ct);
         }
 
@@ -230,7 +220,6 @@ public class CreateProductEntryCommandHandler(
                 BundleItemCount = item.BundleItemCount,
                 ProductId = product.Id,
                 Product = product,
-                ProductTypeItems = [],
                 UnitPrice = item.UnitPrice,
                 Currency = defaultCurrency
             };
@@ -242,20 +231,6 @@ public class CreateProductEntryCommandHandler(
         }
 
         return productType;
-    }
-
-    private async Task TryDeductFromInProcessAsync(ProductType productType, int totalCount, CancellationToken ct)
-    {
-        if (productType.Id <= 0)
-            return;
-
-        var inProcess = await context.InProcesses
-            .FirstOrDefaultAsync(p => p.ProductTypeId == productType.Id, ct);
-
-        if (inProcess is not null && inProcess.Count >= totalCount)
-        {
-            inProcess.Count -= totalCount;
-        }
     }
 
     private async Task<ProductResidue> UpdateProductResidueAsync(
@@ -293,38 +268,11 @@ public class CreateProductEntryCommandHandler(
         return residue;
     }
 
-    private static decimal CalculateCostPrice(ProductType productType)
-    {
-        if (productType.ProductTypeItems is null || !productType.ProductTypeItems.Any())
-            return 0;
-
-        decimal totalCostPrice = 0;
-
-        foreach (var typeItem in productType.ProductTypeItems)
-        {
-            if (typeItem.SemiProduct?.SemiProductEntries is null ||
-                !typeItem.SemiProduct.SemiProductEntries.Any())
-                continue;
-
-            var lastEntry = typeItem.SemiProduct.SemiProductEntries
-                .OrderByDescending(e => e.CreatedAt)
-                .FirstOrDefault();
-
-            if (lastEntry is not null)
-            {
-                totalCostPrice += lastEntry.CostPrice * typeItem.Quantity;
-            }
-        }
-
-        return totalCostPrice;
-    }
-
     private ProductEntry SaveProductEntry(
         CreateProductEntryCommand item,
         ProductType productType,
         Shop shop,
         ProductResidue residue,
-        decimal costPrice,
         Currency defaultCurrency)
     {
         var totalAmount = (decimal)item.Count * item.UnitPrice;
@@ -334,7 +282,7 @@ public class CreateProductEntryCommandHandler(
             Date = item.Date.ToUniversalTime(),
             Count = item.Count,
             BundleItemCount = item.BundleItemCount,
-            CostPrice = costPrice,
+            CostPrice = 0,
             PreparationCostPerUnit = item.PreparationCostPerUnit,
             UnitPrice = item.UnitPrice,
             TotalAmount = totalAmount,

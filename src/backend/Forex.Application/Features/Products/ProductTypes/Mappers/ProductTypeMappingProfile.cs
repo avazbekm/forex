@@ -13,7 +13,6 @@ public class ProductTypeMappingProfile : Profile
         CreateMap<ProductType, ProductTypeForProductDto>();
         CreateMap<ProductType, ProductTypeForProductEntryDto>();
         CreateMap<ProductType, ProductTypeForProductResidueDto>();
-        CreateMap<ProductType, ProductTypeForProductTypeItemDto>();
 
         CreateMap<ProductTypeCommand, ProductType>();
     }

@@ -18,22 +18,4 @@ public interface IApiSemiProducts
 
     [Post("/api/semi-products")]
     Task<Response<long?>> Create([Body] CreateSemiProductRequest request);
-
-    [Multipart]
-    [Post("/api/semi-products")]
-    Task<Response<long?>> Create([AliasAs("ManufactoryId")] int manufactoryId,
-                                [AliasAs("Name")] string name,
-                                [AliasAs("Code")] int code,
-                                [AliasAs("Measure")] string measure,
-                                [AliasAs("Photo")] StreamPart photo);
-
-    [Multipart]
-    [Put("/api/semi-products/{id}")]
-    Task<Response<long?>> Update(long id,
-                                [AliasAs("ManufactoryId")] int manufactoryId,
-                                [AliasAs("Name")] string name,
-                                [AliasAs("Code")] int code,
-                                [AliasAs("Measure")] string measure,
-                                [AliasAs("Photo")] StreamPart photo);
-
 }

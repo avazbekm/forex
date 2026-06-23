@@ -73,13 +73,7 @@
                 </TabItem>
 
 
-                <!--4. Yarim tayyor mahsulotlar
-                <TabItem Header="Yarim tayyor mahsulotlar">
-                <views:SemiFinishedStockReportView DataContext="{Binding SemiFinishedStockVM}"/>
-                </TabItem>
-
-
-                6. Hodimlar balansi
+                <!--6. Hodimlar balansi
                 <TabItem Header="Hodimlar balansi">
                 <views:EmployeeBalanceReportView DataContext="{Binding EmployeeBalanceVM}"/>
                 </TabItem>

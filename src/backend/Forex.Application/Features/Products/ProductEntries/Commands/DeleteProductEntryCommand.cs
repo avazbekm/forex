@@ -2,7 +2,6 @@
 
 using Forex.Application.Common.Exceptions;
 using Forex.Application.Common.Interfaces;
-using Forex.Domain.Entities.Processes;
 using Forex.Domain.Entities.Products;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -24,9 +23,6 @@ public class DeleteProductEntryCommandHandler(IAppDbContext context)
 
             if (residue.Count < 0)
                 throw new ForbiddenException($"Mahsulot qoldig'i manfiy bo'lishi mumkin emas. ProductTypeId={entry.ProductTypeId}");
-
-            var inProcess = await GetOrCreateInProcessAsync(entry.ProductTypeId, cancellationToken);
-            inProcess.Count += entry.Count;
 
             context.ProductEntries.Remove(entry);
 
@@ -53,24 +49,5 @@ public class DeleteProductEntryCommandHandler(IAppDbContext context)
             .FirstOrDefaultAsync(r => r.ProductTypeId == productTypeId && r.ShopId == shopId, ct);
 
         return residue is null ? throw new NotFoundException("ProductResidue", "ProductTypeId", productTypeId) : residue;
-    }
-
-    private async Task<InProcess> GetOrCreateInProcessAsync(long productTypeId, CancellationToken ct)
-    {
-        var inProcess = await context.InProcesses
-            .FirstOrDefaultAsync(p => p.ProductTypeId == productTypeId, ct);
-
-        if (inProcess is null)
-        {
-            inProcess = new InProcess
-            {
-                ProductTypeId = productTypeId,
-                Count = 0
-            };
-
-            await context.InProcesses.AddAsync(inProcess, ct);
-        }
-
-        return inProcess;
     }
 }
