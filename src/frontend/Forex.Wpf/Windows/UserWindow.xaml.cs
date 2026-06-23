@@ -19,6 +19,8 @@ public partial class UserWindow : Window
     private readonly IMapper mapper;
 
     public UserViewModel? user;
+    public UserRole Role { get; set; } = UserRole.Mijoz;
+    public long AccountCurrencyId { get; set; }
     public UserWindow()
     {
         InitializeComponent();
@@ -81,12 +83,12 @@ public partial class UserWindow : Window
                 Phone = txtPhone.Text.Trim(),
                 Address = txtAddress.Text.Trim(),
                 Description = txtDescription.Text.Trim(),
-                Role = UserRole.Mijoz,
+                Role = Role,
                 Accounts =
                 [
                     new UserAccount
                     {
-                        CurrencyId = somId,
+                        CurrencyId = AccountCurrencyId > 0 ? AccountCurrencyId : somId,
                         OpeningBalance = balance,
                         Discount = 0
                     }

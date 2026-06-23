@@ -276,6 +276,31 @@ public partial class SupplyPageViewModel : ViewModelBase
         }
     }
 
+    public void AddCreatedUser(UserViewModel? user)
+    {
+        if (user is null)
+            return;
+
+        var collection = SelectedPartyType == SupplyPartyType.Supplier
+            ? AvailableSuppliers
+            : AvailableConsolidators;
+
+        collection.Add(user);
+        AvailableUsers = collection;
+        SelectedUser = user;
+        AvailableFilterUsers.Add(UserFilterOption.FromUser(user));
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        FilterBeginDate = DateTime.Today.AddMonths(-1);
+        FilterEndDate = DateTime.Today;
+        SelectedFilterUser = UserFilterOption.All;
+        SelectedSupplyFilter = SupplyPartyFilter.All;
+        SelectedCurrencyFilter = CurrencyFilterOption.All;
+    }
+
     private bool Validate()
     {
         if (SelectedUser is null)

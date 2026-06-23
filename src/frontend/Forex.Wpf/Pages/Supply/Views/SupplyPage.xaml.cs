@@ -1,5 +1,6 @@
 namespace Forex.Wpf.Pages.Supply.Views;
 
+using Forex.ClientService.Enums;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Home;
 using Forex.Wpf.Pages.Supply.ViewModels;
@@ -40,5 +41,24 @@ public partial class SupplyPage : Page
             NavigationService.GoBack();
         else
             Main.NavigateTo(new HomePage());
+    }
+
+    private void BtnCreateUser_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not SupplyPageViewModel vm)
+            return;
+
+        var isSupplier = vm.SelectedPartyType == SupplyPartyType.Supplier;
+
+        var window = new UserWindow
+        {
+            Owner = Window.GetWindow(this),
+            Role = isSupplier ? UserRole.Taminotchi : UserRole.Vositachi,
+            AccountCurrencyId = vm.SelectedCurrency?.Id ?? 0,
+            Title = isSupplier ? "Yangi ta'minotchi qo'shish" : "Yangi vositachi qo'shish"
+        };
+
+        if (window.ShowDialog() == true)
+            vm.AddCreatedUser(window.user);
     }
 }
