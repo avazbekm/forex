@@ -42,8 +42,9 @@
             </Setter>
         </Style>
 
-        <Style x:Key="OutlinedCombo" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+        <Style x:Key="PlainCombo" TargetType="ComboBox">
             <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="8,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="FontSize" Value="14" />
         </Style>
@@ -149,7 +150,7 @@
                             DisplayMemberPath="Text"
                             ItemsSource="{Binding PartyTypes}"
                             SelectedItem="{Binding SelectedPartyTypeOption, Mode=TwoWay}"
-                            Style="{StaticResource OutlinedCombo}" />
+                            Style="{StaticResource PlainCombo}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="0,0,12,12">
@@ -159,11 +160,19 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <ComboBox
-                                DisplayMemberPath="Name"
-                                ItemsSource="{Binding AvailableUsers}"
+                            <controls:FloatingImageComboBox
+                                x:Name="cbxUser"
+                                Height="38"
+                                VerticalAlignment="Stretch"
+                                IsEditable="True"
+                                IsSearchEnabled="True"
+                                IsTextSearchEnabled="False"
+                                ItemsSource="{Binding FilteredUsers}"
+                                PrimaryTextMemberPath="Name"
+                                SecondaryTextMemberPath="PhoneAndAddress"
                                 SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                                Style="{StaticResource OutlinedCombo}" />
+                                ShowImage="False"
+                                Text="{Binding UserInput, Mode=TwoWay}" />
                             <Button
                                 Grid.Column="1"
                                 Width="38"
@@ -190,7 +199,7 @@
                             DisplayMemberPath="Code"
                             ItemsSource="{Binding AvailableCurrencies}"
                             SelectedItem="{Binding SelectedCurrency, Mode=TwoWay}"
-                            Style="{StaticResource OutlinedCombo}" />
+                            Style="{StaticResource PlainCombo}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="4" Margin="0,0,12,12">
@@ -299,7 +308,7 @@
                                     DisplayMemberPath="Text"
                                     ItemsSource="{Binding AvailableFilterUsers}"
                                     SelectedItem="{Binding SelectedFilterUser, Mode=TwoWay}"
-                                    Style="{StaticResource OutlinedCombo}" />
+                                    Style="{StaticResource PlainCombo}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="3" Margin="0,0,12,0">
@@ -309,7 +318,7 @@
                                     DisplayMemberPath="Text"
                                     ItemsSource="{Binding SupplyFilterOptions}"
                                     SelectedItem="{Binding SelectedSupplyFilterOption, Mode=TwoWay}"
-                                    Style="{StaticResource OutlinedCombo}" />
+                                    Style="{StaticResource PlainCombo}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="4" Margin="0,0,12,0">
@@ -319,7 +328,7 @@
                                     DisplayMemberPath="Text"
                                     ItemsSource="{Binding CurrencyFilterOptions}"
                                     SelectedItem="{Binding SelectedCurrencyFilter, Mode=TwoWay}"
-                                    Style="{StaticResource OutlinedCombo}" />
+                                    Style="{StaticResource PlainCombo}" />
                             </StackPanel>
 
                             <Button

@@ -9,6 +9,7 @@ using Forex.ClientService.Interfaces;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.ClientService.Models.Responses;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
@@ -58,6 +59,8 @@ public partial class SupplyPageViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<UserViewModel> availableSuppliers = [];
     [ObservableProperty] private ObservableCollection<UserViewModel> availableConsolidators = [];
     [ObservableProperty] private ObservableCollection<UserViewModel> availableUsers = [];
+    [ObservableProperty] private ObservableCollection<UserViewModel> filteredUsers = [];
+    [ObservableProperty] private string? userInput;
     [ObservableProperty] private ObservableCollection<UserFilterOption> availableFilterUsers = [];
     [ObservableProperty] private ObservableCollection<CurrencyViewModel> availableCurrencies = [];
     [ObservableProperty] private ObservableCollection<SupplyViewModel> supplies = [];
@@ -108,6 +111,10 @@ public partial class SupplyPageViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsConsolidatorMode));
         OnPropertyChanged(nameof(SelectedPartyTypeOption));
     }
+
+    partial void OnAvailableUsersChanged(ObservableCollection<UserViewModel> value) => FilteredUsers = value;
+
+    partial void OnSelectedUserChanged(UserViewModel? value) => UserInput = value?.Name ?? string.Empty;
 
     partial void OnFilterBeginDateChanged(DateTime value) => ApplySupplyFilters();
     partial void OnFilterEndDateChanged(DateTime value) => ApplySupplyFilters();
@@ -276,6 +283,23 @@ public partial class SupplyPageViewModel : ViewModelBase
         }
     }
 
+    public void ApplyUserFilter(string? searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            FilteredUsers = AvailableUsers;
+            return;
+        }
+
+        var results = AvailableUsers
+            .Where(u => TransliterationHelper.ContainsIgnoreScript(u.Name, searchText)
+                     || TransliterationHelper.ContainsIgnoreScript(u.Phone, searchText)
+                     || TransliterationHelper.ContainsIgnoreScript(u.Address, searchText))
+            .ToList();
+
+        FilteredUsers = new ObservableCollection<UserViewModel>(results);
+    }
+
     public void AddCreatedUser(UserViewModel? user)
     {
         if (user is null)
@@ -287,6 +311,7 @@ public partial class SupplyPageViewModel : ViewModelBase
 
         collection.Add(user);
         AvailableUsers = collection;
+        FilteredUsers = collection;
         SelectedUser = user;
         AvailableFilterUsers.Add(UserFilterOption.FromUser(user));
     }
