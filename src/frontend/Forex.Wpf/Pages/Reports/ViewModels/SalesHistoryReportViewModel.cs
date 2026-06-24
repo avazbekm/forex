@@ -4,9 +4,11 @@ using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
+using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -38,6 +40,8 @@ public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHist
     private string totalsSummary = string.Empty;
 
     [ObservableProperty] private int summaryQty;
+
+    [ObservableProperty] private ChartData salesChart = new();
 
     [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
     public ObservableCollection<ProductViewModel> AvailableProducts => commonData.AvailableProducts;
@@ -103,6 +107,7 @@ public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHist
                 {
                     Date = sale.Date.ToLocalTime(),
                     Customer = sale.Customer?.Name ?? "-",
+                    ProductionOrigin = product.ProductionOrigin,
                     Code = product.Code ?? "-",
                     ProductName = product.Name ?? "-",
                     Type = item.ProductType?.Type ?? "-",
@@ -389,6 +394,23 @@ public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHist
         SetSource(FilteredItems);
         SummaryQty = FilteredItems.Sum(x => x.TotalCount);
         TotalSalesAmount = FilteredItems.Sum(x => x.BaseAmount);
+
+        var byDay = FilteredItems.GroupBy(x => x.Date.Date).OrderBy(g => g.Key).ToList();
+        static double ValOf(SaleHistoryItemViewModel x) => (double)(x.BaseAmount != 0 ? x.BaseAmount : x.Amount);
+        List<double> SeriesFor(ProductionOrigin? o) =>
+            [.. byDay.Select(g => g.Where(x => o == null || x.ProductionOrigin == o).Sum(ValOf))];
+
+        SalesChart = new ChartData
+        {
+            Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
+            Series =
+            [
+                new ChartSeries { Name = "Tayyor", Color = Color.FromRgb(0x1B, 0x5E, 0x20), Values = SeriesFor(ProductionOrigin.Tayyor) },
+                new ChartSeries { Name = "Aralash", Color = Color.FromRgb(0x6A, 0x1B, 0x9A), Values = SeriesFor(ProductionOrigin.Aralash) },
+                new ChartSeries { Name = "Eva", Color = Color.FromRgb(0xD8, 0x1B, 0x60), Values = SeriesFor(ProductionOrigin.Eva) },
+                new ChartSeries { Name = "Umumiy", Color = Color.FromRgb(0x9A, 0xA4, 0xB2), Values = SeriesFor(null), Dim = true }
+            ]
+        };
         TotalsSummary = string.Join("    ", FilteredItems
             .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode!)
             .OrderBy(g => g.Key)

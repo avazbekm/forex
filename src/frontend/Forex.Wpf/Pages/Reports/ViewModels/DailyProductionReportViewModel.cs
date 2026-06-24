@@ -8,6 +8,7 @@ using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
 using System.Collections.ObjectModel;
@@ -42,6 +43,8 @@ public partial class DailyProductionReportViewModel : PagedReportViewModel<Produ
     [ObservableProperty] private decimal tayyorAmount;
     [ObservableProperty] private decimal aralashAmount;
     [ObservableProperty] private decimal evaAmount;
+
+    [ObservableProperty] private ChartData productionChart = new();
 
     public bool HasData => Items.Count > 0;
 
@@ -153,6 +156,22 @@ public partial class DailyProductionReportViewModel : PagedReportViewModel<Produ
             TayyorAmount = tayyorSum;
             AralashAmount = aralashSum;
             EvaAmount = evaSum;
+
+            var byDay = Items.GroupBy(x => x.Date.Date).OrderBy(g => g.Key).ToList();
+            List<double> SeriesFor(string? t) =>
+                [.. byDay.Select(g => (double)g.Where(x => t == null || x.ProductionType == t).Sum(x => x.TotalCount))];
+
+            ProductionChart = new ChartData
+            {
+                Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
+                Series =
+                [
+                    new ChartSeries { Name = "Tayyor", Color = Color.FromRgb(0x1B, 0x5E, 0x20), Values = SeriesFor("Tayyor") },
+                    new ChartSeries { Name = "Aralash", Color = Color.FromRgb(0x6A, 0x1B, 0x9A), Values = SeriesFor("Aralash") },
+                    new ChartSeries { Name = "Eva", Color = Color.FromRgb(0xD8, 0x1B, 0x60), Values = SeriesFor("Eva") },
+                    new ChartSeries { Name = "Umumiy", Color = Color.FromRgb(0x9A, 0xA4, 0xB2), Values = SeriesFor(null), Dim = true }
+                ]
+            };
 
             SetSource(Items);
             OnPropertyChanged(nameof(HasData));

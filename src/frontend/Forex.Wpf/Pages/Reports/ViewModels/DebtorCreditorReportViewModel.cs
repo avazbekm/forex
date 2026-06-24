@@ -7,6 +7,7 @@ using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using Forex.Wpf.Common.Services;
 using System.Collections.ObjectModel;
@@ -38,6 +39,12 @@ public partial class DebtorCreditorReportViewModel : PagedReportViewModel<Debtor
     [ObservableProperty] private string debtorBreakdown = string.Empty;
     [ObservableProperty] private string creditorBreakdown = string.Empty;
 
+    [ObservableProperty] private ObservableCollection<ChartPoint> debtorChart = [];
+    [ObservableProperty] private double chartMax;
+    [ObservableProperty] private bool debtorDescending = true;
+
+    partial void OnDebtorDescendingChanged(bool value) => ApplyFilter();
+
     public bool HasData => FilteredItems?.Count > 0;
 
     public DebtorCreditorReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -65,8 +72,7 @@ public partial class DebtorCreditorReportViewModel : PagedReportViewModel<Debtor
         if (users == null) return;
         var mapped = MapUsersToDebtorCreditor(users);
         Items = new ObservableCollection<DebtorCreditorItemViewModel>(mapped);
-        FilteredItems = new ObservableCollection<DebtorCreditorItemViewModel>(mapped);
-        UpdateTotals();
+        SetFilteredSorted(mapped);
     }
 
     private async Task<List<UserResponse>?> LoadUsersAsync()
@@ -89,6 +95,7 @@ public partial class DebtorCreditorReportViewModel : PagedReportViewModel<Debtor
         {
             if (u.Username == "admin") continue;
             var balance = u.FirstBalance ?? 0;
+            if (balance == 0) continue;
             list.Add(new DebtorCreditorItemViewModel
             {
                 Id = u.Id,
@@ -125,6 +132,24 @@ public partial class DebtorCreditorReportViewModel : PagedReportViewModel<Debtor
         CreditorBreakdown = string.Join("   ", groups
             .Where(g => g.Sum(x => x.CreditorAmount) > 0)
             .Select(g => $"{g.Key}: {g.Sum(x => x.CreditorAmount):N0}"));
+
+    }
+
+    protected override void OnPageApplied()
+    {
+        DebtorChart = new ObservableCollection<ChartPoint>(PagedItems
+            .Where(x => x.DebtorAmount > 0 || x.CreditorAmount > 0)
+            .Select(x =>
+            {
+                bool isDebtor = x.DebtorAmount > 0;
+                decimal amount = isDebtor ? x.DebtorAmount : x.CreditorAmount;
+                return new ChartPoint
+                {
+                    Label = x.Name ?? "-",
+                    Value = (double)(amount * _commonData.BaseRate(x.CurrencyCode)),
+                    Color = isDebtor ? Color.FromRgb(0xD3, 0x2F, 0x2F) : Color.FromRgb(0x2E, 0x7D, 0x32)
+                };
+            }));
     }
     #endregion Private Helpers
 
@@ -146,7 +171,17 @@ public partial class DebtorCreditorReportViewModel : PagedReportViewModel<Debtor
             ).ToList();
         }
         
-        FilteredItems = new ObservableCollection<DebtorCreditorItemViewModel>(filtered);
+        SetFilteredSorted(filtered);
+    }
+
+    private void SetFilteredSorted(IEnumerable<DebtorCreditorItemViewModel> list)
+    {
+        double Signed(DebtorCreditorItemViewModel x) =>
+            (double)((x.DebtorAmount - x.CreditorAmount) * _commonData.BaseRate(x.CurrencyCode));
+        var ordered = DebtorDescending ? list.OrderByDescending(Signed) : list.OrderBy(Signed);
+        FilteredItems = new ObservableCollection<DebtorCreditorItemViewModel>(ordered);
+        ChartMax = FilteredItems.Count == 0 ? 0 : FilteredItems.Max(x =>
+            (double)(Math.Max(x.DebtorAmount, x.CreditorAmount) * _commonData.BaseRate(x.CurrencyCode)));
         UpdateTotals();
     }
 
@@ -155,8 +190,7 @@ public partial class DebtorCreditorReportViewModel : PagedReportViewModel<Debtor
     private void ClearFilter()
     {
         SearchText = string.Empty;
-        FilteredItems = new ObservableCollection<DebtorCreditorItemViewModel>(Items);
-        UpdateTotals();
+        SetFilteredSorted(Items);
     }
 
         [RelayCommand]

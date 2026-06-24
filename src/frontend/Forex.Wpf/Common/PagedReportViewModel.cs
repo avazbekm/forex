@@ -25,10 +25,13 @@ public abstract partial class PagedReportViewModel<T> : ViewModelBase
 
     partial void OnCurrentPageChanged(int value) => ApplyPage();
 
+    protected virtual void OnPageApplied() { }
+
     private void ApplyPage()
     {
         if (CurrentPage < 1) { CurrentPage = 1; return; }
         if (CurrentPage > TotalPages) { CurrentPage = TotalPages; return; }
         PagedItems = [.. source.Skip((CurrentPage - 1) * PageSize).Take(PageSize)];
+        OnPageApplied();
     }
 }

@@ -1,9 +1,12 @@
 ﻿namespace Forex.Wpf.ViewModels;
 
+using Forex.ClientService.Enums;
+
 public class SaleHistoryItemViewModel
 {
     public DateTime Date { get; set; }
     public string Customer { get; set; } = default!;
+    public ProductionOrigin ProductionOrigin { get; set; }
 
     public string Code { get; set; } = default!;
     public string ProductName { get; set; } = default!;

@@ -4,6 +4,7 @@ using Forex.Wpf.Common.Services;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 
 /// <summary>
@@ -11,6 +12,10 @@ using System.Windows.Input;
 /// </summary>
 public partial class DebtorCreditorReportView : UserControl
 {
+    private static readonly Brush ActiveBg = new SolidColorBrush(Colors.White);
+    private static readonly Brush ActiveFg = new SolidColorBrush(Color.FromRgb(0x2E, 0x7D, 0x32));
+    private static readonly Brush InactiveFg = new SolidColorBrush(Color.FromRgb(0x7A, 0x86, 0x99));
+
     public DebtorCreditorReportView()
     {
         InitializeComponent();
@@ -21,6 +26,30 @@ public partial class DebtorCreditorReportView : UserControl
     {
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
+        SetView(showChart: false);
+    }
+
+    private void TableView_Click(object sender, RoutedEventArgs e) => SetView(showChart: false);
+    private void ChartView_Click(object sender, RoutedEventArgs e) => SetView(showChart: true);
+
+    private void DebtorSort_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DebtorCreditorReportViewModel vm) return;
+        vm.DebtorDescending = !vm.DebtorDescending;
+        icoDebtorSort.Kind = vm.DebtorDescending
+            ? MaterialDesignThemes.Wpf.PackIconKind.SortDescending
+            : MaterialDesignThemes.Wpf.PackIconKind.SortAscending;
+    }
+
+    private void SetView(bool showChart)
+    {
+        grid.Visibility = showChart ? Visibility.Collapsed : Visibility.Visible;
+        chartPanel.Visibility = showChart ? Visibility.Visible : Visibility.Collapsed;
+
+        btnChartView.Background = showChart ? ActiveBg : Brushes.Transparent;
+        btnChartView.Foreground = showChart ? ActiveFg : InactiveFg;
+        btnTableView.Background = showChart ? Brushes.Transparent : ActiveBg;
+        btnTableView.Foreground = showChart ? InactiveFg : ActiveFg;
     }
 
     private void RegisterFocusNavigation()

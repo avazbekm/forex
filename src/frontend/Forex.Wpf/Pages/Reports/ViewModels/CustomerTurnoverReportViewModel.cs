@@ -8,6 +8,7 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using PdfSharp.Drawing;
 using System.Collections.Specialized;
@@ -37,6 +38,8 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
 
     [ObservableProperty] private decimal summaryDebit;
     [ObservableProperty] private decimal summaryCredit;
+
+    [ObservableProperty] private ChartData turnoverChart = new();
 
     partial void OnSelectedCustomerChanged(UserViewModel? value) { if (!_suppress) _ = LoadDataAsync(); }
     partial void OnSelectedPartyFilterChanged(TurnoverPartyFilter value)
@@ -99,6 +102,7 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
         {
             Operations.Clear();
             SetSource(Operations);
+            TurnoverChart = new();
             BeginBalance = 0;
             LastBalance = 0;
             SummaryDebit = 0;
@@ -176,6 +180,17 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
         SummaryDebit = Operations.Sum(x => x.Debit);
         SummaryCredit = Operations.Sum(x => x.Credit);
         SetSource(Operations);
+
+        var byDay = Operations.GroupBy(o => o.Date.Date).OrderBy(g => g.Key).ToList();
+        TurnoverChart = new ChartData
+        {
+            Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
+            Series =
+            [
+                new ChartSeries { Name = "Kirim", Color = Color.FromRgb(0x1B, 0x7A, 0x3E), Values = [.. byDay.Select(g => (double)g.Sum(o => o.Credit))] },
+                new ChartSeries { Name = "Chiqim", Color = Color.FromRgb(0xC6, 0x28, 0x28), Values = [.. byDay.Select(g => (double)g.Sum(o => o.Debit))] }
+            ]
+        };
     }
 
     private async Task RebuildParticipantsAsync()

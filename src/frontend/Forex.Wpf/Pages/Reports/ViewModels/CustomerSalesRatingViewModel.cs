@@ -8,6 +8,7 @@ using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
 using System.Collections.ObjectModel;
@@ -40,6 +41,17 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
     [ObservableProperty] private int summaryPairs;
     [ObservableProperty] private decimal summaryAmount;
     [ObservableProperty] private string amountBreakdown = string.Empty;
+
+    [ObservableProperty] private ObservableCollection<ChartPoint> ratingChart = [];
+    [ObservableProperty] private double chartMax;
+    [ObservableProperty] private bool ratingByAmount;
+    [ObservableProperty] private bool ratingDescending = true;
+
+    partial void OnRatingByAmountChanged(bool value) => ApplySort();
+    partial void OnRatingDescendingChanged(bool value) => ApplySort();
+
+    private double Metric(CustomerSaleViewModel r) =>
+        RatingByAmount ? (double)(r.TotalAmount * _commonData.BaseRate(r.CurrencyCode)) : r.TotalCount;
 
     private bool _suppress;
 
@@ -127,12 +139,8 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
                 tempList.Add(vm);
             }
 
-            allRows = [.. tempList.OrderByDescending(x => x.TotalCount)];
-            int rowNumber = 1;
-            foreach (var row in allRows) row.RowNumber = rowNumber++;
-
-            SetSource(allRows);
-            UpdateSummary();
+            allRows = tempList;
+            ApplySort();
         }
         catch (Exception ex)
         {
@@ -168,7 +176,24 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
             .Where(x => !string.IsNullOrEmpty(x.CurrencyCode))
             .GroupBy(x => x.CurrencyCode)
             .Select(g => $"{g.Key}: {g.Sum(x => x.TotalAmount):N0}"));
+
         OnPropertyChanged(nameof(HasData));
+    }
+
+    private void ApplySort()
+    {
+        allRows = [.. (RatingDescending ? allRows.OrderByDescending(Metric) : allRows.OrderBy(Metric))];
+        int n = 1;
+        foreach (var r in allRows) r.RowNumber = n++;
+        ChartMax = allRows.Count == 0 ? 0 : allRows.Max(Metric);
+        SetSource(allRows);
+        UpdateSummary();
+    }
+
+    protected override void OnPageApplied()
+    {
+        RatingChart = new ObservableCollection<ChartPoint>(PagedItems
+            .Select(r => new ChartPoint { Label = r.CustomerName, Value = Metric(r) }));
     }
 
     [RelayCommand]

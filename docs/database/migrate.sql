@@ -9,9 +9,9 @@
 --   A. 11 ta ishlatilmaydigan jadvalni o'chirish.
 --   B. "Supplies" jadvali; "OperationRecords" ga "UserId"/"SupplyId".
 --   C. Multicurrency ustunlari: "Users"."SettlementCurrencyId",
---      "OperationRecords"."CurrencyId" va "Rate".
+--      "OperationRecords"."CurrencyId" va "Rate", "Sales"."CurrencyId" va "BaseAmount".
 --   D. Backfill: OperationRecords.UserId (Sale/Transaction'dan), asosiy valyuta (rol bo'yicha),
---      original valyuta + kurs; eski Sale bug'i (CurrencyId=0).
+--      original valyuta + kurs; eski Sale bug'i (CurrencyId=0); Sales.BaseAmount (so'm ekvivalenti).
 --   E. FK + index + NOT NULL.
 --   F. Balanslarni qayta qurish (settlement valyutada).
 --
@@ -97,7 +97,9 @@ ALTER TABLE "OperationRecords" ADD COLUMN IF NOT EXISTS "CurrencyId"           b
 ALTER TABLE "OperationRecords" ADD COLUMN IF NOT EXISTS "Rate"                 numeric NOT NULL DEFAULT 1;
 
 -- Sales: savdo valyutasi (eski savdolar so'mda); foyda/tannarx ustunlari olib tashlanadi.
+-- "BaseAmount" — savdoning so'm ekvivalenti (sotuv vaqtidagi kursda muzlatiladi).
 ALTER TABLE "Sales"     ADD COLUMN IF NOT EXISTS "CurrencyId" bigint;
+ALTER TABLE "Sales"     ADD COLUMN IF NOT EXISTS "BaseAmount" numeric NOT NULL DEFAULT 0;
 ALTER TABLE "Sales"     DROP COLUMN IF EXISTS "CostPrice";
 ALTER TABLE "Sales"     DROP COLUMN IF EXISTS "BenifitPrice";
 ALTER TABLE "SaleItems" DROP COLUMN IF EXISTS "CostPrice";
@@ -167,6 +169,15 @@ WHERE "AccountType" = 'Customer' AND "CurrencyId" = 0;
 UPDATE "Sales"
 SET "CurrencyId" = (SELECT "Id" FROM "Currencies" WHERE "IsDefault" = true LIMIT 1)
 WHERE "CurrencyId" IS NULL;
+
+-- D6. Sales.BaseAmount — savdo so'm ekvivalenti (sotuv valyutasi kursida).
+--     Eski savdolar uchun tarixiy kurs yo'q -> JORIY kurs (taxminiy, bir martalik backfill).
+--     UZS savdolar aniq (kurs 1). Yangi savdolar dastur tomonidan to'g'ri yoziladi.
+UPDATE "Sales" s
+SET "BaseAmount" = s."TotalAmount" *
+    (SELECT CASE WHEN c."IsDefault" OR c."ExchangeRate" = 0 THEN 1 ELSE c."ExchangeRate" END
+     FROM "Currencies" c WHERE c."Id" = s."CurrencyId")
+WHERE s."BaseAmount" = 0;
 
 -- ============================================================================
 -- E. Majburiy qilish + FK + indexlar (multicurrency ustunlari)

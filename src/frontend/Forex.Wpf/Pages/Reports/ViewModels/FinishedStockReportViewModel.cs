@@ -8,6 +8,7 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -28,6 +29,7 @@ public partial class FinishedStockReportViewModel : PagedReportViewModel<Finishe
     private readonly CommonReportDataService _commonData;
 
     private readonly ObservableCollection<FinishedStockItemViewModel> _allItems = [];
+    private List<FinishedStockItemViewModel> _filtered = [];
 
     // UI ga ko'rinadigan filtrlangan ro'yxat
     [ObservableProperty]
@@ -42,6 +44,21 @@ public partial class FinishedStockReportViewModel : PagedReportViewModel<Finishe
 
     [ObservableProperty]
     private int summaryQty;
+
+    [ObservableProperty]
+    private ObservableCollection<ChartPoint> stockChart = [];
+
+    [ObservableProperty]
+    private double chartMax;
+
+    [ObservableProperty]
+    private bool stockByCount;
+
+    [ObservableProperty]
+    private bool stockDescending = true;
+
+    partial void OnStockByCountChanged(bool value) => SortAndApply();
+    partial void OnStockDescendingChanged(bool value) => SortAndApply();
 
     public bool HasData => Items?.Count > 0;
 
@@ -418,10 +435,28 @@ public partial class FinishedStockReportViewModel : PagedReportViewModel<Finishe
                 TransliterationHelper.ContainsIgnoreScript(x.Name ?? "", SearchText));
         }
 
-        Items = new ObservableCollection<FinishedStockItemViewModel>(result);
+        _filtered = result.ToList();
+        SortAndApply();
+    }
+
+    private void SortAndApply()
+    {
+        Func<FinishedStockItemViewModel, double> metric = StockByCount ? x => x.TotalCount : x => (double)x.TotalAmount;
+        var ordered = StockDescending ? _filtered.OrderByDescending(metric) : _filtered.OrderBy(metric);
+        Items = new ObservableCollection<FinishedStockItemViewModel>(ordered);
+        ChartMax = Items.Count == 0 ? 0 : Items.Max(metric);
         SetSource(Items);
         TotalAmount = Items.Sum(x => x.TotalAmount);
         SummaryQty = Items.Sum(x => x.TotalCount);
+    }
+
+    protected override void OnPageApplied()
+    {
+        StockChart = new ObservableCollection<ChartPoint>(PagedItems.Select(x => new ChartPoint
+        {
+            Label = string.IsNullOrWhiteSpace(x.Name) ? x.Code ?? "-" : x.Name,
+            Value = StockByCount ? x.TotalCount : (double)x.TotalAmount
+        }));
     }
 
     // PDF/Print uchun document yaratish (PASTDAN 25mm BO'SH JOY!)
