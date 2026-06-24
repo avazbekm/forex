@@ -27,6 +27,7 @@ public partial class UserPage : Page
     private ObservableCollection<UserResponse> filteredUsers = [];
     private bool isCreatingNewUser = false;
     private UserResponse? currentUser;
+    private string _filterRole = string.Empty;
 
     public UserPage()
     {
@@ -46,6 +47,7 @@ public partial class UserPage : Page
         LoadValyutaType();
         LoadUsers();
         UpdateRoleList();
+        lstRoleFilter.SelectedIndex = 0;
 
         Loaded += Page_Loaded;
     }
@@ -238,17 +240,15 @@ public partial class UserPage : Page
     private void ApplyFilters()
     {
         string query = txtSearch.Text.Trim();
-        string selectedRole = cbRole.SelectedItem?.ToString() ?? "";
+        string selectedRole = _filterRole;
 
         var filtered = rawUsers.AsEnumerable();
 
-        // 🔴 Filter logikasi: "User" tanlanganida HAMMA ko'rinadi
-        if (!string.IsNullOrWhiteSpace(selectedRole) && selectedRole != "User")
+        // Rol bo'yicha filter: "Barchasi" (bo'sh) tanlanganida hamma ko'rinadi
+        if (!string.IsNullOrWhiteSpace(selectedRole))
         {
-            // Boshqa rol tanlanganida faqat o'sha rolni ko'rsatish
             filtered = filtered.Where(u => u.Role.ToString() == selectedRole);
         }
-        // "User" tanlanganida yoki bo'sh bo'lganida hamma ko'rinadi
 
         // Search bo'yicha filter
         if (!string.IsNullOrWhiteSpace(query))
@@ -272,10 +272,14 @@ public partial class UserPage : Page
     // AuthStore orqali tizimga kirgan odamni tekshiramiz
     private bool IsLoggedInAsAdmin =>
         ClientService.Services.AuthStore.Instance.Username?.ToLower() == "admin";
+    private void RoleFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _filterRole = (lstRoleFilter.SelectedItem as ListBoxItem)?.Tag?.ToString() ?? string.Empty;
+        ApplyFilters();
+    }
+
     private void CbRole_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyFilters();
-
         if (cbRole.SelectedItem is not string role) return;
 
         bool isUser = role.Equals("User", StringComparison.OrdinalIgnoreCase);

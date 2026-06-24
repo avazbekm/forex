@@ -47,10 +47,13 @@ public partial class ProductPageViewModel : ViewModelBase
     [ObservableProperty] private DateTime? filterFromDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime? filterToDate = DateTime.Today;
     [ObservableProperty] private string searchText = string.Empty;
-    [ObservableProperty] private ProductViewModel? selectedFilterProduct;
+    public const string AllSizesOption = "Barchasi";
+    public static readonly ProductViewModel AllProductsOption = new() { Code = "Barchasi" };
+
+    [ObservableProperty] private ProductViewModel? selectedFilterProduct = AllProductsOption;
     [ObservableProperty] private string filterProductText = string.Empty;
     [ObservableProperty] private ObservableCollection<ProductViewModel> filteredFilterProducts = [];
-    [ObservableProperty] private string? selectedSize;
+    [ObservableProperty] private string? selectedSize = AllSizesOption;
     [ObservableProperty] private ObservableCollection<string> availableSizes = [];
 
     private readonly ObservableCollection<ProductEntryViewModel> _productEntries = [];
@@ -92,24 +95,24 @@ public partial class ProductPageViewModel : ViewModelBase
         if (response.IsSuccess)
         {
             AvailableProducts = mapper.Map<ObservableCollection<ProductViewModel>>(response.Data);
-            FilteredFilterProducts = new ObservableCollection<ProductViewModel>(AvailableProducts);
+            ApplyFilterProductSearch(null);
         }
         else ErrorMessage = response.Message ?? "Mahsulotlarni yuklashda xatolik!";
     }
 
     public void ApplyFilterProductSearch(string? text)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        IEnumerable<ProductViewModel> results = AvailableProducts;
+
+        if (!string.IsNullOrWhiteSpace(text) && text.Trim() != AllProductsOption.Code)
         {
-            FilteredFilterProducts = new ObservableCollection<ProductViewModel>(AvailableProducts);
-            return;
+            var search = text.Trim();
+            results = AvailableProducts.Where(p =>
+                TransliterationHelper.ContainsIgnoreScript(p.Code ?? string.Empty, search)
+                || TransliterationHelper.ContainsIgnoreScript(p.Name ?? string.Empty, search));
         }
 
-        var search = text.Trim();
-        var results = AvailableProducts.Where(p =>
-            TransliterationHelper.ContainsIgnoreScript(p.Code ?? string.Empty, search)
-            || TransliterationHelper.ContainsIgnoreScript(p.Name ?? string.Empty, search));
-        FilteredFilterProducts = new ObservableCollection<ProductViewModel>(results);
+        FilteredFilterProducts = new ObservableCollection<ProductViewModel>(results.Prepend(AllProductsOption));
     }
 
     private FilteringRequest BuildFilterRequest(int page, int pageSize, bool applyTypeFilter = true)
@@ -145,8 +148,8 @@ public partial class ProductPageViewModel : ViewModelBase
 
     private List<long>? GetFilteredProductTypeIds()
     {
-        var hasProduct = SelectedFilterProduct is not null;
-        var hasSize = !string.IsNullOrWhiteSpace(SelectedSize);
+        var hasProduct = SelectedFilterProduct is not null && SelectedFilterProduct.Id > 0;
+        var hasSize = !string.IsNullOrWhiteSpace(SelectedSize) && SelectedSize != AllSizesOption;
         if (!hasProduct && !hasSize)
             return null;
 
@@ -173,7 +176,7 @@ public partial class ProductPageViewModel : ViewModelBase
                 .Distinct()
                 .OrderBy(t => t)
                 .ToList();
-            AvailableSizes = new ObservableCollection<string>(sizes);
+            AvailableSizes = new ObservableCollection<string>(sizes.Prepend(AllSizesOption));
         }
     }
 
@@ -254,10 +257,10 @@ public partial class ProductPageViewModel : ViewModelBase
         FilterFromDate = DateTime.Today.AddDays(-7);
         FilterToDate = DateTime.Today;
         SearchText = string.Empty;
-        SelectedFilterProduct = null;
+        SelectedFilterProduct = AllProductsOption;
         FilterProductText = string.Empty;
         ApplyFilterProductSearch(null);
-        SelectedSize = null;
+        SelectedSize = AllSizesOption;
         _suppressFilter = false;
         CurrentPage = 1;
         await Task.WhenAll(LoadProductEntriesAsync(), LoadProductSummaryAsync(), LoadAvailableSizesAsync());
