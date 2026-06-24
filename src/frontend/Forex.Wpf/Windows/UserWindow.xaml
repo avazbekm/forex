@@ -13,13 +13,14 @@
     ShowInTaskbar="False"
     WindowStartupLocation="CenterScreen"
     WindowStyle="SingleBorderWindow"
+    Background="{DynamicResource SurfaceCard}"
     mc:Ignorable="d">
 
     <Window.Resources>
         <conv:BoolToVisibilityConverter x:Key="BooleanToVisibility" />
     </Window.Resources>
 
-    <Grid Margin="10">
+    <Grid Margin="10" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -49,7 +50,7 @@
             Grid.Row="0"
             Grid.Column="1"
             Margin="0,5"
-            BorderBrush="#CCC"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="4"
             Visibility="Collapsed">
@@ -72,7 +73,7 @@
             Grid.Row="1"
             Grid.Column="1"
             Margin="0,5"
-            BorderBrush="#CCC"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="4">
             <TextBox
@@ -93,7 +94,7 @@
             Grid.Row="2"
             Grid.Column="1"
             Margin="0,5"
-            BorderBrush="#CCC"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="4">
             <TextBox
@@ -116,7 +117,7 @@
             Grid.Row="3"
             Grid.Column="1"
             Margin="0,5"
-            BorderBrush="#CCC"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="4">
             <TextBox
@@ -137,7 +138,7 @@
             Grid.Row="4"
             Grid.Column="1"
             Margin="0,5"
-            BorderBrush="#CCC"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="4">
             <ComboBox
@@ -164,7 +165,7 @@
             <StackPanel Grid.Column="0">
                 <Border
                     Margin="0,5"
-                    BorderBrush="#CCC"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     CornerRadius="4">
                     <Grid>
@@ -189,7 +190,7 @@
             <StackPanel Grid.Column="1" Margin="10,0,0,0">
                 <Border
                     Margin="0,5"
-                    BorderBrush="#CCC"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     CornerRadius="4">
                     <Grid>
@@ -202,7 +203,7 @@
                         <TextBlock
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
-                            Foreground="#999"
+                            Foreground="{DynamicResource InkFaint}"
                             IsHitTestVisible="False"
                             Text="{Binding ElementName=txtBeginningSum2, Path=Tag}"
                             Visibility="{Binding Text.IsEmpty, ElementName=txtBeginningSum2, Converter={StaticResource BooleanToVisibility}}" />
@@ -223,7 +224,7 @@
             Grid.Row="6"
             Grid.Column="1"
             Margin="0,5"
-            BorderBrush="#CCC"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="4">
             <TextBox
@@ -284,9 +285,9 @@
                 IsCancel="True">
                 <Button.Style>
                     <Style TargetType="Button">
-                        <Setter Property="Background" Value="#E5E7EB" />
-                        <Setter Property="Foreground" Value="#333" />
-                        <Setter Property="BorderBrush" Value="#D1D5DB" />
+                        <Setter Property="Background" Value="{DynamicResource SurfaceChip}" />
+                        <Setter Property="Foreground" Value="{DynamicResource InkSecondary}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBorder}" />
                         <Setter Property="BorderThickness" Value="1" />
                         <Setter Property="Padding" Value="6,3" />
                         <Setter Property="Template">
@@ -305,7 +306,7 @@
                         <Setter Property="Cursor" Value="Hand" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#D1D5DB" />
+                                <Setter Property="Background" Value="{DynamicResource HairlineBorder}" />
                             </Trigger>
                         </Style.Triggers>
                     </Style>

@@ -5,17 +5,17 @@
     xmlns:charts="clr-namespace:Forex.Wpf.Resources.Charts"
     xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-    Background="White">
+    Background="{DynamicResource SurfaceCard}">
     <UserControl.Resources>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="2,0,0,4" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="#7A8699" />
+            <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="14" Background="White">
+    <Grid Margin="14" Background="{DynamicResource SurfaceCard}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -26,8 +26,8 @@
         <Border
             Grid.Row="0"
             Padding="14,12"
-            Background="#F8FAFD"
-            BorderBrush="#EAEEF5"
+            Background="{DynamicResource SurfaceMuted}"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="11">
             <Grid>
@@ -61,7 +61,7 @@
                     <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Mahsulot" />
                     <Border
                         Height="34"
-                        BorderBrush="#D9DEE7"
+                        BorderBrush="{DynamicResource HairlineBorder}"
                         BorderThickness="1"
                         CornerRadius="6">
                         <ComboBox
@@ -102,11 +102,11 @@
                         Height="34"
                         Padding="14,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="White"
-                        BorderBrush="#D9DEE7"
+                        Background="{DynamicResource SurfaceCard}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
                         BorderThickness="1"
                         Command="{Binding ClearFilterCommand}"
-                        Foreground="#475467"
+                        Foreground="{DynamicResource InkSecondary}"
                         ToolTip="Tozalash">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="FilterRemoveOutline" />
@@ -121,7 +121,7 @@
                     Padding="3"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
-                    Background="#EEF1F6"
+                    Background="{DynamicResource SurfaceChip}"
                     CornerRadius="9">
                     <StackPanel Orientation="Horizontal">
                         <Button
@@ -194,8 +194,8 @@
             Grid.Row="1"
             Margin="0,14,0,0"
             AutoGenerateColumns="False"
-            Background="White"
-            BorderBrush="#EAEEF5"
+            Background="{DynamicResource SurfaceCard}"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CanUserAddRows="False"
             CanUserDeleteRows="False"
@@ -204,7 +204,7 @@
             FontSize="14"
             GridLinesVisibility="Horizontal"
             HeadersVisibility="Column"
-            HorizontalGridLinesBrush="#F0F2F6"
+            HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
             IsReadOnly="True"
             ItemsSource="{Binding PagedItems}"
             RowHeight="40"
@@ -212,8 +212,8 @@
 
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#F4F7FC" />
-                    <Setter Property="Foreground" Value="#5A6477" />
+                    <Setter Property="Background" Value="{DynamicResource GridHeaderBg}" />
+                    <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
                     <Setter Property="FontWeight" Value="SemiBold" />
                     <Setter Property="Padding" Value="10,0" />
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -319,8 +319,8 @@
             Grid.Row="1"
             Margin="0,14,0,0"
             Padding="18,16"
-            Background="White"
-            BorderBrush="#EAEEF5"
+            Background="{DynamicResource SurfaceCard}"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="12"
             Visibility="Collapsed">
@@ -341,7 +341,7 @@
                         VerticalAlignment="Center"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="#1F2937"
+                        Foreground="{DynamicResource InkPrimary}"
                         Text="Kunlik ishlab chiqarish (juftlar)" />
                 </StackPanel>
                 <charts:LineChart
@@ -356,8 +356,8 @@
             Grid.Row="2"
             Margin="0,14,0,0"
             Padding="12,10"
-            Background="White"
-            BorderBrush="#EAEEF5"
+            Background="{DynamicResource SurfaceCard}"
+            BorderBrush="{DynamicResource HairlineBorder}"
             BorderThickness="1"
             CornerRadius="12">
             <Grid>

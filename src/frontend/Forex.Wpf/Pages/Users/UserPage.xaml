@@ -43,7 +43,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Background="#F4F6FA">
+    <Grid Background="{DynamicResource SurfacePage}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid Margin="18">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -71,11 +71,11 @@
                         <TextBlock
                             FontSize="22"
                             FontWeight="Bold"
-                            Foreground="#1F2937"
+                            Foreground="{DynamicResource InkPrimary}"
                             Text="Foydalanuvchilar" />
                         <TextBlock
                             FontSize="12"
-                            Foreground="#9AA4B2"
+                            Foreground="{DynamicResource InkFaint}"
                             Text="Mijoz, hodim, ta'minotchi va vositachilar" />
                     </StackPanel>
                 </StackPanel>
@@ -86,10 +86,10 @@
                     Padding="16,0"
                     HorizontalAlignment="Right"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="White"
-                    BorderBrush="#D9DEE7"
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
-                    Foreground="#475467">
+                    Foreground="{DynamicResource InkSecondary}">
                     <StackPanel Orientation="Horizontal">
                         <md:PackIcon
                             Width="16"
@@ -107,7 +107,7 @@
                 Grid.Row="1"
                 Margin="0,14,0,0"
                 Padding="14,12"
-                Background="White"
+                Background="{DynamicResource SurfaceCard}"
                 CornerRadius="14"
                 md:ElevationAssist.Elevation="Dp2"
                 Visibility="Collapsed">
@@ -369,8 +369,8 @@
                 <Border
                     Grid.Column="0"
                     Padding="10"
-                    Background="White"
-                    BorderBrush="#EAEEF5"
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     CornerRadius="14"
                     md:ElevationAssist.Elevation="Dp1">
@@ -379,7 +379,7 @@
                             Margin="6,4,0,8"
                             FontSize="13"
                             FontWeight="SemiBold"
-                            Foreground="#7A8699"
+                            Foreground="{DynamicResource InkMuted}"
                             Text="ROLLAR" />
                         <ListBox
                             x:Name="lstRoleFilter"
@@ -400,8 +400,8 @@
                 <Border
                     Grid.Column="2"
                     Padding="14"
-                    Background="White"
-                    BorderBrush="#EAEEF5"
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     CornerRadius="14"
                     md:ElevationAssist.Elevation="Dp1">
@@ -417,8 +417,8 @@
                             Height="34"
                             Margin="0,0,0,10"
                             HorizontalAlignment="Left"
-                            Background="#F8FAFD"
-                            BorderBrush="#D9DEE7"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             CornerRadius="9">
                             <Grid>
@@ -432,7 +432,7 @@
                                     Height="18"
                                     Margin="10,0,4,0"
                                     VerticalAlignment="Center"
-                                    Foreground="#9AA4B2"
+                                    Foreground="{DynamicResource InkFaint}"
                                     Kind="Magnify" />
                                 <TextBox
                                     x:Name="txtSearch"
@@ -481,23 +481,23 @@
                             VirtualizingStackPanel.VirtualizationMode="Standard"
                             EnableRowVirtualization="True"
                             AutoGenerateColumns="False"
-                            AlternatingRowBackground="#F9F9F9"
-                            Background="White"
-                            BorderBrush="#EAEEF5"
+                            AlternatingRowBackground="{DynamicResource SurfaceMuted}"
+                            Background="{DynamicResource SurfaceCard}"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             CanUserAddRows="False"
                             ColumnHeaderHeight="40"
                             RowHeight="40"
                             GridLinesVisibility="Horizontal"
-                            HorizontalGridLinesBrush="#F0F2F6"
+                            HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
                             HeadersVisibility="Column"
                             IsReadOnly="True"
                             ItemsSource="{Binding filteredUsers}">
 
                             <DataGrid.ColumnHeaderStyle>
                                 <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#F4F7FC" />
-                                    <Setter Property="Foreground" Value="#5A6477" />
+                                    <Setter Property="Background" Value="{DynamicResource GridHeaderBg}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
                                     <Setter Property="FontWeight" Value="SemiBold" />
                                     <Setter Property="Padding" Value="10,0" />
                                     <Setter Property="HorizontalContentAlignment" Value="Center" />

@@ -10,7 +10,7 @@
             <Setter Property="Margin" Value="3,0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Background" Value="#F4F6FA" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceChip}" />
             <Setter Property="Foreground" Value="#475467" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Template">
@@ -46,7 +46,7 @@
             VerticalAlignment="Center"
             FontSize="13"
             FontWeight="SemiBold"
-            Foreground="#5A6477" />
+            Foreground="{DynamicResource GridHeaderInk}" />
         <Button x:Name="btnNext" Click="Next_Click" Style="{StaticResource PagerButton}" ToolTip="Keyingi">
             <md:PackIcon Width="18" Height="18" Kind="ChevronRight" />
         </Button>

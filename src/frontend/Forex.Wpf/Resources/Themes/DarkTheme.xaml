@@ -1,0 +1,93 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  Semantic surfaces (zamonaviy sahifalar uchun, theme bilan boshqariladi)  -->
+    <SolidColorBrush x:Key="SurfacePage" Color="#1B2029" />
+    <SolidColorBrush x:Key="SurfaceCard" Color="#262C3A" />
+    <SolidColorBrush x:Key="SurfaceMuted" Color="#222836" />
+    <SolidColorBrush x:Key="SurfaceChip" Color="#2E3647" />
+    <SolidColorBrush x:Key="HairlineBorder" Color="#343C4D" />
+    <SolidColorBrush x:Key="GridHeaderBg" Color="#2A3140" />
+    <SolidColorBrush x:Key="GridHeaderInk" Color="#AEB6C5" />
+    <SolidColorBrush x:Key="GridLineBrush" Color="#2E3545" />
+    <SolidColorBrush x:Key="InkPrimary" Color="#E6E9EF" />
+    <SolidColorBrush x:Key="InkSecondary" Color="#C2C9D6" />
+    <SolidColorBrush x:Key="InkMuted" Color="#97A0AF" />
+    <SolidColorBrush x:Key="InkFaint" Color="#7E8794" />
+
+    <!--  Backgrounds (yumshoq tungi, qora emas)  -->
+    <SolidColorBrush x:Key="PrimaryBackground" Color="#1F2430" />
+    <SolidColorBrush x:Key="SecondaryBackground" Color="#262C3A" />
+    <SolidColorBrush x:Key="SelectedBackground" Color="#2E3647" />
+    <SolidColorBrush x:Key="OtherBackground" Color="#2E3647" />
+
+    <!--  Borders  -->
+    <SolidColorBrush x:Key="PrimaryBorderColor" Color="#3A4254" />
+    <SolidColorBrush x:Key="SecondaryBorderColor" Color="#4A5468" />
+    <SolidColorBrush x:Key="SelectedBorderColor" Color="#4F8BF0" />
+
+    <!--  Text  -->
+    <SolidColorBrush x:Key="PrimaryTextColor" Color="#E6E9EF" />
+    <SolidColorBrush x:Key="SecondaryTextColor" Color="#AEB6C5" />
+    <SolidColorBrush x:Key="DisabledTextColor" Color="#6B7280" />
+    <SolidColorBrush x:Key="MainMenuTextColor" Color="White" />
+
+    <!--  Accent Colors  -->
+    <SolidColorBrush x:Key="AccentColor" Color="#4F8BF0" />
+    <SolidColorBrush x:Key="AccentLightColor" Color="#2E3647" />
+    <SolidColorBrush x:Key="AccentDarkColor" Color="#1976D2" />
+
+    <!--  Status Colors  -->
+    <SolidColorBrush x:Key="SuccessColor" Color="#34C759" />
+    <SolidColorBrush x:Key="WarningColor" Color="#FFC107" />
+    <SolidColorBrush x:Key="ErrorColor" Color="#FF5A52" />
+
+    <!--  Button Colors  -->
+    <SolidColorBrush x:Key="PrimaryButtonBackground" Color="#4F8BF0" />
+    <SolidColorBrush x:Key="PrimaryButtonForeground" Color="White" />
+
+    <SolidColorBrush x:Key="SecondaryButtonBackground" Color="#323A4B" />
+    <SolidColorBrush x:Key="SecondaryButtonForeground" Color="#E6E9EF" />
+
+    <SolidColorBrush x:Key="DangerButtonBackground" Color="#FF5A52" />
+    <SolidColorBrush x:Key="DangerButtonForeground" Color="White" />
+
+    <SolidColorBrush x:Key="DisabledButtonBackground" Color="#323A4B" />
+    <SolidColorBrush x:Key="DisabledButtonForeground" Color="#6B7280" />
+
+    <!--  Back Button  -->
+    <SolidColorBrush x:Key="BackButtonBackground" Color="#323A4B" />
+    <SolidColorBrush x:Key="BackButtonForeground" Color="#E6E9EF" />
+    <SolidColorBrush x:Key="BackButtonBorder" Color="#4A5468" />
+
+    <!--  Success Button  -->
+    <SolidColorBrush x:Key="SuccessButtonBackground" Color="#2DAA39" />
+    <SolidColorBrush x:Key="SuccessButtonForeground" Color="White" />
+    <SolidColorBrush x:Key="SuccessButtonBorder" Color="#2DAA39" />
+
+    <!--  MaterialDesign rang override'lari — MD kontrollar (TextBox, ComboBox, DataGrid, Calendar) tungi rejimga o'tishi uchun  -->
+    <SolidColorBrush x:Key="MaterialDesignPaper" Color="#262C3A" />
+    <SolidColorBrush x:Key="MaterialDesignBackground" Color="#1B2029" />
+    <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#262C3A" />
+    <SolidColorBrush x:Key="MaterialDesignToolBackground" Color="#222836" />
+    <SolidColorBrush x:Key="MaterialDesignToolForeground" Color="#E6E9EF" />
+    <SolidColorBrush x:Key="MaterialDesignBody" Color="#E6E9EF" />
+    <SolidColorBrush x:Key="MaterialDesignBodyLight" Color="#AEB6C5" />
+    <SolidColorBrush x:Key="MaterialDesignColumnHeader" Color="#AEB6C5" />
+    <SolidColorBrush x:Key="MaterialDesignTextBoxBorder" Color="#4A5468" />
+    <SolidColorBrush x:Key="MaterialDesignTextAreaBorder" Color="#4A5468" />
+    <SolidColorBrush x:Key="MaterialDesignTextAreaInactiveBorder" Color="#3A4254" />
+    <SolidColorBrush x:Key="MaterialDesignDivider" Color="#343C4D" />
+    <SolidColorBrush x:Key="MaterialDesignSelection" Color="#3349557A" />
+    <SolidColorBrush x:Key="MaterialDesignFlatButtonClick" Color="#33FFFFFF" />
+    <SolidColorBrush x:Key="MaterialDesignFlatButtonRipple" Color="#55FFFFFF" />
+    <SolidColorBrush x:Key="MaterialDesignToolTipBackground" Color="#2E3647" />
+    <SolidColorBrush x:Key="MaterialDesignCheckBoxOff" Color="#8B93A3" />
+    <SolidColorBrush x:Key="MaterialDesignCheckBoxDisabled" Color="#4A5468" />
+    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxBackground" Color="#2E3647" />
+    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxHoverBackground" Color="#343C4D" />
+    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxDisabledBackground" Color="#222836" />
+    <SolidColorBrush x:Key="MaterialDesignDataGridRowHoverBackground" Color="#2E3647" />
+    <SolidColorBrush x:Key="MaterialDesignChipBackground" Color="#2E3647" />
+    <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#1B2029" />
+
+</ResourceDictionary>

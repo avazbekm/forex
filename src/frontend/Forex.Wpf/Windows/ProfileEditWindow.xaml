@@ -41,7 +41,7 @@
                     HorizontalAlignment="Center"
                     Margin="0,0,0,25"
                     Padding="20"
-                    Background="White"
+                    Background="{DynamicResource SurfaceCard}"
                     CornerRadius="15"
                     md:ElevationAssist.Elevation="Dp4">
                     <Grid>
@@ -105,7 +105,7 @@
 
                 <!-- Profile Fields -->
                 <Border
-                    Background="White"
+                    Background="{DynamicResource SurfaceCard}"
                     CornerRadius="12"
                     Padding="20"
                     md:ElevationAssist.Elevation="Dp4">
@@ -153,7 +153,7 @@
                             Text="Parolni o'zgartirish"
                             FontSize="14"
                             FontWeight="SemiBold"
-                            Foreground="#FF757575"
+                            Foreground="{DynamicResource InkMuted}"
                             Margin="0,0,0,10" />
 
                         <PasswordBox

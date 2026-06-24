@@ -215,7 +215,7 @@ public partial class FinishedStockReportViewModel : PagedReportViewModel<Finishe
     private void Preview()
     {
         var doc = CreateFixedDocument();
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
+        var viewer = new DocumentViewer { Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfaceMuted"), Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { 
             Orientation = Orientation.Horizontal, 
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -356,7 +356,7 @@ public partial class FinishedStockReportViewModel : PagedReportViewModel<Finishe
             Title = "Tayyor mahsulot qoldig'i",
             Width = 1000,
             Height = 800,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen, Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfacePage"),
             Content = layout,
             Owner = Application.Current.MainWindow,
             ShowInTaskbar = false

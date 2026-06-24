@@ -79,8 +79,8 @@ public partial class BarChart : UserControl
         if (maxValue <= 0) maxValue = 1;
 
         var accent = Accent;
-        var trackBrush = new SolidColorBrush(Color.FromRgb(0xF0, 0xF2, 0xF8));
-        var nameBrush = new SolidColorBrush(Color.FromRgb(0x47, 0x54, 0x67));
+        var trackBrush = Res("GridLineBrush", Color.FromRgb(0xF0, 0xF2, 0xF8));
+        var nameBrush = Res("InkSecondary", Color.FromRgb(0x47, 0x54, 0x67));
 
         double rowH = scroll ? RowHeight : (h - top - bottom) / data.Count;
         double barH = Math.Min(26, rowH * 0.56);
@@ -88,7 +88,7 @@ public partial class BarChart : UserControl
         for (int i = 0; i < data.Count; i++)
         {
             var p = data[i];
-            var barColor = p.Color ?? accent;
+            var barColor = LineChart.Adjust(p.Color ?? accent);
             double cy = top + rowH * i + rowH / 2;
             double barLen = Math.Max(2, plotW * (p.Value / maxValue));
 
@@ -150,4 +150,7 @@ public partial class BarChart : UserControl
             canvas.Children.Add(value);
         }
     }
+
+    private static Brush Res(string key, Color fallback)
+        => Application.Current?.TryFindResource(key) as Brush ?? new SolidColorBrush(fallback);
 }

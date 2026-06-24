@@ -425,7 +425,7 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
 
     private void ShowPreviewWindow(FixedDocument doc)
     {
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(15) };
+        var viewer = new DocumentViewer { Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfaceMuted"), Document = doc, Margin = new Thickness(15) };
 
         var toolbar = new StackPanel
         {
@@ -571,7 +571,7 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
             Title = "Mijoz aylanma hisoboti - Ko'rish",
             Width = 1000,
             Height = 800,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen, Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfacePage"),
             Content = layout,
             Icon = Application.Current.MainWindow?.Icon,
             Owner = Application.Current.MainWindow,

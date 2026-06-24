@@ -7,7 +7,7 @@
     xmlns:views="clr-namespace:Forex.Wpf.Pages.Reports.ViewModels"
     Title="Hisobotlar">
 
-    <Grid Margin="10">
+    <Grid Margin="10" Background="{DynamicResource SurfacePage}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -34,7 +34,7 @@
             UniformCornerRadius="4">
             <TabControl
                 x:Name="tabReports"
-                md:ColorZoneAssist.Mode="PrimaryLight"
+                Background="{DynamicResource SurfaceMuted}"
                 FontSize="15"
                 FontWeight="Medium"
                 SelectedIndex="0"

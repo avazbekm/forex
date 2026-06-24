@@ -12,6 +12,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     Background="{DynamicResource PrimaryBackground}"
+    TextElement.Foreground="{DynamicResource InkPrimary}"
     mc:Ignorable="d">
 
 	<Grid Margin="10">
@@ -43,7 +44,7 @@
                     VerticalAlignment="Center"
                     FontSize="18"
                     FontWeight="Bold"
-                    Foreground="#1F2937"
+                    Foreground="{DynamicResource InkPrimary}"
                     Text="Savdo qo'shish" />
 			</StackPanel>
 
@@ -77,11 +78,11 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
                 md:ButtonAssist.CornerRadius="9"
-                Background="White"
-                BorderBrush="#D9DEE7"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 Click="BtnBack_Click"
-                Foreground="#475467"
+                Foreground="{DynamicResource InkSecondary}"
                 ToolTip="Orqaga">
 				<StackPanel Orientation="Horizontal">
 					<md:PackIcon
@@ -406,7 +407,7 @@
                     Margin="2,0"
                     Padding="14,0"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="White"
+                    Background="{DynamicResource SurfaceCard}"
                     BorderBrush="#E11D48"
                     BorderThickness="1"
                     Command="{Binding CancelEditCommand}"
@@ -442,9 +443,9 @@
 		<Grid Grid.Row="3" Margin="0,5,0,5">
 			<DataGrid
                 x:Name="dataGrid"
-                AlternatingRowBackground="#F9F9F9"
+                AlternatingRowBackground="{DynamicResource SurfaceMuted}"
                 AutoGenerateColumns="False"
-                BorderBrush="LightGray"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="2"
                 CanUserAddRows="False"
                 CanUserDeleteRows="False"
@@ -634,7 +635,7 @@
                 Margin="0,0,10,0"
                 Padding="16,0"
                 md:ButtonAssist.CornerRadius="9"
-                Background="White"
+                Background="{DynamicResource SurfaceCard}"
                 BorderBrush="#E11D48"
                 BorderThickness="1"
                 Command="{Binding ClearSaleCommand}"
@@ -675,7 +676,7 @@
                 MaxWidth="1200"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Background="White"
+                Background="{DynamicResource SurfaceCard}"
                 CornerRadius="12"
                 Padding="30">
                 <Grid>
@@ -696,7 +697,7 @@
                         <TextBlock
                             Margin="0,0,0,20"
                             FontSize="20"
-                            Foreground="Gray"
+                            Foreground="{DynamicResource InkMuted}"
                             Text="{Binding PopupItem.Product.Code}" />
 
                         <Grid>
@@ -719,28 +720,28 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Razmer:" />
+                            <TextBlock Grid.Row="0" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="Razmer:" />
                             <TextBlock Grid.Row="0" Grid.Column="2" FontSize="16" FontWeight="Bold" Text="{Binding PopupItem.ProductType.Type}" />
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="1 qopda:" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="1 qopda:" />
                             <TextBlock Grid.Row="2" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.ProductType.BundleItemCount, StringFormat={}{0} ta}" />
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Qop soni:" />
+                            <TextBlock Grid.Row="4" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="Qop soni:" />
                             <TextBlock Grid.Row="4" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.BundleCount, StringFormat={}{0:N0}}" />
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Jami soni:" />
+                            <TextBlock Grid.Row="6" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="Jami soni:" />
                             <TextBlock Grid.Row="6" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.TotalCount, StringFormat={}{0:N0} ta}" />
 
-                            <TextBlock Grid.Row="8" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Narxi:" />
+                            <TextBlock Grid.Row="8" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="Narxi:" />
                             <TextBlock Grid.Row="8" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.UnitPrice, StringFormat={}{0:N2}}" />
 
-                            <TextBlock Grid.Row="10" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="#555" Text="Jami summa:" />
+                            <TextBlock Grid.Row="10" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="Jami summa:" />
                             <TextBlock Grid.Row="10" Grid.Column="2" FontSize="20" FontWeight="Bold" Foreground="Green" Text="{Binding PopupItem.Amount, StringFormat={}{0:N2}}" />
                         </Grid>
                     </StackPanel>
 
                     <!-- Image (Right) -->
-                    <Border Grid.Column="2" Width="400" Height="400" Background="#F5F5F5" CornerRadius="8" VerticalAlignment="Center">
+                    <Border Grid.Column="2" Width="400" Height="400" Background="{DynamicResource SurfaceMuted}" CornerRadius="8" VerticalAlignment="Center">
                         <Image Source="{Binding PopupItem.Product.DisplayImagePath}" Stretch="Uniform" />
                     </Border>
                 </Grid>

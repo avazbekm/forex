@@ -10,7 +10,7 @@
     Height="600"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
-    <Grid Background="{DynamicResource PrimaryBackground}">
+    <Grid Background="{DynamicResource PrimaryBackground}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" />
 
         <controls:LoadingSpinner

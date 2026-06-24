@@ -16,7 +16,7 @@
             <Setter Property="Margin" Value="2,0,0,4" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="#7A8699" />
+            <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
         </Style>
 
         <Style x:Key="StatCard" TargetType="Border">
@@ -26,7 +26,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Background="#F4F6FA">
+    <Grid Background="{DynamicResource SurfacePage}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid Margin="18">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -56,11 +56,11 @@
                         <TextBlock
                             FontSize="22"
                             FontWeight="Bold"
-                            Foreground="#1F2937"
+                            Foreground="{DynamicResource InkPrimary}"
                             Text="To'lovlar" />
                         <TextBlock
                             FontSize="12"
-                            Foreground="#9AA4B2"
+                            Foreground="{DynamicResource InkFaint}"
                             Text="Mijoz va hamkorlar bilan hisob-kitob" />
                     </StackPanel>
                 </StackPanel>
@@ -71,11 +71,11 @@
                     Padding="16,0"
                     HorizontalAlignment="Right"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="White"
-                    BorderBrush="#D9DEE7"
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     Click="BtnBack_Click"
-                    Foreground="#475467">
+                    Foreground="{DynamicResource InkSecondary}">
                     <StackPanel Orientation="Horizontal">
                         <md:PackIcon
                             Width="16"
@@ -92,7 +92,7 @@
                 Grid.Row="1"
                 Margin="0,14,0,14"
                 Padding="18"
-                Background="White"
+                Background="{DynamicResource SurfaceCard}"
                 CornerRadius="14"
                 md:ElevationAssist.Elevation="Dp2">
                 <Grid>
@@ -464,8 +464,8 @@
                 Grid.Row="2"
                 Margin="0,0,0,10"
                 Padding="14,12"
-                Background="#F8FAFD"
-                BorderBrush="#EAEEF5"
+                Background="{DynamicResource SurfaceMuted}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 CornerRadius="11">
                 <Grid>
@@ -535,11 +535,11 @@
                                 Height="30"
                                 Padding="14,0"
                                 md:ButtonAssist.CornerRadius="9"
-                                Background="White"
-                                BorderBrush="#D9DEE7"
+                                Background="{DynamicResource SurfaceCard}"
+                                BorderBrush="{DynamicResource HairlineBorder}"
                                 BorderThickness="1"
                                 Command="{Binding ClearFiltersCommand}"
-                                Foreground="#475467"
+                                Foreground="{DynamicResource InkSecondary}"
                                 ToolTip="Filterlarni tozalash">
                                 <StackPanel Orientation="Horizontal">
                                     <md:PackIcon
@@ -579,10 +579,10 @@
             <!--  Transaction History DataGrid  -->
             <DataGrid
                 Grid.Row="3"
-                AlternatingRowBackground="#F9F9F9"
+                AlternatingRowBackground="{DynamicResource SurfaceMuted}"
                 AutoGenerateColumns="False"
-                Background="White"
-                BorderBrush="#EAEEF5"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 CanUserAddRows="False"
                 VirtualizingStackPanel.VirtualizationMode="Standard"
@@ -593,7 +593,7 @@
                 RowHeight="40"
                 ColumnHeaderHeight="40"
                 GridLinesVisibility="Horizontal"
-                HorizontalGridLinesBrush="#F0F2F6"
+                HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
                 SelectionMode="Single">
 
                 <DataGrid.Resources>
@@ -609,8 +609,8 @@
 
                 <DataGrid.ColumnHeaderStyle>
                     <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#F4F7FC" />
-                        <Setter Property="Foreground" Value="#5A6477" />
+                        <Setter Property="Background" Value="{DynamicResource GridHeaderBg}" />
+                        <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
                         <Setter Property="FontWeight" Value="SemiBold" />
                         <Setter Property="Padding" Value="10,0" />
                         <Setter Property="HorizontalContentAlignment" Value="Center" />

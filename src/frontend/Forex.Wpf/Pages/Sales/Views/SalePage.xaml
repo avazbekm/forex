@@ -18,7 +18,7 @@
             <Setter Property="Margin" Value="2,0,0,4" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="#7A8699" />
+            <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
         </Style>
 
         <Style x:Key="StatChip" TargetType="Border">
@@ -28,7 +28,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Background="#F4F6FA">
+    <Grid Background="{DynamicResource SurfacePage}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid Margin="18">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -57,11 +57,11 @@
                         <TextBlock
                             FontSize="22"
                             FontWeight="Bold"
-                            Foreground="#1F2937"
+                            Foreground="{DynamicResource InkPrimary}"
                             Text="Savdolar" />
                         <TextBlock
                             FontSize="12"
-                            Foreground="#9AA4B2"
+                            Foreground="{DynamicResource InkFaint}"
                             Text="Savdolar ro'yxati va hisob-kitob" />
                     </StackPanel>
                 </StackPanel>
@@ -93,11 +93,11 @@
                         Height="38"
                         Padding="16,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="White"
-                        BorderBrush="#D9DEE7"
+                        Background="{DynamicResource SurfaceCard}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
                         BorderThickness="1"
                         Click="BtnBack_Click"
-                        Foreground="#475467">
+                        Foreground="{DynamicResource InkSecondary}">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon
                                 Width="16"
@@ -115,8 +115,8 @@
                 Grid.Row="1"
                 Margin="0,14,0,0"
                 Padding="14,12"
-                Background="#F8FAFD"
-                BorderBrush="#EAEEF5"
+                Background="{DynamicResource SurfaceMuted}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 CornerRadius="11">
                 <Grid>
@@ -167,11 +167,11 @@
                             Height="30"
                             Padding="14,0"
                             md:ButtonAssist.CornerRadius="9"
-                            Background="White"
-                            BorderBrush="#D9DEE7"
+                            Background="{DynamicResource SurfaceCard}"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             Command="{Binding ClearFiltersCommand}"
-                            Foreground="#475467"
+                            Foreground="{DynamicResource InkSecondary}"
                             ToolTip="Filterlarni tozalash">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon
@@ -213,15 +213,15 @@
                 Grid.Row="2"
                 Margin="0,14,0,0"
                 AutoGenerateColumns="False"
-                Background="White"
-                BorderBrush="#EAEEF5"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 CanUserAddRows="False"
                 CanUserDeleteRows="False"
                 ColumnHeaderHeight="40"
                 RowHeight="40"
                 GridLinesVisibility="Horizontal"
-                HorizontalGridLinesBrush="#F0F2F6"
+                HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
                 VirtualizingStackPanel.VirtualizationMode="Standard"
                 EnableRowVirtualization="True"
                 FontSize="14"
@@ -254,8 +254,8 @@
 
                 <DataGrid.ColumnHeaderStyle>
                     <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#F4F7FC" />
-                        <Setter Property="Foreground" Value="#5A6477" />
+                        <Setter Property="Background" Value="{DynamicResource GridHeaderBg}" />
+                        <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
                         <Setter Property="FontWeight" Value="SemiBold" />
                         <Setter Property="Padding" Value="10,0" />
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -358,8 +358,8 @@
                 Grid.Row="3"
                 Margin="0,14,0,0"
                 Padding="12,10"
-                Background="White"
-                BorderBrush="#EAEEF5"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 CornerRadius="12">
                 <Grid>
@@ -441,7 +441,7 @@
                             Padding="0"
                             md:ButtonAssist.CornerRadius="8"
                             Background="Transparent"
-                            BorderBrush="#D9DEE7"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             Command="{Binding GoToFirstPageCommand}"
                             IsEnabled="{Binding CanGoPrevious}"
@@ -455,7 +455,7 @@
                             Padding="0"
                             md:ButtonAssist.CornerRadius="8"
                             Background="Transparent"
-                            BorderBrush="#D9DEE7"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             Command="{Binding GoToPreviousPageCommand}"
                             IsEnabled="{Binding CanGoPrevious}"
@@ -484,7 +484,7 @@
                                             <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
                                                 <Setter Property="Background" Value="Transparent" />
                                                 <Setter Property="BorderThickness" Value="1" />
-                                                <Setter Property="BorderBrush" Value="#D9DEE7" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource HairlineBorder}" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding}" Value="...">
                                                         <Setter Property="IsEnabled" Value="False" />
@@ -515,7 +515,7 @@
                             Padding="0"
                             md:ButtonAssist.CornerRadius="8"
                             Background="Transparent"
-                            BorderBrush="#D9DEE7"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             Command="{Binding GoToNextPageCommand}"
                             IsEnabled="{Binding CanGoNext}"
@@ -529,7 +529,7 @@
                             Padding="0"
                             md:ButtonAssist.CornerRadius="8"
                             Background="Transparent"
-                            BorderBrush="#D9DEE7"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             Command="{Binding GoToLastPageCommand}"
                             IsEnabled="{Binding CanGoNext}"
@@ -540,11 +540,11 @@
                         <Border
                             Margin="8,0,0,0"
                             Padding="8,4"
-                            Background="#F4F6FA"
-                            BorderBrush="#E0E0E0"
+                            Background="{DynamicResource SurfacePage}"
+                            BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             CornerRadius="8">
-                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#5A6477">
+                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource GridHeaderInk}">
                                 <Run Text="{Binding CurrentPage, Mode=OneWay}" />
                                 <Run Text=" / " />
                                 <Run Text="{Binding TotalPages, Mode=OneWay}" />

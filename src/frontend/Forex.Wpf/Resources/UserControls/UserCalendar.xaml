@@ -7,34 +7,30 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     mc:Ignorable="d">
-    <Grid Background="Transparent">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="30" />
-        </Grid.ColumnDefinitions>
+    <Border
+        Background="Transparent"
+        BorderBrush="{DynamicResource SecondaryBorderColor}"
+        BorderThickness="1"
+        CornerRadius="4">
+        <Grid Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="30" />
+            </Grid.ColumnDefinitions>
 
-        <!--  TextBox taraf  -->
-        <Border
-            Background="Transparent"
-            BorderBrush="Black"
-            BorderThickness="1,1,0,1"
-            CornerRadius="4 0 0 4">
             <TextBox
                 x:Name="input"
-                Padding="0"
+                Padding="6,0,0,0"
+                VerticalContentAlignment="Center"
                 HorizontalAlignment="Stretch"
                 md:HintAssist.Hint="{Binding Hint, RelativeSource={RelativeSource AncestorType=local:UserCalendar}}"
+                Background="Transparent"
                 BorderThickness="0"
+                Foreground="{DynamicResource InkPrimary}"
                 TextAlignment="Right" />
-        </Border>
 
-        <!--  kalendar iconkasi  -->
-        <Border
-            Grid.Column="1"
-            BorderBrush="Black"
-            BorderThickness="0,1,1,1"
-            CornerRadius="0 4 4 0">
             <Button
+                Grid.Column="1"
                 Padding="0"
                 VerticalAlignment="Center"
                 md:ButtonAssist.CornerRadius="0"
@@ -42,20 +38,22 @@
                 BorderThickness="0"
                 Click="OpenCalendar_Click"
                 Content="📅"
+                Foreground="{DynamicResource InkSecondary}"
                 IsTabStop="False" />
-        </Border>
 
-        <!--  Calendar popup  -->
-        <Popup
-            x:Name="calendarPopup"
-            PlacementTarget="{Binding ElementName=dateTextBox}"
-            StaysOpen="False">
-            <Border
-                BorderBrush="Aqua"
-                BorderThickness="1"
-                CornerRadius="4">
-                <Calendar x:Name="calendar" SelectedDatesChanged="Calendar_SelectedDatesChanged" />
-            </Border>
-        </Popup>
-    </Grid>
+            <!--  Calendar popup  -->
+            <Popup
+                x:Name="calendarPopup"
+                PlacementTarget="{Binding ElementName=dateTextBox}"
+                StaysOpen="False">
+                <Border
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <Calendar x:Name="calendar" SelectedDatesChanged="Calendar_SelectedDatesChanged" />
+                </Border>
+            </Popup>
+        </Grid>
+    </Border>
 </UserControl>

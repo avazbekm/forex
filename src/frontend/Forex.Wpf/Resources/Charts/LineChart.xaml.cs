@@ -12,7 +12,7 @@ public partial class LineChart : UserControl
 
     private readonly List<UIElement> hoverLayer = [];
     private double[] xs = [];
-    private List<(ChartSeries series, double[] ys)> plotted = [];
+    private List<(ChartSeries series, double[] ys, Color color)> plotted = [];
     private IReadOnlyList<string> labels = [];
 
     public LineChart()
@@ -51,8 +51,8 @@ public partial class LineChart : UserControl
         double maxValue = NiceCeil(series.Max(s => s.Values.Count > 0 ? s.Values.Max() : 0));
         if (maxValue <= 0) maxValue = 1;
 
-        var gridBrush = new SolidColorBrush(Color.FromRgb(0xEE, 0xF1, 0xF6));
-        var labelBrush = new SolidColorBrush(Color.FromRgb(0x9A, 0xA4, 0xB2));
+        var gridBrush = Res("GridLineBrush", Color.FromRgb(0xEE, 0xF1, 0xF6));
+        var labelBrush = Res("InkFaint", Color.FromRgb(0x9A, 0xA4, 0xB2));
 
         // Y gridlines + labels
         const int ticks = 4;
@@ -78,6 +78,7 @@ public partial class LineChart : UserControl
         // Series (dim ones first so bright lines stay on top)
         foreach (var s in series.OrderByDescending(s => s.Dim))
         {
+            var sc = Adjust(s.Color);
             var pts = new List<Point>();
             for (int i = 0; i < count; i++)
                 pts.Add(new Point(xs[i], Y(i < s.Values.Count ? s.Values[i] : 0)));
@@ -88,15 +89,15 @@ public partial class LineChart : UserControl
                 {
                     Data = new PathGeometry([BuildSmoothFigure(pts, true, baseY)]),
                     Fill = new LinearGradientBrush(
-                        Color.FromArgb(0x38, s.Color.R, s.Color.G, s.Color.B),
-                        Color.FromArgb(0x00, s.Color.R, s.Color.G, s.Color.B), 90)
+                        Color.FromArgb(0x38, sc.R, sc.G, sc.B),
+                        Color.FromArgb(0x00, sc.R, sc.G, sc.B), 90)
                 });
             }
 
             canvas.Children.Add(new Path
             {
                 Data = new PathGeometry([BuildSmoothFigure(pts, false, baseY)]),
-                Stroke = new SolidColorBrush(s.Color),
+                Stroke = new SolidColorBrush(sc),
                 StrokeThickness = s.Dim ? 1.6 : 2.6,
                 StrokeLineJoin = PenLineJoin.Round,
                 StrokeStartLineCap = PenLineCap.Round,
@@ -104,7 +105,7 @@ public partial class LineChart : UserControl
                 Opacity = s.Dim ? 0.75 : 1
             });
 
-            plotted.Add((s, [.. pts.Select(p => p.Y)]));
+            plotted.Add((s, [.. pts.Select(p => p.Y)], sc));
         }
 
         // X labels (sparse)
@@ -129,14 +130,14 @@ public partial class LineChart : UserControl
                 Height = 4,
                 RadiusX = 2,
                 RadiusY = 2,
-                Fill = new SolidColorBrush(s.Color),
+                Fill = new SolidColorBrush(Adjust(s.Color)),
                 Opacity = s.Dim ? 0.75 : 1
             };
             Canvas.SetLeft(swatch, lx);
             Canvas.SetTop(swatch, 12);
             canvas.Children.Add(swatch);
 
-            var lt = new TextBlock { Text = s.Name, FontSize = 11.5, Foreground = new SolidColorBrush(Color.FromRgb(0x5A, 0x64, 0x77)) };
+            var lt = new TextBlock { Text = s.Name, FontSize = 11.5, Foreground = Res("GridHeaderInk", Color.FromRgb(0x5A, 0x64, 0x77)) };
             lt.Measure(new Size(120, 20));
             Canvas.SetLeft(lt, lx + 18);
             Canvas.SetTop(lt, 6);
@@ -173,13 +174,13 @@ public partial class LineChart : UserControl
         };
         AddHover(guide);
 
-        foreach (var (s, ys) in plotted)
+        foreach (var (s, ys, col) in plotted)
         {
             var dot = new Ellipse
             {
                 Width = 9,
                 Height = 9,
-                Fill = new SolidColorBrush(s.Color),
+                Fill = new SolidColorBrush(col),
                 Stroke = Brushes.White,
                 StrokeThickness = 2
             };
@@ -195,21 +196,21 @@ public partial class LineChart : UserControl
             Text = labels[nearest],
             FontSize = 11,
             FontWeight = FontWeights.SemiBold,
-            Foreground = new SolidColorBrush(Color.FromRgb(0x6B, 0x72, 0x80)),
+            Foreground = Res("InkMuted", Color.FromRgb(0x6B, 0x72, 0x80)),
             Margin = new Thickness(0, 0, 0, 3)
         });
-        foreach (var (s, _) in plotted.OrderByDescending(p => p.series.Dim ? 0 : 1))
+        foreach (var (s, _, col) in plotted.OrderByDescending(p => p.series.Dim ? 0 : 1))
         {
             double v = s.Values[nearest];
             var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 1, 0, 1) };
-            row.Children.Add(new Ellipse { Width = 8, Height = 8, Fill = new SolidColorBrush(s.Color), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) });
-            row.Children.Add(new TextBlock { Text = $"{s.Name}: {v:N0}", FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(0x1F, 0x29, 0x37)) });
+            row.Children.Add(new Ellipse { Width = 8, Height = 8, Fill = new SolidColorBrush(col), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) });
+            row.Children.Add(new TextBlock { Text = $"{s.Name}: {v:N0}", FontSize = 12, Foreground = Res("InkPrimary", Color.FromRgb(0x1F, 0x29, 0x37)) });
             box.Children.Add(row);
         }
         var tip = new Border
         {
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0xE4, 0xE9, 0xF2)),
+            Background = Res("SurfaceCard", Colors.White),
+            BorderBrush = Res("HairlineBorder", Color.FromRgb(0xE4, 0xE9, 0xF2)),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(10, 7, 10, 7),
@@ -261,6 +262,25 @@ public partial class LineChart : UserControl
             fig.IsClosed = true;
         }
         return fig;
+    }
+
+    private static Brush Res(string key, Color fallback)
+        => Application.Current?.TryFindResource(key) as Brush ?? new SolidColorBrush(fallback);
+
+    internal static bool IsDark()
+        => Application.Current?.TryFindResource("InkPrimary") is SolidColorBrush b
+           && (b.Color.R * 0.299 + b.Color.G * 0.587 + b.Color.B * 0.114) > 140;
+
+    internal static Color Adjust(Color c)
+    {
+        if (!IsDark()) return c;
+        double lum = c.R * 0.299 + c.G * 0.587 + c.B * 0.114;
+        if (lum >= 120) return c;
+        const double f = 0.45;
+        return Color.FromRgb(
+            (byte)(c.R + (255 - c.R) * f),
+            (byte)(c.G + (255 - c.G) * f),
+            (byte)(c.B + (255 - c.B) * f));
     }
 
     private static double NiceCeil(double v)
