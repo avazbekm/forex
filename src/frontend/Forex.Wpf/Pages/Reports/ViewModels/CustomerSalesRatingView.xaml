@@ -5,227 +5,190 @@
     xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     Background="White">
-    <Grid Margin="10" Background="White">
+    <UserControl.Resources>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0,0,4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="#7A8699" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="14" Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Filter Panel -->
+        <!--  Filter bar  -->
         <Border
             Grid.Row="0"
-            Margin="0,0,0,10"
-            Padding="15,10"
-            Background="#FAFAFA"
-            BorderBrush="#E0E0E0"
+            Padding="14,12"
+            Background="#F8FAFD"
+            BorderBrush="#EAEEF5"
             BorderThickness="1"
-            CornerRadius="6">
+            CornerRadius="11">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <!-- Date Range -->
-                    <StackPanel Margin="0,0,20,0">
-                        <TextBlock
-                            Margin="0,0,0,5"
-                            FontSize="12"
-                            Foreground="#666"
-                            Text="Sana oralig'i" />
-                        <StackPanel Orientation="Horizontal">
-                            <controls:UserCalendar
-                                Width="120"
-                                Height="36"
-                                SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
-                            <TextBlock
-                                Margin="8,0"
-                                VerticalAlignment="Center"
-                                Text="-" />
-                            <controls:UserCalendar
-                                Width="120"
-                                Height="36"
-                                SelectedDate="{Binding EndDate, Mode=TwoWay}" />
-                        </StackPanel>
-                    </StackPanel>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Boshlanish" />
+                    <controls:UserCalendar
+                        Width="120"
+                        Height="34"
+                        SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
+                </StackPanel>
 
-                    <!-- Customer -->
-                    <StackPanel Margin="0,0,20,0">
-                        <TextBlock
-                            Margin="0,0,0,5"
-                            FontSize="12"
-                            Foreground="#666"
-                            Text="Mijozni tanlang" />
-                        <Border
-                            Height="36"
-                            BorderBrush="#DDD"
-                            BorderThickness="1"
-                            CornerRadius="4">
-                            <ComboBox
-                                x:Name="cbxCustomer"
-                                Width="250"
-                                Padding="8,0"
-                                VerticalContentAlignment="Center"
-                                BorderThickness="0"
-                                DisplayMemberPath="Name"
-                                FontSize="14"
-                                IsEditable="True"
-                                ItemsSource="{Binding AvailableCustomers}"
-                                SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}" />
-                        </Border>
-                    </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tugash" />
+                    <controls:UserCalendar
+                        Width="120"
+                        Height="34"
+                        SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+                </StackPanel>
 
-                    <!-- Buttons -->
-                     <Button
-                        x:Name="btnLoad"
-                        Height="36"
-                        Margin="0,21,0,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
+                <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Mijoz" />
+                    <Border
+                        Height="34"
+                        BorderBrush="#D9DEE7"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                        <ComboBox
+                            Width="240"
+                            Padding="8,0"
+                            VerticalContentAlignment="Center"
+                            BorderThickness="0"
+                            DisplayMemberPath="Name"
+                            FontSize="14"
+                            IsEditable="True"
+                            ItemsSource="{Binding AvailableCustomers}"
+                            SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Margin="0,0,10,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="" />
+                    <Button
+                        Height="34"
+                        Padding="14,0"
+                        md:ButtonAssist.CornerRadius="9"
                         Background="#673AB7"
                         BorderThickness="0"
                         Command="{Binding LoadSalesCommand}"
-                        Foreground="White">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="Refresh" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Yuklash" />
-                        </StackPanel>
-                    </Button>
-                    
-                    <Button
-                        x:Name="btnClear"
-                        Height="36"
-                        Margin="10,21,0,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="#78909C"
-                        BorderThickness="0"
-                        Command="{Binding ClearFilterCommand}"
                         Foreground="White"
-                        ToolTip="Filterni tozalash">
+                        ToolTip="Yuklash">
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="FilterRemove" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Tozalash" />
+                            <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Refresh" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Yuklash" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
-                <!-- Actions -->
-                <StackPanel
-                    Grid.Column="2"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Bottom">
+                <StackPanel Grid.Column="4">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="" />
                     <Button
-                        x:Name="btnPreview"
-                        Height="36"
+                        Height="34"
+                        Padding="14,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="White"
+                        BorderBrush="#D9DEE7"
+                        BorderThickness="1"
+                        Command="{Binding ClearFilterCommand}"
+                        Foreground="#475467"
+                        ToolTip="Tozalash">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="FilterRemoveOutline" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Tozalash" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="6"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal">
+                    <Button
+                        Height="34"
                         Margin="5,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
+                        Padding="12,0"
+                        md:ButtonAssist.CornerRadius="9"
                         Background="#1976D2"
                         BorderThickness="0"
                         Command="{Binding PreviewCommand}"
                         Foreground="White"
-                        IsEnabled="{Binding HasData}">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="Eye" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Ko'rish" />
-                        </StackPanel>
+                        IsEnabled="{Binding HasData}"
+                        ToolTip="Ko'rish">
+                        <md:PackIcon Width="18" Height="18" Kind="Eye" />
                     </Button>
                     <Button
-                        x:Name="btnPrint"
-                        Height="36"
+                        Height="34"
                         Margin="5,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
+                        Padding="12,0"
+                        md:ButtonAssist.CornerRadius="9"
                         Background="#00897B"
                         BorderThickness="0"
                         Command="{Binding PrintCommand}"
                         Foreground="White"
-                        IsEnabled="{Binding HasData}">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="Printer" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Pechat" />
-                        </StackPanel>
+                        IsEnabled="{Binding HasData}"
+                        ToolTip="Pechat">
+                        <md:PackIcon Width="18" Height="18" Kind="Printer" />
                     </Button>
                     <Button
-                        x:Name="btnExport"
-                        Height="36"
+                        Height="34"
                         Margin="5,0,0,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="#2E7D32"
+                        Padding="12,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="#15803D"
                         BorderThickness="0"
                         Command="{Binding ExportToExcelCommand}"
                         Foreground="White"
-                        IsEnabled="{Binding HasData}">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="FileExcel" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Excel" />
-                        </StackPanel>
+                        IsEnabled="{Binding HasData}"
+                        ToolTip="Excel">
+                        <md:PackIcon Width="18" Height="18" Kind="FileExcel" />
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- DataGrid -->
+        <!--  DataGrid  -->
         <DataGrid
             Grid.Row="1"
-            AlternatingRowBackground="#F5F5F5"
+            Margin="0,14,0,0"
             AutoGenerateColumns="False"
-            BorderBrush="LightGray"
+            Background="White"
+            BorderBrush="#EAEEF5"
             BorderThickness="1"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            ColumnHeaderHeight="42"
+            EnableRowVirtualization="True"
             FontSize="14"
             GridLinesVisibility="Horizontal"
+            HeadersVisibility="Column"
+            HorizontalGridLinesBrush="#F0F2F6"
             IsReadOnly="True"
-            ItemsSource="{Binding CustomerSales}"
-            RowHeight="42"
+            ItemsSource="{Binding PagedItems}"
+            RowHeight="40"
             VirtualizingStackPanel.VirtualizationMode="Standard">
-            
+
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    <Setter Property="Background" Value="#F4F7FC" />
+                    <Setter Property="Foreground" Value="#5A6477" />
                     <Setter Property="FontWeight" Value="SemiBold" />
-                    <Setter Property="Background" Value="#E3F2FD" />
-                    <Setter Property="Padding" Value="8" />
+                    <Setter Property="Padding" Value="10,0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
                 </Style>
             </DataGrid.ColumnHeaderStyle>
 
@@ -236,11 +199,11 @@
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource IndexConverter}}" />
+                                Text="{Binding RowNumber}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                
+
                 <DataGridTextColumn
                     Width="2*"
                     Binding="{Binding CustomerName}"
@@ -258,15 +221,6 @@
                     Width="*"
                     Binding="{Binding ReadyCount, StringFormat=N0}"
                     Header="Tayyor">
-                    <DataGridTextColumn.HeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
-                            <Setter Property="Foreground" Value="#1565C0" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Background" Value="#E3F2FD" />
-                            <Setter Property="Padding" Value="8" />
-                        </Style>
-                    </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -281,15 +235,6 @@
                     Width="*"
                     Binding="{Binding MixedCount, StringFormat=N0}"
                     Header="Aralash">
-                    <DataGridTextColumn.HeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
-                            <Setter Property="Foreground" Value="#6A1B9A" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Background" Value="#E3F2FD" />
-                            <Setter Property="Padding" Value="8" />
-                        </Style>
-                    </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -304,15 +249,6 @@
                     Width="*"
                     Binding="{Binding EvaCount, StringFormat=N0}"
                     Header="Eva">
-                    <DataGridTextColumn.HeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
-                            <Setter Property="Foreground" Value="#D81B60" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Background" Value="#E3F2FD" />
-                            <Setter Property="Padding" Value="8" />
-                        </Style>
-                    </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -327,23 +263,26 @@
                     Width="*"
                     Binding="{Binding TotalCount, StringFormat=N0}"
                     Header="Jami">
-                    <DataGridTextColumn.HeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="HorizontalContentAlignment" Value="Center" />
-                            <Setter Property="Foreground" Value="#1B5E20" />
-                            <Setter Property="FontWeight" Value="Bold" />
-                            <Setter Property="Background" Value="#E3F2FD" />
-                            <Setter Property="Padding" Value="8" />
-                        </Style>
-                    </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                             <Setter Property="FontWeight" Value="ExtraBold" />
                             <Setter Property="Foreground" Value="#1B5E20" />
-                            <Setter Property="FontSize" Value="15" />
-                            <Setter Property="Background" Value="#E8F5E8" />
-                            <Setter Property="Padding" Value="0,6" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn
+                    Width="1.4*"
+                    Binding="{Binding TotalAmount, StringFormat=N0}"
+                    Header="Jami summa">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right" />
+                            <Setter Property="Padding" Value="0,0,10,0" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="Foreground" Value="#B7791F" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
@@ -351,23 +290,51 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Footer -->
+        <!--  Totals + Pager  -->
         <Border
             Grid.Row="2"
-            Margin="0,10,0,0"
-            Padding="15,10"
-            Background="#E8F5E8"
-            BorderBrush="#C8E6C9"
+            Margin="0,14,0,0"
+            Padding="12,10"
+            Background="White"
+            BorderBrush="#EAEEF5"
             BorderThickness="1"
-            CornerRadius="6">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock
-                    Margin="0,0,30,0"
-                    FontSize="14"
-                    FontWeight="SemiBold"
-                    Foreground="#555"
-                    Text="{Binding CustomerSales.Count, StringFormat='Jami mijozlar: {0} ta'}" />
-            </StackPanel>
+            CornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <UniformGrid
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    Rows="1">
+                    <controls:StatCard
+                        Accent="#3949AB"
+                        CardBackground="#EEF2FF"
+                        Title="Mijozlar"
+                        TitleBrush="#6470B0"
+                        Value="{Binding TotalCount}" />
+                    <controls:StatCard
+                        Accent="#1B7A3E"
+                        CardBackground="#E9F8EE"
+                        Title="Jami juft"
+                        TitleBrush="#2E8B57"
+                        Value="{Binding SummaryPairs, StringFormat=N0}" />
+                    <controls:StatCard
+                        Accent="#A66A12"
+                        Caption="{Binding AmountBreakdown}"
+                        CardBackground="#FFF6E6"
+                        Title="Jami summa (so'm)"
+                        TitleBrush="#B7791F"
+                        Value="{Binding SummaryAmount, StringFormat=N0}" />
+                </UniformGrid>
+
+                <controls:Pager
+                    Grid.Column="1"
+                    CurrentPage="{Binding CurrentPage, Mode=TwoWay}"
+                    TotalPages="{Binding TotalPages}" />
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

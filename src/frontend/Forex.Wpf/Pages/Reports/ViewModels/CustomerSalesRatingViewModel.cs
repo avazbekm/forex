@@ -9,6 +9,7 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
+using MapsterMapper;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,36 +24,41 @@ using Forex.Wpf.Windows;
 using System.Windows.Input;
 using System.Diagnostics;
 
-public partial class CustomerSalesRatingViewModel : ViewModelBase
+public partial class CustomerSalesRatingViewModel : PagedReportViewModel<CustomerSaleViewModel>
 {
     private readonly ForexClient _client;
+    private readonly IMapper _mapper;
     private readonly CommonReportDataService _commonData;
 
-    [ObservableProperty] private ObservableCollection<CustomerSaleViewModel> customerSales = [];
-    public ObservableCollection<UserViewModel> AvailableCustomers => _commonData.AvailableCustomers;
+    private List<CustomerSaleViewModel> allRows = [];
 
+    [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
     [ObservableProperty] private UserViewModel? selectedCustomer;
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
-    
-    public bool HasData => CustomerSales?.Count > 0;
 
-    public CustomerSalesRatingViewModel(ForexClient client, CommonReportDataService commonData)
+    [ObservableProperty] private int summaryPairs;
+    [ObservableProperty] private decimal summaryAmount;
+    [ObservableProperty] private string amountBreakdown = string.Empty;
+
+    private bool _suppress;
+
+    public bool HasData => TotalCount > 0;
+
+    public CustomerSalesRatingViewModel(ForexClient client, IMapper mapper, CommonReportDataService commonData)
     {
         _client = client;
+        _mapper = mapper;
         _commonData = commonData;
     }
 
-    partial void OnCustomerSalesChanged(ObservableCollection<CustomerSaleViewModel> value)
-    {
-        OnPropertyChanged(nameof(HasData));
-    }
+    partial void OnBeginDateChanged(DateTime value) { if (!_suppress) _ = LoadSalesAsync(); }
+    partial void OnEndDateChanged(DateTime value) { if (!_suppress) _ = LoadSalesAsync(); }
+    partial void OnSelectedCustomerChanged(UserViewModel? value) { if (!_suppress) _ = LoadSalesAsync(); }
 
-    [RelayCommand] 
+    [RelayCommand]
     private async Task LoadSalesAsync()
     {
-        IsLoading = true;
-
         try
         {
             var request = new FilteringRequest
@@ -63,20 +69,21 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
                     ["customer"] = ["include"],
                     ["saleItems"] = ["include:productType.product"]
                 }
-
             };
-            // ... filter va request ...
 
             var response = await _client.Sales.Filter(request).Handle(l => IsLoading = l);
             if (!response.IsSuccess || response.Data == null)
             {
                 ErrorMessage = "Savdolar yuklanmadi";
-                CustomerSales = new ObservableCollection<CustomerSaleViewModel>(); // yangi collection
+                allRows = [];
+                SetSource(allRows);
+                UpdateSummary();
                 return;
             }
 
+            RebuildCustomers(response.Data);
+
             var tempList = new List<CustomerSaleViewModel>();
-            int rowNumber = 1;
 
             foreach (var group in response.Data
                 .Where(s => s.Customer != null)
@@ -89,7 +96,6 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
 
                 var vm = new CustomerSaleViewModel
                 {
-                    RowNumber = rowNumber++,
                     CustomerName = customer.Name ?? "Nomsiz mijoz"
                 };
 
@@ -97,12 +103,16 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
                 {
                     if (sale.SaleItems == null) continue;
 
+                    if (!string.IsNullOrEmpty(sale.CurrencyCode))
+                        vm.CurrencyCode = sale.CurrencyCode;
+
                     foreach (var item in sale.SaleItems)
                     {
                         if (item?.ProductType?.Product == null) continue;
 
                         var origin = item.ProductType.Product.ProductionOrigin;
-                        int count = (int)item.TotalCount;
+                        int count = item.TotalCount;
+                        vm.TotalAmount += item.Amount;
 
                         switch (origin)
                         {
@@ -117,39 +127,64 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
                 tempList.Add(vm);
             }
 
-            // Eng muhimi — YANGI ObservableCollection yaratib beramiz!
-            CustomerSales = new ObservableCollection<CustomerSaleViewModel>(tempList.OrderByDescending(x => x.TotalCount));
+            allRows = [.. tempList.OrderByDescending(x => x.TotalCount)];
+            int rowNumber = 1;
+            foreach (var row in allRows) row.RowNumber = rowNumber++;
 
+            SetSource(allRows);
+            UpdateSummary();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Xatolik: {ex.Message}");
-            CustomerSales = [];
+            allRows = [];
+            SetSource(allRows);
+            UpdateSummary();
         }
-        finally
-        {
-            IsLoading = false;
-        }
+    }
+
+    private void RebuildCustomers(IEnumerable<Forex.ClientService.Models.Responses.SaleResponse> sales)
+    {
+        var customers = sales
+            .Where(s => s.Customer != null)
+            .Select(s => s.Customer)
+            .GroupBy(c => c.Id)
+            .Select(g => g.First())
+            .OrderBy(c => c.Name)
+            .ToList();
+
+        var keepId = SelectedCustomer?.Id;
+        _suppress = true;
+        AvailableCustomers = _mapper.Map<ObservableCollection<UserViewModel>>(customers);
+        SelectedCustomer = keepId is null ? null : AvailableCustomers.FirstOrDefault(c => c.Id == keepId);
+        _suppress = false;
+    }
+
+    private void UpdateSummary()
+    {
+        SummaryPairs = allRows.Sum(x => x.TotalCount);
+        SummaryAmount = allRows.Sum(x => x.TotalAmount * _commonData.BaseRate(x.CurrencyCode));
+        AmountBreakdown = string.Join("   ", allRows
+            .Where(x => !string.IsNullOrEmpty(x.CurrencyCode))
+            .GroupBy(x => x.CurrencyCode)
+            .Select(g => $"{g.Key}: {g.Sum(x => x.TotalAmount):N0}"));
+        OnPropertyChanged(nameof(HasData));
     }
 
     [RelayCommand]
     private async Task ClearFilter()
     {
+        _suppress = true;
         SelectedCustomer = null;
         BeginDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         EndDate = DateTime.Today;
+        _suppress = false;
         await LoadSalesAsync();
     }
 
     [RelayCommand]
     private void Preview()
     {
-        if (!CustomerSales.Any())
-        {
-            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(10) };
@@ -328,12 +363,6 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (!CustomerSales.Any())
-        {
-            MessageBox.Show("Chop etish uchun ma’lumot yo‘q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dlg = new PrintDialog();
         if (dlg.ShowDialog() == true)
         {
@@ -344,12 +373,6 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
     [RelayCommand]
     private void ExportToExcel()
     {
-        if (!CustomerSales.Any())
-        {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo‘q!", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -367,18 +390,18 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
 
             // Title
             ws.Cell(row, 1).Value = "MIJOZLAR BO‘YICHA SAVDO REYTINGI";
-            ws.Range(row, 1, row, 6).Merge().Style
+            ws.Range(row, 1, row, 7).Merge().Style
                 .Font.SetBold().Font.SetFontSize(16)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
             row += 2;
 
             // Date
             ws.Cell(row, 1).Value = $"Sana: {DateTime.Today:dd.MM.yyyy}";
-            ws.Range(row, 1, row, 6).Merge().Style.Font.SetFontSize(12);
+            ws.Range(row, 1, row, 7).Merge().Style.Font.SetFontSize(12);
             row += 2;
 
             // Header
-            string[] headers = { "T/r", "Mijoz nomi", "Tayyor", "Aralash", "Eva", "Jami" };
+            string[] headers = { "T/r", "Mijoz nomi", "Tayyor", "Aralash", "Eva", "Jami", "Jami summa" };
             for (int i = 0; i < headers.Length; i++)
                 ws.Cell(row, i + 1).Value = headers[i];
 
@@ -388,7 +411,7 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
             row++;
 
             // Data
-            foreach (var x in CustomerSales)
+            foreach (var x in allRows)
             {
                 ws.Cell(row, 1).Value = x.RowNumber;
                 ws.Cell(row, 2).Value = x.CustomerName;
@@ -396,13 +419,15 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
                 ws.Cell(row, 4).Value = x.MixedCount;
                 ws.Cell(row, 5).Value = x.EvaCount;
                 ws.Cell(row, 6).Value = x.TotalCount;
+                ws.Cell(row, 7).Value = x.TotalAmount;
                 row++;
             }
 
             // Total row
             ws.Cell(row, 5).Value = "JAMI:";
-            ws.Cell(row, 6).Value = CustomerSales.Sum(i => i.TotalCount);
-            ws.Range(row, 5, row, 6).Style.Font.SetBold();
+            ws.Cell(row, 6).Value = allRows.Sum(i => i.TotalCount);
+            ws.Cell(row, 7).Value = allRows.Sum(i => i.TotalAmount);
+            ws.Range(row, 5, row, 7).Style.Font.SetBold();
 
             ws.Columns().AdjustToContents();
             workbook.SaveAs(dialog.FileName);
@@ -435,8 +460,9 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
         double rowHeight = 25;
 
         // Ma'lumotlarni saralangan holda olamiz
-        var items = CustomerSales.ToList();
+        var items = allRows;
         double total = items.Sum(x => x.TotalCount);
+        decimal totalAmount = items.Sum(x => x.TotalAmount);
 
         double tableAvailableHeight =
             pageHeight - marginTop - marginBottom - titleHeight - dateHeight - 30; // 30 footer uchun joy
@@ -490,11 +516,11 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
 
             // Table
             var table = new Grid();
-            double[] widths = { 50, 250, 100, 100, 100, 120 };
+            double[] widths = { 45, 210, 85, 85, 85, 95, 130 };
             foreach (var w in widths)
                 table.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
-            AddRow(table, true, "T/r", "Mijoz", "Tayyor", "Aralash", "Eva", "Jami");
+            AddRow(table, true, "T/r", "Mijoz", "Tayyor", "Aralash", "Eva", "Jami", "Jami summa");
 
             int start = pageIndex * rowsPerPage;
             int count = Math.Min(rowsPerPage, items.Count - start);
@@ -509,13 +535,14 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
                     x.ReadyCount.ToString("N0"),
                     x.MixedCount.ToString("N0"),
                     x.EvaCount.ToString("N0"),
-                    x.TotalCount.ToString("N0"));
+                    x.TotalCount.ToString("N0"),
+                    x.TotalAmount.ToString("N0"));
             }
 
             // Oxirgi betda JAMI qatori
             if (pageIndex == totalPages - 1)
             {
-                AddRow(table, true, "", "JAMI:", "", "", "", total.ToString("N0"));
+                AddRow(table, true, "", "JAMI:", "", "", "", total.ToString("N0"), totalAmount.ToString("N0"));
             }
 
             container.Children.Add(table);
@@ -559,6 +586,7 @@ public partial class CustomerSalesRatingViewModel : ViewModelBase
                     3 => TextAlignment.Center,
                     4 => TextAlignment.Center,
                     5 => TextAlignment.Right,
+                    6 => TextAlignment.Right,
                     _ => TextAlignment.Center
                 };
 

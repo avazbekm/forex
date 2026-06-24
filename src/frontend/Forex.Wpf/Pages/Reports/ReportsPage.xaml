@@ -44,7 +44,7 @@
                 <TabItem Header="Aylanma">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="IsVisibleChanged">
-                            <i:InvokeCommandAction Command="{Binding CustomerTurnoverVM.PreviewCommand}" />
+                            <i:InvokeCommandAction Command="{Binding CustomerTurnoverVM.OnTabSelectedCommand}" />
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                     <views:CustomerTurnoverReportView DataContext="{Binding CustomerTurnoverVM}" />
@@ -54,8 +54,8 @@
                 <TabItem Header="Tayyor mahsulotlar qoldig‘i">
                     <views:FinishedStockReportView DataContext="{Binding FinishedStockVM}" />
                 </TabItem>
-                <!--  3. Savdo tarixi  -->
-                <TabItem Header="Savdo tarixi">
+                <!--  3. Maxsulot sotuvi  -->
+                <TabItem Header="Maxsulot sotuvi">
                     <views:SalesHistoryReportView DataContext="{Binding SalesHistoryVM}" />
                 </TabItem>
                 <!--  4. Debitor va Kreditor  -->

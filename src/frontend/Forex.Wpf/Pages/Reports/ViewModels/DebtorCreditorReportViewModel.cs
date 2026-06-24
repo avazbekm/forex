@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Forex.Wpf.Windows;
 using System.Windows.Input;
 
-public partial class DebtorCreditorReportViewModel : ViewModelBase
+public partial class DebtorCreditorReportViewModel : PagedReportViewModel<DebtorCreditorItemViewModel>
 {
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
@@ -33,6 +33,11 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
     [ObservableProperty] private string searchText = string.Empty;
     [ObservableProperty] private string totalsSummary = string.Empty;
 
+    [ObservableProperty] private decimal summaryDebtor;
+    [ObservableProperty] private decimal summaryCreditor;
+    [ObservableProperty] private string debtorBreakdown = string.Empty;
+    [ObservableProperty] private string creditorBreakdown = string.Empty;
+
     public bool HasData => FilteredItems?.Count > 0;
 
     public DebtorCreditorReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -40,14 +45,15 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
         _client = client;
         _commonData = commonData;
     }
-    
+
     partial void OnSearchTextChanged(string value)
     {
         ApplyFilter();
     }
-    
+
     partial void OnFilteredItemsChanged(ObservableCollection<DebtorCreditorItemViewModel> value)
     {
+        SetSource(value);
         OnPropertyChanged(nameof(HasData));
     }
 
@@ -99,17 +105,26 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
 
     private void UpdateTotals()
     {
-        var lines = FilteredItems
+        var groups = FilteredItems
             .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode)
             .OrderBy(g => g.Key)
-            .Select(g =>
-            {
-                var debtor = g.Sum(x => x.DebtorAmount);
-                var creditor = g.Sum(x => x.CreditorAmount);
-                return $"{g.Key}  —  debitor: {debtor:N2}, kreditor: {creditor:N2}, balans: {(debtor - creditor):N2}";
-            });
+            .ToList();
 
-        TotalsSummary = string.Join("\n", lines);
+        TotalsSummary = string.Join("\n", groups.Select(g =>
+        {
+            var debtor = g.Sum(x => x.DebtorAmount);
+            var creditor = g.Sum(x => x.CreditorAmount);
+            return $"{g.Key}  —  debitor: {debtor:N2}, kreditor: {creditor:N2}, balans: {(debtor - creditor):N2}";
+        }));
+
+        SummaryDebtor = FilteredItems.Sum(x => x.DebtorAmount * _commonData.BaseRate(x.CurrencyCode));
+        SummaryCreditor = FilteredItems.Sum(x => x.CreditorAmount * _commonData.BaseRate(x.CurrencyCode));
+        DebtorBreakdown = string.Join("   ", groups
+            .Where(g => g.Sum(x => x.DebtorAmount) > 0)
+            .Select(g => $"{g.Key}: {g.Sum(x => x.DebtorAmount):N0}"));
+        CreditorBreakdown = string.Join("   ", groups
+            .Where(g => g.Sum(x => x.CreditorAmount) > 0)
+            .Select(g => $"{g.Key}: {g.Sum(x => x.CreditorAmount):N0}"));
     }
     #endregion Private Helpers
 
@@ -147,12 +162,6 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
         [RelayCommand]
     private void Preview()
     {
-        if (FilteredItems == null || !FilteredItems.Any())
-        {
-            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { 
@@ -362,11 +371,6 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
     {
         try
         {
-            if (FilteredItems == null || !FilteredItems.Any())
-            {
-                MessageBox.Show("Eksport qilish uchun ma'lumot topilmadi.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -438,11 +442,6 @@ public partial class DebtorCreditorReportViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (FilteredItems == null || !FilteredItems.Any())
-        {
-            MessageBox.Show("Chop etish uchun ma’lumot topilmadi.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
         var fixedDoc = CreateFixedDocument();
         var dlg = new PrintDialog();
         if (dlg.ShowDialog() == true)

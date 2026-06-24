@@ -3,6 +3,7 @@
 using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
+using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
@@ -17,6 +18,7 @@ public partial class CommonReportDataService : ViewModelBase
 
     public ObservableCollection<UserViewModel> AvailableCustomers { get; } = [];
     public ObservableCollection<ProductViewModel> AvailableProducts { get; } = [];
+    public ObservableCollection<CurrencyResponse> Currencies { get; } = [];
 
     public CommonReportDataService(ForexClient client, IMapper mapper)
     {
@@ -25,12 +27,31 @@ public partial class CommonReportDataService : ViewModelBase
         _ = LoadAsync(); // Bir marta yuklanadi, keyin cache
     }
 
+    public decimal BaseRate(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return 1;
+        var currency = Currencies.FirstOrDefault(c => string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase));
+        if (currency is null) return 1;
+        return currency.IsDefault || currency.ExchangeRate == 0 ? 1 : currency.ExchangeRate;
+    }
+
     private async Task LoadAsync()
     {
         await Task.WhenAll(
             LoadCustomersAsync(),
-            LoadProductsAsync()
+            LoadProductsAsync(),
+            LoadCurrenciesAsync()
         );
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        var response = await _client.Currencies.GetAllAsync().Handle(isLoading => IsLoading = isLoading);
+        if (response.IsSuccess && response.Data is not null)
+        {
+            Currencies.Clear();
+            foreach (var c in response.Data) Currencies.Add(c);
+        }
     }
 
     private async Task LoadCustomersAsync()

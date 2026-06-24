@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Forex.Wpf.Windows;
 using System.Windows.Input;
 
-public partial class FinishedStockReportViewModel : ViewModelBase
+public partial class FinishedStockReportViewModel : PagedReportViewModel<FinishedStockItemViewModel>
 {
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
@@ -39,7 +39,10 @@ public partial class FinishedStockReportViewModel : ViewModelBase
 
     [ObservableProperty]
     private decimal totalAmount;
-    
+
+    [ObservableProperty]
+    private int summaryQty;
+
     public bool HasData => Items?.Count > 0;
 
     public FinishedStockReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -116,12 +119,6 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Chop etish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dlg = new PrintDialog();
         if (dlg.ShowDialog() == true)
         {
@@ -132,12 +129,6 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     [RelayCommand]
     private void ExportToExcel()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -206,12 +197,6 @@ public partial class FinishedStockReportViewModel : ViewModelBase
         [RelayCommand]
     private void Preview()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { 
@@ -434,7 +419,9 @@ public partial class FinishedStockReportViewModel : ViewModelBase
         }
 
         Items = new ObservableCollection<FinishedStockItemViewModel>(result);
+        SetSource(Items);
         TotalAmount = Items.Sum(x => x.TotalAmount);
+        SummaryQty = Items.Sum(x => x.TotalCount);
     }
 
     // PDF/Print uchun document yaratish (PASTDAN 25mm BO'SH JOY!)

@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
 using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
+using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
@@ -22,26 +23,36 @@ using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using Forex.Wpf.Windows;
 
-public partial class CustomerTurnoverReportViewModel : ViewModelBase
+public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<TurnoversViewModel>
 {
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
+    private HashSet<long>? participantIds;
+    private bool _suppress;
 
     [ObservableProperty] private UserViewModel? selectedCustomer;
     [ObservableProperty] private TurnoverPartyFilter selectedPartyFilter = TurnoverPartyFilter.All;
-    [ObservableProperty] private DateTime beginDate = DateTime.Today;
+    [ObservableProperty] private DateTime beginDate = DateTime.Today.AddMonths(-1);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
 
-    partial void OnSelectedCustomerChanged(UserViewModel? value) => _ = LoadDataAsync();
+    [ObservableProperty] private decimal summaryDebit;
+    [ObservableProperty] private decimal summaryCredit;
+
+    partial void OnSelectedCustomerChanged(UserViewModel? value) { if (!_suppress) _ = LoadDataAsync(); }
     partial void OnSelectedPartyFilterChanged(TurnoverPartyFilter value)
     {
         ApplyPartyFilter();
-        _ = LoadDataAsync();
         OnPropertyChanged(nameof(SelectedPartyFilterOption));
     }
 
-    partial void OnBeginDateChanged(DateTime value) => _ = LoadDataAsync();
-    partial void OnEndDateChanged(DateTime value) => _ = LoadDataAsync();
+    partial void OnBeginDateChanged(DateTime value) { if (!_suppress) _ = OnDateRangeChangedAsync(); }
+    partial void OnEndDateChanged(DateTime value) { if (!_suppress) _ = OnDateRangeChangedAsync(); }
+
+    private async Task OnDateRangeChangedAsync()
+    {
+        await RebuildParticipantsAsync();
+        await LoadDataAsync();
+    }
 
     public ObservableCollection<UserViewModel> AvailableCustomers { get; } = [];
 
@@ -87,8 +98,11 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         if (SelectedCustomer is null)
         {
             Operations.Clear();
+            SetSource(Operations);
             BeginBalance = 0;
             LastBalance = 0;
+            SummaryDebit = 0;
+            SummaryCredit = 0;
             return;
         }
 
@@ -158,6 +172,47 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                 Credit = credit
             });
         }
+
+        SummaryDebit = Operations.Sum(x => x.Debit);
+        SummaryCredit = Operations.Sum(x => x.Credit);
+        SetSource(Operations);
+    }
+
+    private async Task RebuildParticipantsAsync()
+    {
+        var ids = new HashSet<long>();
+        var range = new Dictionary<string, List<string>>
+        {
+            ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"]
+        };
+
+        try
+        {
+            var salesReq = new FilteringRequest { Filters = new(range) { ["customer"] = ["include"] } };
+            var sres = await _client.Sales.Filter(salesReq).Handle();
+            if (sres.IsSuccess && sres.Data is not null)
+                foreach (var s in sres.Data.Where(s => s.Customer is not null))
+                    ids.Add(s.Customer.Id);
+
+            var txReq = new FilteringRequest { Filters = new(range) };
+            var tres = await _client.Transactions.Filter(txReq).Handle();
+            if (tres.IsSuccess && tres.Data is not null)
+                foreach (var t in tres.Data)
+                    ids.Add(t.UserId);
+
+            var supRes = await _client.Supplies.GetAllAsync().Handle();
+            if (supRes.IsSuccess && supRes.Data is not null)
+                foreach (var sup in supRes.Data.Where(x =>
+                    x.Date.ToLocalTime().Date >= BeginDate.Date &&
+                    x.Date.ToLocalTime().Date <= EndDate.Date))
+                    ids.Add(sup.UserId);
+        }
+        catch
+        {
+        }
+
+        participantIds = ids;
+        ApplyPartyFilter();
     }
 
     #endregion Load Data
@@ -178,11 +233,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void Preview()
     {
-        if (Operations.Count == 0)
-        {
-            MessageBox.Show("Ko‘rsatish uchun ma’lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        if (Operations.Count == 0) return;
 
         var doc = CreateFixedDocument();
         ShowPreviewWindow(doc);
@@ -191,12 +242,6 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (Operations.Count == 0)
-        {
-            MessageBox.Show("Chop etish uchun ma’lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var printDialog = new PrintDialog();
         if (printDialog.ShowDialog() == true)
@@ -208,12 +253,6 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void ExportToExcel()
     {
-        if (Operations.Count == 0)
-        {
-            MessageBox.Show("Eksport qilish uchun ma’lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var saveDialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -320,13 +359,19 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void ClearFilter()
     {
+        _suppress = true;
         SelectedPartyFilter = TurnoverPartyFilter.All;
         SelectedCustomer = null;
         BeginDate = DateTime.Today.AddMonths(-1);
         EndDate = DateTime.Today;
+        _suppress = false;
         Operations.Clear();
+        SetSource(Operations);
         BeginBalance = 0;
         LastBalance = 0;
+        SummaryDebit = 0;
+        SummaryCredit = 0;
+        _ = RebuildParticipantsAsync();
     }
 
     #endregion Commands
@@ -338,15 +383,21 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     private void ApplyPartyFilter()
     {
         var selectedId = SelectedCustomer?.Id;
-        var users = _commonData.AvailableCustomers.Where(MatchesPartyFilter).OrderBy(u => u.Name).ToList();
+        var users = _commonData.AvailableCustomers
+            .Where(MatchesPartyFilter)
+            .Where(u => participantIds is null || participantIds.Contains(u.Id))
+            .OrderBy(u => u.Name)
+            .ToList();
 
         AvailableCustomers.Clear();
         foreach (var user in users)
             AvailableCustomers.Add(user);
 
+        _suppress = true;
         SelectedCustomer = selectedId is null
             ? null
             : AvailableCustomers.FirstOrDefault(u => u.Id == selectedId.Value);
+        _suppress = false;
     }
 
     private bool MatchesPartyFilter(UserViewModel user) => SelectedPartyFilter switch

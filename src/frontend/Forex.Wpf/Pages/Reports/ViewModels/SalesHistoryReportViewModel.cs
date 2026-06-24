@@ -21,11 +21,12 @@ using Forex.Wpf.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
-public partial class SalesHistoryReportViewModel : ViewModelBase
+public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHistoryItemViewModel>
 {
     private readonly ForexClient client;
     private readonly CommonReportDataService commonData;
     private readonly ObservableCollection<SaleHistoryItemViewModel> allItems = [];
+    private bool _suppress;
 
     [ObservableProperty]
     private ObservableCollection<SaleHistoryItemViewModel> filteredItems = [];
@@ -36,7 +37,9 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [ObservableProperty]
     private string totalsSummary = string.Empty;
 
-    public ObservableCollection<UserViewModel> AvailableCustomers => commonData.AvailableCustomers;
+    [ObservableProperty] private int summaryQty;
+
+    [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
     public ObservableCollection<ProductViewModel> AvailableProducts => commonData.AvailableProducts;
 
     [ObservableProperty] private UserViewModel? selectedCustomer;
@@ -44,11 +47,10 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [ObservableProperty] private ProductViewModel? selectedCode;
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
-    
-    partial void OnSelectedCustomerChanged(UserViewModel? value) => _ = LoadAsync();
-    partial void OnBeginDateChanged(DateTime value) => _ = LoadAsync();
-    partial void OnEndDateChanged(DateTime value) => _ = LoadAsync();
-    
+
+    partial void OnBeginDateChanged(DateTime value) { if (!_suppress) _ = LoadAsync(); }
+    partial void OnEndDateChanged(DateTime value) { if (!_suppress) _ = LoadAsync(); }
+
     public bool HasData => FilteredItems?.Count > 0;
 
     public SalesHistoryReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -57,7 +59,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         this.commonData = commonData;
         PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(SelectedCustomer) or nameof(SelectedProduct) or nameof(SelectedCode))
+            if (!_suppress && e.PropertyName is nameof(SelectedCustomer) or nameof(SelectedProduct) or nameof(SelectedCode))
                 ApplyFilters();
             if (e.PropertyName is nameof(FilteredItems))
                 OnPropertyChanged(nameof(HasData));
@@ -88,6 +90,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             return;
         }
 
+        RebuildCustomers(response.Data);
+
         foreach (var sale in response.Data)
         {
             if (sale.SaleItems == null) continue;
@@ -116,14 +120,27 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         ApplyFilters();
     }
 
+    private void RebuildCustomers(IEnumerable<Forex.ClientService.Models.Responses.SaleResponse> sales)
+    {
+        var ids = sales.Where(s => s.Customer != null).Select(s => s.Customer.Id).ToHashSet();
+        var keepId = SelectedCustomer?.Id;
+        _suppress = true;
+        AvailableCustomers = [.. commonData.AvailableCustomers.Where(c => ids.Contains(c.Id)).OrderBy(c => c.Name)];
+        SelectedCustomer = keepId is null ? null : AvailableCustomers.FirstOrDefault(c => c.Id == keepId);
+        _suppress = false;
+    }
+
     [RelayCommand]
     private void ClearFilter()
     {
+        _suppress = true;
         SelectedCustomer = null;
         SelectedProduct = null;
         SelectedCode = null;
         BeginDate = DateTime.Today;
         EndDate = DateTime.Today;
+        _suppress = false;
+        _ = LoadAsync();
     }
 
     [RelayCommand]
@@ -132,12 +149,6 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         [RelayCommand]
     private void Preview()
     {
-        if (!FilteredItems.Any())
-        {
-            InfoMessage = "Ko'rsatish uchun ma'lumot yo'q.";
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { 
@@ -304,12 +315,6 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [RelayCommand]
     private async Task ExportToExcel()
     {
-        if (!FilteredItems.Any())
-        {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -381,6 +386,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         if (SelectedCode != null)
             result = result.Where(x => x.Code == SelectedCode.Code);
         FilteredItems = new ObservableCollection<SaleHistoryItemViewModel>(result);
+        SetSource(FilteredItems);
+        SummaryQty = FilteredItems.Sum(x => x.TotalCount);
         TotalSalesAmount = FilteredItems.Sum(x => x.BaseAmount);
         TotalsSummary = string.Join("    ", FilteredItems
             .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode!)

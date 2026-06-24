@@ -1,4 +1,4 @@
-﻿namespace Forex.Wpf.ViewModels;
+namespace Forex.Wpf.ViewModels;
 
 using Forex.Wpf.Pages.Common;
 
@@ -10,4 +10,6 @@ public class CustomerSaleViewModel : ViewModelBase
     public int MixedCount { get; set; }
     public int EvaCount { get; set; }
     public int TotalCount => ReadyCount + MixedCount + EvaCount;
+    public decimal TotalAmount { get; set; }
+    public string CurrencyCode { get; set; } = string.Empty;
 }

@@ -1,0 +1,57 @@
+<UserControl
+    x:Class="Forex.Wpf.Resources.UserControls.Pager"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <UserControl.Resources>
+        <Style x:Key="PagerButton" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="3,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="#F4F6FA" />
+            <Setter Property="Foreground" Value="#475467" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E4E9F2" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.35" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+        <Button x:Name="btnFirst" Click="First_Click" Style="{StaticResource PagerButton}" ToolTip="Birinchi">
+            <md:PackIcon Width="18" Height="18" Kind="PageFirst" />
+        </Button>
+        <Button x:Name="btnPrev" Click="Prev_Click" Style="{StaticResource PagerButton}" ToolTip="Oldingi">
+            <md:PackIcon Width="18" Height="18" Kind="ChevronLeft" />
+        </Button>
+        <TextBlock
+            x:Name="lblPage"
+            Margin="8,0"
+            VerticalAlignment="Center"
+            FontSize="13"
+            FontWeight="SemiBold"
+            Foreground="#5A6477" />
+        <Button x:Name="btnNext" Click="Next_Click" Style="{StaticResource PagerButton}" ToolTip="Keyingi">
+            <md:PackIcon Width="18" Height="18" Kind="ChevronRight" />
+        </Button>
+        <Button x:Name="btnLast" Click="Last_Click" Style="{StaticResource PagerButton}" ToolTip="Oxirgi">
+            <md:PackIcon Width="18" Height="18" Kind="PageLast" />
+        </Button>
+    </StackPanel>
+</UserControl>

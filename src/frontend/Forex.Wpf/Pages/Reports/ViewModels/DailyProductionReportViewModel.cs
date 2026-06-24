@@ -23,11 +23,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Forex.Wpf.Windows;
 using System.Windows.Input;
 
-public partial class DailyProductionReportViewModel : ViewModelBase
+public partial class DailyProductionReportViewModel : PagedReportViewModel<ProductionItemViewModel>
 {
     private readonly ForexClient client;
     private readonly CommonReportDataService _commonData;
     private readonly IMapper mapper;
+    private bool _suppress;
 
     [ObservableProperty]
     private ObservableCollection<ProductViewModel> availableProducts = [];
@@ -42,11 +43,18 @@ public partial class DailyProductionReportViewModel : ViewModelBase
     [ObservableProperty] private decimal aralashAmount;
     [ObservableProperty] private decimal evaAmount;
 
+    public bool HasData => Items.Count > 0;
+
+    partial void OnBeginDateChanged(DateTime value) { if (!_suppress) LoadDataCommand.Execute(null); }
+    partial void OnEndDateChanged(DateTime value) { if (!_suppress) LoadDataCommand.Execute(null); }
+    partial void OnSelectedCodeChanged(ProductViewModel? value) { if (!_suppress) LoadDataCommand.Execute(null); }
+
     public DailyProductionReportViewModel(ForexClient client, CommonReportDataService commonData, IMapper mapper)
     {
         this.client = client;
         this.mapper = mapper;
         _commonData = commonData;
+        Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasData));
         _ = LoadProductsAsync();
     }
 
@@ -90,6 +98,8 @@ public partial class DailyProductionReportViewModel : ViewModelBase
             }
 
             var entries = response.Data;
+
+            RebuildProducts(entries);
 
             // Jami hisoblash uchun
             decimal tayyorSum = 0, aralashSum = 0, evaSum = 0;
@@ -143,6 +153,9 @@ public partial class DailyProductionReportViewModel : ViewModelBase
             TayyorAmount = tayyorSum;
             AralashAmount = aralashSum;
             EvaAmount = evaSum;
+
+            SetSource(Items);
+            OnPropertyChanged(nameof(HasData));
         }
         catch (Exception ex)
         {
@@ -151,24 +164,37 @@ public partial class DailyProductionReportViewModel : ViewModelBase
 
     }
 
+    private void RebuildProducts(IEnumerable<Forex.ClientService.Models.Responses.ProductEntryResponse> entries)
+    {
+        var products = entries
+            .Where(e => e.ProductType?.Product != null)
+            .Select(e => e.ProductType!.Product)
+            .GroupBy(p => p.Id)
+            .Select(g => g.First())
+            .OrderBy(p => p.Name)
+            .ToList();
+
+        var keepCode = SelectedCode?.Code;
+        _suppress = true;
+        AvailableProducts = mapper.Map<ObservableCollection<ProductViewModel>>(products);
+        SelectedCode = keepCode is null ? null : AvailableProducts.FirstOrDefault(p => p.Code == keepCode);
+        _suppress = false;
+    }
+
     [RelayCommand]
     private void ClearFilter()
     {
+        _suppress = true;
         SelectedCode = null;
         BeginDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
         EndDate = DateTime.Today;
+        _suppress = false;
         LoadDataCommand.Execute(null);
     }
 
     [RelayCommand]
     private void Preview()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
@@ -295,11 +321,6 @@ public partial class DailyProductionReportViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Chop etish uchun ma’lumot yo‘q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
         var dlg = new PrintDialog();
         if (dlg.ShowDialog() == true)
         {
@@ -311,12 +332,6 @@ public partial class DailyProductionReportViewModel : ViewModelBase
     [RelayCommand]
     private void ExportToExcel()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo‘q!", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",

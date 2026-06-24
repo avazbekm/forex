@@ -5,232 +5,196 @@
     xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     Background="White">
-    <Grid Margin="10" Background="White">
+    <UserControl.Resources>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0,0,4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="#7A8699" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="14" Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Filter Panel -->
+        <!--  Filter bar  -->
         <Border
             Grid.Row="0"
-            Margin="0,0,0,10"
-            Padding="15,10"
-            Background="#FAFAFA"
-            BorderBrush="#E0E0E0"
+            Padding="14,12"
+            Background="#F8FAFD"
+            BorderBrush="#EAEEF5"
             BorderThickness="1"
-            CornerRadius="6">
+            CornerRadius="11">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <!-- Date Range -->
-                    <StackPanel Margin="0,0,20,0">
-                        <TextBlock
-                            Margin="0,0,0,5"
-                            FontSize="12"
-                            Foreground="#666"
-                            Text="Sana oralig'i" />
-                        <StackPanel Orientation="Horizontal">
-                            <controls:UserCalendar
-                                Width="120"
-                                Height="36"
-                                SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
-                            <TextBlock
-                                Margin="8,0"
-                                VerticalAlignment="Center"
-                                Text="-" />
-                            <controls:UserCalendar
-                                Width="120"
-                                Height="36"
-                                SelectedDate="{Binding EndDate, Mode=TwoWay}" />
-                        </StackPanel>
-                    </StackPanel>
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Boshlanish" />
+                    <controls:UserCalendar
+                        Width="120"
+                        Height="34"
+                        SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
+                </StackPanel>
 
-                    <!-- Product Code -->
-                    <StackPanel Margin="0,0,20,0">
-                        <TextBlock
-                            Margin="0,0,0,5"
-                            FontSize="12"
-                            Foreground="#666"
-                            Text="Mahsulot" />
-                        <Border
-                            Height="36"
-                            BorderBrush="#DDD"
-                            BorderThickness="1"
-                            CornerRadius="4">
-                            <ComboBox
-                                x:Name="cbxProduct"
-                                Width="250"
-                                Padding="8,0"
-                                VerticalContentAlignment="Center"
-                                BorderThickness="0"
-                                DisplayMemberPath="Name"
-                                FontSize="14"
-                                IsEditable="True"
-                                ItemsSource="{Binding AvailableProducts}"
-                                SelectedItem="{Binding SelectedCode, Mode=TwoWay}" />
-                        </Border>
-                    </StackPanel>
-                    
-                    <!-- Buttons -->
-                     <Button
-                        x:Name="btnLoad"
-                        Height="36"
-                        Margin="0,21,0,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
+                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tugash" />
+                    <controls:UserCalendar
+                        Width="120"
+                        Height="34"
+                        SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Mahsulot" />
+                    <Border
+                        Height="34"
+                        BorderBrush="#D9DEE7"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                        <ComboBox
+                            x:Name="cbxProduct"
+                            Width="240"
+                            Padding="8,0"
+                            VerticalContentAlignment="Center"
+                            BorderThickness="0"
+                            DisplayMemberPath="Name"
+                            FontSize="14"
+                            IsEditable="True"
+                            ItemsSource="{Binding AvailableProducts}"
+                            SelectedItem="{Binding SelectedCode, Mode=TwoWay}" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Margin="0,0,10,0">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="" />
+                    <Button
+                        Height="34"
+                        Padding="14,0"
+                        md:ButtonAssist.CornerRadius="9"
                         Background="#673AB7"
                         BorderThickness="0"
                         Command="{Binding LoadDataCommand}"
-                        Foreground="White">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="Refresh" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Yuklash" />
-                        </StackPanel>
-                    </Button>
-                    
-                    <Button
-                        x:Name="btnClear"
-                        Height="36"
-                        Margin="10,21,0,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="#78909C"
-                        BorderThickness="0"
-                        Command="{Binding ClearFilterCommand}"
                         Foreground="White"
-                        ToolTip="Filterni tozalash">
+                        ToolTip="Yuklash">
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="FilterRemove" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Tozalash" />
+                            <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Refresh" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Yuklash" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
-                <!-- Actions -->
-                <StackPanel
-                    Grid.Column="2"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Bottom">
+                <StackPanel Grid.Column="4">
+                    <TextBlock Style="{StaticResource FieldLabelStyle}" Text="" />
                     <Button
-                        x:Name="btnPreview"
-                        Height="36"
+                        Height="34"
+                        Padding="14,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="White"
+                        BorderBrush="#D9DEE7"
+                        BorderThickness="1"
+                        Command="{Binding ClearFilterCommand}"
+                        Foreground="#475467"
+                        ToolTip="Tozalash">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="FilterRemoveOutline" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Tozalash" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Column="6"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal">
+                    <Button
+                        Height="34"
                         Margin="5,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
+                        Padding="12,0"
+                        md:ButtonAssist.CornerRadius="9"
                         Background="#1976D2"
                         BorderThickness="0"
                         Command="{Binding PreviewCommand}"
                         Foreground="White"
-                        IsEnabled="{Binding HasData}">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="Eye" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Ko'rish" />
-                        </StackPanel>
+                        IsEnabled="{Binding HasData}"
+                        ToolTip="Ko'rish">
+                        <md:PackIcon Width="18" Height="18" Kind="Eye" />
                     </Button>
                     <Button
-                        x:Name="btnPrint"
-                        Height="36"
+                        Height="34"
                         Margin="5,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
+                        Padding="12,0"
+                        md:ButtonAssist.CornerRadius="9"
                         Background="#00897B"
                         BorderThickness="0"
                         Command="{Binding PrintCommand}"
                         Foreground="White"
-                        IsEnabled="{Binding HasData}">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="Printer" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Pechat" />
-                        </StackPanel>
+                        IsEnabled="{Binding HasData}"
+                        ToolTip="Pechat">
+                        <md:PackIcon Width="18" Height="18" Kind="Printer" />
                     </Button>
                     <Button
-                        x:Name="btnExport"
-                        Height="36"
+                        Height="34"
                         Margin="5,0,0,0"
-                        Padding="15,0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="#2E7D32"
+                        Padding="12,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="#15803D"
                         BorderThickness="0"
                         Command="{Binding ExportToExcelCommand}"
                         Foreground="White"
-                        IsEnabled="{Binding HasData}">
-                        <StackPanel Orientation="Horizontal">
-                            <md:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Kind="FileExcel" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="Excel" />
-                        </StackPanel>
+                        IsEnabled="{Binding HasData}"
+                        ToolTip="Excel">
+                        <md:PackIcon Width="18" Height="18" Kind="FileExcel" />
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- DataGrid -->
+        <!--  DataGrid  -->
         <DataGrid
             Grid.Row="1"
-            AlternatingRowBackground="#F5F5F5"
+            Margin="0,14,0,0"
             AutoGenerateColumns="False"
-            BorderBrush="LightGray"
+            Background="White"
+            BorderBrush="#EAEEF5"
             BorderThickness="1"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            ColumnHeaderHeight="42"
+            EnableRowVirtualization="True"
             FontSize="14"
             GridLinesVisibility="Horizontal"
+            HeadersVisibility="Column"
+            HorizontalGridLinesBrush="#F0F2F6"
             IsReadOnly="True"
-            ItemsSource="{Binding Items}"
-            RowHeight="42"
+            ItemsSource="{Binding PagedItems}"
+            RowHeight="40"
             VirtualizingStackPanel.VirtualizationMode="Standard">
-            
+
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    <Setter Property="Background" Value="#F4F7FC" />
+                    <Setter Property="Foreground" Value="#5A6477" />
                     <Setter Property="FontWeight" Value="SemiBold" />
-                    <Setter Property="Background" Value="#E3F2FD" />
-                    <Setter Property="Padding" Value="8" />
+                    <Setter Property="Padding" Value="10,0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
                 </Style>
             </DataGrid.ColumnHeaderStyle>
 
             <DataGrid.Columns>
-                <DataGridTemplateColumn Width="60" Header="T/r">
+                <DataGridTemplateColumn Width="50" Header="T/r">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock
@@ -240,11 +204,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                
-                <DataGridTextColumn
-                    Width="110"
-                    Binding="{Binding Date, StringFormat=dd.MM.yyyy}"
-                    Header="Sana">
+
+                <DataGridTextColumn Width="150" Binding="{Binding Date, StringFormat='dd.MM.yyyy HH:mm'}" Header="Sana">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -253,10 +214,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn
-                    Width="100"
-                    Binding="{Binding Code}"
-                    Header="Kodi">
+                <DataGridTextColumn Width="90" Binding="{Binding Code}" Header="Kodi">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -265,35 +223,18 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn
-                    Width="*"
-                    Binding="{Binding Name}"
-                    Header="Nomi">
+                <DataGridTextColumn Width="*" MinWidth="150" Binding="{Binding Name}" Header="Nomi">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Left" />
-                            <Setter Property="Padding" Value="5,0" />
+                            <Setter Property="Padding" Value="6,0" />
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn
-                    Width="80"
-                    Binding="{Binding Type}"
-                    Header="Razmer">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Center" />
-                            <Setter Property="VerticalAlignment" Value="Center" />
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                
-                <DataGridTextColumn
-                    Width="90"
-                    Binding="{Binding BundleCount}"
-                    Header="Qop soni">
+                <DataGridTextColumn Width="75" Binding="{Binding Type}" Header="Razmer">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -302,10 +243,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn
-                    Width="90"
-                    Binding="{Binding BundleItemCount, StringFormat=N0}"
-                    Header="Donasi">
+                <DataGridTextColumn Width="80" Binding="{Binding BundleCount}" Header="Qop soni">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -314,23 +252,27 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn
-                    Width="100"
-                    Binding="{Binding TotalCount, StringFormat=N0}"
-                    Header="Jami">
+                <DataGridTextColumn Width="80" Binding="{Binding BundleItemCount, StringFormat=N0}" Header="Donasi">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Width="90" Binding="{Binding TotalCount, StringFormat=N0}" Header="Jami">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right" />
-                            <Setter Property="Padding" Value="0,0,8,0" />
+                            <Setter Property="Padding" Value="0,0,10,0" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn
-                    Width="140"
-                    Binding="{Binding ProductionType}"
-                    Header="Tayyorlanish usuli">
+                <DataGridTextColumn Width="150" Binding="{Binding ProductionType}" Header="Tayyorlanish usuli">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -343,58 +285,50 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Footer (Totals) -->
+        <!--  Totals + Pager  -->
         <Border
             Grid.Row="2"
-            Margin="0,10,0,0"
-            Padding="15,10"
-            Background="#E8F5E8"
-            BorderBrush="#C8E6C9"
+            Margin="0,14,0,0"
+            Padding="12,10"
+            Background="White"
+            BorderBrush="#EAEEF5"
             BorderThickness="1"
-            CornerRadius="6">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <!-- Tayyor -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,30,0">
-                    <TextBlock
-                        Margin="0,0,10,0"
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Text="Tayyor:" />
-                    <TextBlock
-                        FontSize="15"
-                        FontWeight="Bold"
-                        Foreground="#1B5E20"
-                        Text="{Binding TayyorAmount, StringFormat=N2}" />
-                </StackPanel>
+            CornerRadius="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <!-- Aralash -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,30,0">
-                    <TextBlock
-                        Margin="0,0,10,0"
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Text="Aralash:" />
-                    <TextBlock
-                        FontSize="15"
-                        FontWeight="Bold"
-                        Foreground="#B71C1C"
-                        Text="{Binding AralashAmount, StringFormat=N2}" />
-                </StackPanel>
+                <UniformGrid
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    Rows="1">
+                    <controls:StatCard
+                        Accent="#1B7A3E"
+                        CardBackground="#E9F8EE"
+                        Title="Tayyor"
+                        TitleBrush="#2E8B57"
+                        Value="{Binding TayyorAmount, StringFormat=N0}" />
+                    <controls:StatCard
+                        Accent="#C62828"
+                        CardBackground="#FDECEA"
+                        Title="Aralash"
+                        TitleBrush="#C0564B"
+                        Value="{Binding AralashAmount, StringFormat=N0}" />
+                    <controls:StatCard
+                        Accent="#0D47A1"
+                        CardBackground="#EEF2FF"
+                        Title="Eva"
+                        TitleBrush="#3F62B3"
+                        Value="{Binding EvaAmount, StringFormat=N0}" />
+                </UniformGrid>
 
-                <!-- Eva -->
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock
-                        Margin="0,0,10,0"
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Text="Eva:" />
-                    <TextBlock
-                        FontSize="15"
-                        FontWeight="Bold"
-                        Foreground="#0D47A1"
-                        Text="{Binding EvaAmount, StringFormat=N2}" />
-                </StackPanel>
-            </StackPanel>
+                <controls:Pager
+                    Grid.Column="1"
+                    CurrentPage="{Binding CurrentPage, Mode=TwoWay}"
+                    TotalPages="{Binding TotalPages}" />
+            </Grid>
         </Border>
     </Grid>
 </UserControl>
