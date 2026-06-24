@@ -20,7 +20,7 @@
         </Style>
 
         <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Height" Value="38" />
+            <Setter Property="Height" Value="30" />
             <Setter Property="Padding" Value="10,4" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Background" Value="White" />
@@ -40,13 +40,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style x:Key="PlainCombo" TargetType="ComboBox">
-            <Setter Property="Height" Value="38" />
-            <Setter Property="Padding" Value="8,0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="14" />
         </Style>
 
         <Style x:Key="StatCard" TargetType="Border">
@@ -140,66 +133,40 @@
                     <StackPanel Margin="0,0,12,12">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Sana" />
                         <controls:UserCalendar
-                            Height="38"
+                            Height="30"
+                            FontSize="14"
                             SelectedDate="{Binding Date, Mode=TwoWay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,12,12">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Hisob turi" />
-                        <ComboBox
+                        <controls:FloatingComboBox
                             DisplayMemberPath="Text"
                             ItemsSource="{Binding PartyTypes}"
-                            SelectedItem="{Binding SelectedPartyTypeOption, Mode=TwoWay}"
-                            Style="{StaticResource PlainCombo}" />
+                            SelectedItem="{Binding SelectedPartyTypeOption, Mode=TwoWay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="0,0,12,12">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Ta'minotchi / Vositachi" />
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <controls:FloatingImageComboBox
-                                x:Name="cbxUser"
-                                Height="38"
-                                VerticalAlignment="Stretch"
-                                IsEditable="True"
-                                IsSearchEnabled="True"
-                                IsTextSearchEnabled="False"
-                                ItemsSource="{Binding FilteredUsers}"
-                                PrimaryTextMemberPath="Name"
-                                SecondaryTextMemberPath="PhoneAndAddress"
-                                SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                                ShowImage="False"
-                                Text="{Binding UserInput, Mode=TwoWay}" />
-                            <Button
-                                Grid.Column="1"
-                                Width="38"
-                                Height="38"
-                                Margin="6,0,0,0"
-                                Padding="0"
-                                md:ButtonAssist.CornerRadius="9"
-                                Background="#E8EDFB"
-                                BorderThickness="0"
-                                Click="BtnCreateUser_Click"
-                                ToolTip="Yangi ta'minotchi / vositachi qo'shish">
-                                <md:PackIcon
-                                    Width="20"
-                                    Height="20"
-                                    Foreground="#3B5BDB"
-                                    Kind="AccountPlus" />
-                            </Button>
-                        </Grid>
+                        <controls:FloatingImageComboBox
+                            x:Name="cbxUser"
+                            IsEditable="True"
+                            IsSearchEnabled="True"
+                            IsTextSearchEnabled="False"
+                            ItemsSource="{Binding FilteredUsers}"
+                            PrimaryTextMemberPath="Name"
+                            SecondaryTextMemberPath="PhoneAndAddress"
+                            SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                            ShowImage="False"
+                            Text="{Binding UserInput, Mode=TwoWay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="3" Margin="0,0,12,12">
                         <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Valyuta" />
-                        <ComboBox
+                        <controls:FloatingComboBox
                             DisplayMemberPath="Code"
                             ItemsSource="{Binding AvailableCurrencies}"
-                            SelectedItem="{Binding SelectedCurrency, Mode=TwoWay}"
-                            Style="{StaticResource PlainCombo}" />
+                            SelectedItem="{Binding SelectedCurrency, Mode=TwoWay}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="4" Margin="0,0,12,12">
@@ -225,9 +192,10 @@
                         Grid.Row="1"
                         Grid.Column="4"
                         Grid.ColumnSpan="2"
+                        Width="170"
                         Height="38"
                         Margin="0,18,0,0"
-                        HorizontalAlignment="Stretch"
+                        HorizontalAlignment="Left"
                         md:ButtonAssist.CornerRadius="9"
                         md:ElevationAssist.Elevation="Dp2"
                         Background="#16A34A"
@@ -280,8 +248,8 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
@@ -289,7 +257,8 @@
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Boshlanish" />
                                 <controls:UserCalendar
                                     Width="135"
-                                    Height="38"
+                                    Height="30"
+                                    FontSize="14"
                                     SelectedDate="{Binding FilterBeginDate, Mode=TwoWay}" />
                             </StackPanel>
 
@@ -297,44 +266,42 @@
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tugash" />
                                 <controls:UserCalendar
                                     Width="135"
-                                    Height="38"
+                                    Height="30"
+                                    FontSize="14"
                                     SelectedDate="{Binding FilterEndDate, Mode=TwoWay}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Margin="0,0,12,0">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Shaxs" />
-                                <ComboBox
+                                <controls:FloatingComboBox
                                     Width="180"
                                     DisplayMemberPath="Text"
                                     ItemsSource="{Binding AvailableFilterUsers}"
-                                    SelectedItem="{Binding SelectedFilterUser, Mode=TwoWay}"
-                                    Style="{StaticResource PlainCombo}" />
+                                    SelectedItem="{Binding SelectedFilterUser, Mode=TwoWay}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="3" Margin="0,0,12,0">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Turi" />
-                                <ComboBox
+                                <controls:FloatingComboBox
                                     Width="150"
                                     DisplayMemberPath="Text"
                                     ItemsSource="{Binding SupplyFilterOptions}"
-                                    SelectedItem="{Binding SelectedSupplyFilterOption, Mode=TwoWay}"
-                                    Style="{StaticResource PlainCombo}" />
+                                    SelectedItem="{Binding SelectedSupplyFilterOption, Mode=TwoWay}" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="4" Margin="0,0,12,0">
                                 <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Valyuta" />
-                                <ComboBox
+                                <controls:FloatingComboBox
                                     Width="120"
                                     DisplayMemberPath="Text"
                                     ItemsSource="{Binding CurrencyFilterOptions}"
-                                    SelectedItem="{Binding SelectedCurrencyFilter, Mode=TwoWay}"
-                                    Style="{StaticResource PlainCombo}" />
+                                    SelectedItem="{Binding SelectedCurrencyFilter, Mode=TwoWay}" />
                             </StackPanel>
 
                             <Button
-                                Grid.Column="6"
+                                Grid.Column="5"
                                 Height="38"
-                                Margin="0,18,8,0"
+                                Margin="0,18,0,0"
                                 Padding="14,0"
                                 md:ButtonAssist.CornerRadius="9"
                                 Background="White"
@@ -433,36 +400,37 @@
                                 Width="*"
                                 Binding="{Binding Description}"
                                 Header="Izoh" />
-                            <DataGridTemplateColumn Width="92" Header="">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                            <Button
-                                                Width="32"
-                                                Height="32"
-                                                Margin="0,0,4,0"
-                                                Padding="0"
-                                                Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Foreground="#3B5BDB"
-                                                Style="{StaticResource MaterialDesignIconButton}"
-                                                ToolTip="Tahrirlash">
-                                                <md:PackIcon Width="16" Height="16" Kind="Pencil" />
-                                            </Button>
-                                            <Button
-                                                Width="32"
-                                                Height="32"
-                                                Padding="0"
-                                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Foreground="#E11D48"
-                                                Style="{StaticResource MaterialDesignIconButton}"
-                                                ToolTip="O'chirish">
-                                                <md:PackIcon Width="16" Height="16" Kind="Delete" />
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn Width="104" Header="">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="Padding" Value="4" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="DataGridCell">
+                                                    <StackPanel
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Orientation="Horizontal">
+                                                        <Button
+                                                            Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource EditActionButton}"
+                                                            ToolTip="Tahrirlash">
+                                                            <md:PackIcon Width="16" Height="16" Kind="Pencil" />
+                                                        </Button>
+                                                        <Button
+                                                            Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource DeleteActionButton}"
+                                                            ToolTip="O'chirish">
+                                                            <md:PackIcon Width="16" Height="16" Kind="Delete" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>

@@ -46,7 +46,7 @@ public partial class SupplyPageViewModel : ViewModelBase
     [ObservableProperty] private CurrencyViewModel? selectedCurrency;
     [ObservableProperty] private decimal? amount;
     [ObservableProperty] private string? description;
-    [ObservableProperty] private DateTime filterBeginDate = DateTime.Today.AddMonths(-1);
+    [ObservableProperty] private DateTime filterBeginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime filterEndDate = DateTime.Today;
     [ObservableProperty] private UserFilterOption selectedFilterUser = UserFilterOption.All;
     [ObservableProperty] private SupplyPartyFilter selectedSupplyFilter = SupplyPartyFilter.All;
@@ -319,7 +319,7 @@ public partial class SupplyPageViewModel : ViewModelBase
     [RelayCommand]
     private void ClearFilters()
     {
-        FilterBeginDate = DateTime.Today.AddMonths(-1);
+        FilterBeginDate = DateTime.Today.AddDays(-7);
         FilterEndDate = DateTime.Today;
         SelectedFilterUser = UserFilterOption.All;
         SelectedSupplyFilter = SupplyPartyFilter.All;

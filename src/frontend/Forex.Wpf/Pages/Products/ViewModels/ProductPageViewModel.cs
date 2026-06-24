@@ -1,5 +1,6 @@
 ﻿namespace Forex.Wpf.Pages.Products.ViewModels;
 
+using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -17,6 +18,7 @@ using Mapster;
 using MapsterMapper;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Data;
 
 public partial class ProductPageViewModel : ViewModelBase
@@ -25,15 +27,31 @@ public partial class ProductPageViewModel : ViewModelBase
     private readonly IMapper mapper;
     private ProductEntryViewModel? backupEntry;
     private int backupIndex = -1;
-    private int currentPage = 1;
-    private bool hasMoreItems = true;
     private bool _suppressFilter;
-    private const int PageSize = 35;
+    private const int PageSize = 20;
+    [ObservableProperty] private int currentPage = 1;
+    [ObservableProperty] private int totalPages = 1;
+    [ObservableProperty] private int totalCount;
+    [ObservableProperty] private ObservableCollection<object> visiblePageNumbers = [];
+    [ObservableProperty] private int totalEntries;
+    [ObservableProperty] private int totalStockCount;
+    [ObservableProperty] private decimal totalStockValue;
+
+    public bool CanGoPrevious => CurrentPage > 1;
+    public bool CanGoNext => CurrentPage < TotalPages;
+    partial void OnCurrentPageChanged(int value) => UpdateVisiblePageNumbers();
+    partial void OnTotalPagesChanged(int value) => UpdateVisiblePageNumbers();
+
     [ObservableProperty] private bool isNewProductMode;
     [ObservableProperty] private ProductViewModel currentProduct;
-    [ObservableProperty] private DateTime? filterFromDate;
-    [ObservableProperty] private DateTime? filterToDate;
+    [ObservableProperty] private DateTime? filterFromDate = DateTime.Today.AddDays(-7);
+    [ObservableProperty] private DateTime? filterToDate = DateTime.Today;
     [ObservableProperty] private string searchText = string.Empty;
+    [ObservableProperty] private ProductViewModel? selectedFilterProduct;
+    [ObservableProperty] private string filterProductText = string.Empty;
+    [ObservableProperty] private ObservableCollection<ProductViewModel> filteredFilterProducts = [];
+    [ObservableProperty] private string? selectedSize;
+    [ObservableProperty] private ObservableCollection<string> availableSizes = [];
 
     private readonly ObservableCollection<ProductEntryViewModel> _productEntries = [];
     public ICollectionView ProductEntriesView { get; }
@@ -63,25 +81,46 @@ public partial class ProductPageViewModel : ViewModelBase
     {
         await Task.WhenAll(
             LoadProductsAsync(),
-            LoadProductEntriesAsync());
+            LoadProductEntriesAsync(),
+            LoadProductSummaryAsync(),
+            LoadAvailableSizesAsync());
     }
 
     private async Task LoadProductsAsync()
     {
         var response = await client.Products.GetAllAsync().Handle(l => IsLoading = l);
-        if (response.IsSuccess) AvailableProducts = mapper.Map<ObservableCollection<ProductViewModel>>(response.Data);
+        if (response.IsSuccess)
+        {
+            AvailableProducts = mapper.Map<ObservableCollection<ProductViewModel>>(response.Data);
+            FilteredFilterProducts = new ObservableCollection<ProductViewModel>(AvailableProducts);
+        }
         else ErrorMessage = response.Message ?? "Mahsulotlarni yuklashda xatolik!";
     }
 
-    private async Task LoadProductEntriesAsync()
+    public void ApplyFilterProductSearch(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            FilteredFilterProducts = new ObservableCollection<ProductViewModel>(AvailableProducts);
+            return;
+        }
+
+        var search = text.Trim();
+        var results = AvailableProducts.Where(p =>
+            TransliterationHelper.ContainsIgnoreScript(p.Code ?? string.Empty, search)
+            || TransliterationHelper.ContainsIgnoreScript(p.Name ?? string.Empty, search));
+        FilteredFilterProducts = new ObservableCollection<ProductViewModel>(results);
+    }
+
+    private FilteringRequest BuildFilterRequest(int page, int pageSize, bool applyTypeFilter = true)
     {
         FilteringRequest request = new()
         {
             Filters = new() { ["producttype"] = ["include:product"] },
             Descending = true,
             SortBy = "date",
-            Page = currentPage,
-            PageSize = PageSize
+            Page = page,
+            PageSize = pageSize
         };
 
         if (FilterFromDate.HasValue || FilterToDate.HasValue)
@@ -94,48 +133,212 @@ public partial class ProductPageViewModel : ViewModelBase
             request.Filters["date"] = dateFilters;
         }
 
-        var response = await client.ProductEntries.Filter(request).Handle(l => IsLoading = l);
+        if (applyTypeFilter)
+        {
+            var typeIds = GetFilteredProductTypeIds();
+            if (typeIds is not null)
+                request.Filters["productTypeId"] = [typeIds.Count > 0 ? "in:" + string.Join(",", typeIds) : "in:0"];
+        }
+
+        return request;
+    }
+
+    private List<long>? GetFilteredProductTypeIds()
+    {
+        var hasProduct = SelectedFilterProduct is not null;
+        var hasSize = !string.IsNullOrWhiteSpace(SelectedSize);
+        if (!hasProduct && !hasSize)
+            return null;
+
+        IEnumerable<ProductTypeViewModel> types = hasProduct
+            ? SelectedFilterProduct!.ProductTypes ?? []
+            : AvailableProducts.SelectMany(p => p.ProductTypes ?? Enumerable.Empty<ProductTypeViewModel>());
+
+        if (hasSize)
+            types = types.Where(t => string.Equals(t.Type, SelectedSize, StringComparison.OrdinalIgnoreCase));
+
+        return types.Select(t => t.Id).Where(id => id > 0).Distinct().ToList();
+    }
+
+    private async Task LoadAvailableSizesAsync()
+    {
+        var response = await client.ProductEntries.Filter(BuildFilterRequest(0, 0, applyTypeFilter: false)).Handle();
+        if (response.IsSuccess && response.Data is not null)
+        {
+            var entries = mapper.Map<List<ProductEntryViewModel>>(response.Data);
+            var sizes = entries
+                .Select(e => e.ProductType?.Type)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Select(t => t!)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToList();
+            AvailableSizes = new ObservableCollection<string>(sizes);
+        }
+    }
+
+    private async Task LoadProductEntriesAsync()
+    {
+        var response = await client.ProductEntries.Filter(BuildFilterRequest(CurrentPage, PageSize)).Handle(l => IsLoading = l);
         if (response.IsSuccess)
         {
+            _productEntries.Clear();
             _productEntries.AddRange(mapper.Map<ObservableCollection<ProductEntryViewModel>>(response.Data));
-            if (response.Data.Count < PageSize) hasMoreItems = false;
+            OnPropertyChanged(nameof(CanGoPrevious));
+            OnPropertyChanged(nameof(CanGoNext));
         }
         else ErrorMessage = response.Message ?? "Kirim tarixini yuklashda xatolik!";
     }
 
-    [RelayCommand]
-    private async Task LoadMoreEntries()
+    private async Task LoadProductSummaryAsync()
     {
-        if (IsLoading || !hasMoreItems) return;
-
-        currentPage++;
-        await LoadProductEntriesAsync();
+        var response = await client.ProductEntries.Filter(BuildFilterRequest(0, 0)).Handle();
+        if (response.IsSuccess && response.Data is not null)
+        {
+            var entries = mapper.Map<List<ProductEntryViewModel>>(response.Data);
+            TotalEntries = entries.Count;
+            TotalStockCount = entries.Sum(e => e.Count ?? 0);
+            TotalStockValue = entries.Sum(e => (e.Count ?? 0) * (e.UnitPrice ?? 0));
+            TotalCount = entries.Count;
+            TotalPages = PageSize > 0 ? Math.Max(1, (int)Math.Ceiling((double)entries.Count / PageSize)) : 1;
+        }
     }
 
-    partial void OnFilterFromDateChanged(DateTime? value) => _ = ApplyDateFilter();
-    partial void OnFilterToDateChanged(DateTime? value) => _ = ApplyDateFilter();
+    private void UpdateVisiblePageNumbers()
+    {
+        var pages = new List<object>();
+
+        if (TotalPages <= 7)
+        {
+            for (int i = 1; i <= TotalPages; i++)
+                pages.Add(i);
+        }
+        else
+        {
+            pages.Add(1);
+            if (CurrentPage > 4) pages.Add("...");
+
+            int start = Math.Max(2, CurrentPage - 1);
+            int end = Math.Min(TotalPages - 1, CurrentPage + 1);
+            if (CurrentPage < 5) end = 5;
+            else if (CurrentPage > TotalPages - 4) start = TotalPages - 4;
+
+            for (int i = start; i <= end; i++) pages.Add(i);
+
+            if (CurrentPage < TotalPages - 3) pages.Add("...");
+            pages.Add(TotalPages);
+        }
+
+        VisiblePageNumbers = new ObservableCollection<object>(pages);
+    }
+
+    partial void OnFilterFromDateChanged(DateTime? value) => _ = ReloadFromFirstPageAsync(reloadSizes: true);
+    partial void OnFilterToDateChanged(DateTime? value) => _ = ReloadFromFirstPageAsync(reloadSizes: true);
     partial void OnSearchTextChanged(string value) => ProductEntriesView.Refresh();
+    partial void OnSelectedFilterProductChanged(ProductViewModel? value) => _ = ReloadFromFirstPageAsync();
+    partial void OnSelectedSizeChanged(string? value) => _ = ReloadFromFirstPageAsync();
 
-    [RelayCommand]
-    private async Task ClearDateFilter()
-    {
-        _suppressFilter = true;
-        FilterFromDate = null;
-        FilterToDate = null;
-        _suppressFilter = false;
-        currentPage = 1;
-        hasMoreItems = true;
-        _productEntries.Clear();
-        await LoadProductEntriesAsync();
-    }
-
-    private async Task ApplyDateFilter()
+    private async Task ReloadFromFirstPageAsync(bool reloadSizes = false)
     {
         if (_suppressFilter) return;
-        currentPage = 1;
-        hasMoreItems = true;
-        _productEntries.Clear();
-        await LoadProductEntriesAsync();
+        CurrentPage = 1;
+        var tasks = new List<Task> { LoadProductEntriesAsync(), LoadProductSummaryAsync() };
+        if (reloadSizes) tasks.Add(LoadAvailableSizesAsync());
+        await Task.WhenAll(tasks);
+    }
+
+    [RelayCommand]
+    private async Task ClearFilters()
+    {
+        _suppressFilter = true;
+        FilterFromDate = DateTime.Today.AddDays(-7);
+        FilterToDate = DateTime.Today;
+        SearchText = string.Empty;
+        SelectedFilterProduct = null;
+        FilterProductText = string.Empty;
+        ApplyFilterProductSearch(null);
+        SelectedSize = null;
+        _suppressFilter = false;
+        CurrentPage = 1;
+        await Task.WhenAll(LoadProductEntriesAsync(), LoadProductSummaryAsync(), LoadAvailableSizesAsync());
+    }
+
+    [RelayCommand] private async Task GoToFirstPage() { if (CurrentPage == 1) return; CurrentPage = 1; await LoadProductEntriesAsync(); }
+    [RelayCommand] private async Task GoToPreviousPage() { if (!CanGoPrevious) return; CurrentPage--; await LoadProductEntriesAsync(); }
+    [RelayCommand] private async Task GoToNextPage() { if (!CanGoNext) return; CurrentPage++; await LoadProductEntriesAsync(); }
+    [RelayCommand] private async Task GoToLastPage() { if (CurrentPage == TotalPages) return; CurrentPage = TotalPages; await LoadProductEntriesAsync(); }
+
+    [RelayCommand]
+    private async Task GoToPage(object? parameter)
+    {
+        if (parameter is int page)
+        {
+            if (page < 1 || page > TotalPages || page == CurrentPage) return;
+            CurrentPage = page;
+            await LoadProductEntriesAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportToExcel()
+    {
+        var response = await client.ProductEntries.Filter(BuildFilterRequest(0, 0)).Handle(l => IsLoading = l);
+        if (!response.IsSuccess || response.Data is null)
+        {
+            ErrorMessage = response.Message ?? "Ma'lumotlarni yuklashda xatolik.";
+            return;
+        }
+
+        var list = mapper.Map<List<ProductEntryViewModel>>(response.Data);
+        if (list.Count == 0)
+        {
+            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Excel fayllari (*.xlsx)|*.xlsx",
+            FileName = $"Mahsulot_kirimlari_{DateTime.Today:dd.MM.yyyy}.xlsx"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("Kirimlar");
+        string[] headers = ["T/r", "Sana", "Kod", "Nomi", "Tayyorlanish usuli", "Razmer", "Qop soni", "Donasi", "Jami soni", "Tannarxi", "Jami summa"];
+
+        for (var i = 0; i < headers.Length; i++)
+            ws.Cell(1, i + 1).Value = headers[i];
+
+        ws.Range(1, 1, 1, headers.Length).Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.LightGray);
+
+        var row = 2;
+        var index = 1;
+        foreach (var e in list)
+        {
+            ws.Cell(row, 1).Value = index++;
+            ws.Cell(row, 2).Value = e.Date.ToString("dd.MM.yyyy HH:mm");
+            ws.Cell(row, 3).Value = e.ProductType?.Product?.Code ?? "-";
+            ws.Cell(row, 4).Value = e.ProductType?.Product?.Name ?? "-";
+            ws.Cell(row, 5).Value = e.ProductionOrigin?.ToString() ?? "-";
+            ws.Cell(row, 6).Value = e.ProductType?.Type ?? "-";
+            ws.Cell(row, 7).Value = e.BundleCount;
+            ws.Cell(row, 8).Value = e.BundleItemCount;
+            ws.Cell(row, 9).Value = e.Count;
+            ws.Cell(row, 10).Value = e.UnitPrice;
+            ws.Cell(row, 11).Value = (e.Count ?? 0) * (e.UnitPrice ?? 0);
+            row++;
+        }
+
+        ws.Cell(row, 8).Value = "Jami:";
+        ws.Cell(row, 9).Value = list.Sum(e => e.Count ?? 0);
+        ws.Cell(row, 11).Value = list.Sum(e => (e.Count ?? 0) * (e.UnitPrice ?? 0));
+        ws.Range(row, 8, row, 11).Style.Font.SetBold();
+        ws.Columns().AdjustToContents();
+        workbook.SaveAs(dialog.FileName);
+        MessageBox.Show("Excel fayl muvaffaqiyatli saqlandi.", "Tayyor", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     #endregion
@@ -366,6 +569,7 @@ public partial class ProductPageViewModel : ViewModelBase
         {
             _productEntries.Remove(entry);
             SuccessMessage = "Muvaffaqiyatli o'chirildi!";
+            _ = LoadProductSummaryAsync();
         }
         else
         {
@@ -393,13 +597,16 @@ public partial class ProductPageViewModel : ViewModelBase
 
     private void CleanupAfterSave()
     {
+        var lastDate = CurrentProductEntry.Date;
         IsEditing = false;
         IsNewProductMode = false;
         backupEntry = null;
         backupIndex = -1;
         CurrentProductEntry = new();
+        CurrentProductEntry.Date = lastDate;
         CurrentProduct = new();
         ProductCode = string.Empty;
+        _ = LoadProductSummaryAsync();
     }
 
     private bool Validate()

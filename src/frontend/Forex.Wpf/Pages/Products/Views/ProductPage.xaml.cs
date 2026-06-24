@@ -41,6 +41,40 @@ public partial class ProductPage : Page
         this.ResizeWindow(1300, 700);
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
+        SetupFilterProductComboBox();
+    }
+
+    private void SetupFilterProductComboBox()
+    {
+        var combo = filterProductCombo.InternalComboBox;
+        combo.StaysOpenOnEdit = true;
+
+        combo.GotFocus += (_, _) =>
+        {
+            vm.ApplyFilterProductSearch(null);
+            combo.IsDropDownOpen = true;
+        };
+
+        void setupEditBox()
+        {
+            if (combo.Template?.FindName("PART_EditableTextBox", combo) is not TextBox editBox) return;
+
+            bool userTyping = false;
+
+            editBox.PreviewKeyDown += (_, e) =>
+                userTyping = e.Key is not (Key.Down or Key.Up or Key.Enter or Key.Escape or Key.Tab or Key.Left or Key.Right);
+
+            editBox.TextChanged += (_, _) =>
+            {
+                if (!userTyping) return;
+                userTyping = false;
+                vm.ApplyFilterProductSearch(editBox.Text?.Trim());
+                combo.IsDropDownOpen = true;
+            };
+        }
+
+        if (combo.IsLoaded) setupEditBox();
+        else combo.Loaded += (_, _) => setupEditBox();
     }
 
     private void RegisterFocusNavigation()
@@ -83,19 +117,6 @@ public partial class ProductPage : Page
             NavigationService.GoBack();
         else
             navigation.NavigateTo(new HomePage());
-    }
-
-    private async void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
-    {
-        if (e.VerticalChange <= 0) return;
-
-        if (e.OriginalSource is not ScrollViewer scrollViewer) return;
-
-        double scrollPosition = scrollViewer.VerticalOffset;
-        double scrollHeight = scrollViewer.ScrollableHeight;
-
-        if (scrollHeight > 0 && scrollPosition >= scrollHeight * 0.99)
-            await vm.LoadMoreEntriesCommand.ExecuteAsync(null);
     }
 
     private void OnFocusRequestReceived(string controlName)

@@ -108,6 +108,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                     UnitMeasure = product.UnitMeasure?.Name ?? "dona",
                     UnitPrice = item.UnitPrice,
                     Amount = item.Amount,
+                    BaseAmount = sale.TotalAmount == 0 ? item.Amount : item.Amount * (sale.BaseAmount / sale.TotalAmount),
                     CurrencyCode = sale.CurrencyCode
                 });
             }
@@ -355,8 +356,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                 row++;
             }
 
-            var totalAmount = FilteredItems.Sum(x => x.Amount);
-            ws.Cell(row, 1).Value = "JAMI:";
+            var totalAmount = FilteredItems.Sum(x => x.BaseAmount);
+            ws.Cell(row, 1).Value = "JAMI (so'm):";
             ws.Cell(row, 1).Style.Font.SetBold();
             ws.Cell(row, 11).Value = totalAmount;
             ws.Cell(row, 11).Style.Font.SetBold().NumberFormat.Format = "#,##0.00";
@@ -380,7 +381,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         if (SelectedCode != null)
             result = result.Where(x => x.Code == SelectedCode.Code);
         FilteredItems = new ObservableCollection<SaleHistoryItemViewModel>(result);
-        TotalSalesAmount = FilteredItems.Sum(x => x.Amount);
+        TotalSalesAmount = FilteredItems.Sum(x => x.BaseAmount);
         TotalsSummary = string.Join("    ", FilteredItems
             .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode!)
             .OrderBy(g => g.Key)
@@ -466,8 +467,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             {
                 var totalBundleCount = allItemsList.Sum(x => x.BundleCount);
                 var totalTotalCount = allItemsList.Sum(x => x.TotalCount);
-                var totalAmount = allItemsList.Sum(x => x.Amount);
-                AddRow(table, true, "JAMI:", "", "", "", "",
+                var totalAmount = allItemsList.Sum(x => x.BaseAmount);
+                AddRow(table, true, "JAMI (so'm):", "", "", "", "",
                     totalBundleCount.ToString("N0"), "",
                     totalTotalCount.ToString("N0"), "", "",
                     totalAmount.ToString("N2"));

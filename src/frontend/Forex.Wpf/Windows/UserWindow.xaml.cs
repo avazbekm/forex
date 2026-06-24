@@ -4,6 +4,7 @@ using Forex.ClientService;
 using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Requests;
+using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
@@ -50,9 +51,17 @@ public partial class UserWindow : Window
         try
         {
             var valyutaTypes = await client.Currencies.GetAllAsync().Handle();
+            var data = valyutaTypes.Data ?? [];
 
-            somId = valyutaTypes.Data?.FirstOrDefault(v =>
-                v.Symbol.Equals("UZS", StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+            somId = data.FirstOrDefault(v =>
+                v.Code.Equals("UZS", StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+
+            cbCurrency.ItemsSource = data;
+            cbCurrency.SelectedItem =
+                data.FirstOrDefault(v => v.Id == AccountCurrencyId)
+                ?? data.FirstOrDefault(v => v.IsDefault)
+                ?? data.FirstOrDefault(v => v.Id == somId)
+                ?? data.FirstOrDefault();
         }
         catch (Exception ex)
         {
@@ -65,8 +74,16 @@ public partial class UserWindow : Window
     {
         try
         {
-            if (somId == 0)
-                await LoadValyutaTypeAsync();
+            var currencyId = (cbCurrency.SelectedItem as CurrencyResponse)?.Id ?? 0;
+
+            if (currencyId == 0)
+            {
+                if (somId == 0)
+                    await LoadValyutaTypeAsync();
+
+                currencyId = (cbCurrency.SelectedItem as CurrencyResponse)?.Id
+                    ?? (AccountCurrencyId > 0 ? AccountCurrencyId : somId);
+            }
 
             decimal balance = 0;
 
@@ -88,7 +105,7 @@ public partial class UserWindow : Window
                 [
                     new UserAccount
                     {
-                        CurrencyId = AccountCurrencyId > 0 ? AccountCurrencyId : somId,
+                        CurrencyId = currencyId,
                         OpeningBalance = balance,
                         Discount = 0
                     }

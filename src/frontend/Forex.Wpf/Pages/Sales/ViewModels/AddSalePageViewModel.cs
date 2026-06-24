@@ -65,7 +65,11 @@ public partial class AddSalePageViewModel : ViewModelBase
     [ObservableProperty] private decimal? totalAmount;
     [ObservableProperty] private decimal? finalAmount;
     [ObservableProperty] private decimal? totalAmountWithUserBalance;
+    [ObservableProperty] private decimal? exchangeRate;
     [ObservableProperty] private string note = string.Empty;
+
+    public bool IsForeignCurrency =>
+        Customer?.CurrencyCode is { Length: > 0 } code && !code.Equals("UZS", StringComparison.OrdinalIgnoreCase);
 
     // Statistik ma'lumotlar
     [ObservableProperty] private int totalRowsCount;
@@ -137,6 +141,41 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         if (e.PropertyName == nameof(SaleItemViewModel.Amount))
             RecalculateTotals();
+        else if (e.PropertyName == nameof(SaleItemViewModel.ProductType))
+            ConvertCurrentItemPrice();
+    }
+
+    partial void OnExchangeRateChanged(decimal? value)
+    {
+        ConvertCurrentItemPrice();
+        ReconvertAllItems();
+    }
+
+    private decimal? ConvertSomToCustomer(decimal? somPrice)
+    {
+        if (somPrice is not > 0)
+            return null;
+
+        return IsForeignCurrency && ExchangeRate is > 0
+            ? Math.Round(somPrice.Value / ExchangeRate.Value, 2)
+            : somPrice;
+    }
+
+    private void ConvertCurrentItemPrice()
+    {
+        var converted = ConvertSomToCustomer(CurrentSaleItem.ProductType?.UnitPrice);
+        if (converted is not null)
+            CurrentSaleItem.UnitPrice = converted;
+    }
+
+    private void ReconvertAllItems()
+    {
+        foreach (var item in SaleItems)
+        {
+            var converted = ConvertSomToCustomer(item.ProductType?.UnitPrice);
+            if (converted is not null)
+                item.UnitPrice = converted;
+        }
     }
 
     partial void OnEditingSaleIdChanged(long value)
@@ -170,6 +209,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         if (EditingSaleId == 0) saleSession.SelectedCustomer = value;
         CustomerInput = value?.Name ?? string.Empty;
+        OnPropertyChanged(nameof(IsForeignCurrency));
+        ExchangeRate = IsForeignCurrency && value?.SettlementCurrencyRate is > 0
+            ? value.SettlementCurrencyRate
+            : null;
+        ConvertCurrentItemPrice();
+        ReconvertAllItems();
         RecalculateTotalAmountWithUserBalance();
     }
 
@@ -476,6 +521,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     [RelayCommand]
     private async Task Add()
     {
+        if (Customer is null)
+        {
+            WarningMessage = "Avval mijozni tanlang (narx mijoz valyutasida kiritiladi).";
+            return;
+        }
+
         if (Date.Date > DateTime.Today)
         {
             WarningMessage = "Kelajakdagi sanani tanlab bo'lmaydi!";

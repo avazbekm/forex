@@ -72,6 +72,8 @@ public partial class UserViewModel : ViewModelBase
     private UserAccountViewModel? SettlementAccount =>
         Accounts.FirstOrDefault(x => x.CurrencyId == SettlementCurrencyId) ?? Accounts.FirstOrDefault();
 
+    public decimal SettlementCurrencyRate => SettlementAccount?.Currency?.ExchangeRate ?? 0;
+
     private void CalculateBalance()
     {
         var account = SettlementAccount;

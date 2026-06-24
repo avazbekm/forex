@@ -6,6 +6,7 @@ public sealed record SaleResponse
     public DateTime Date { get; set; }
     public int TotalCount { get; set; }
     public decimal TotalAmount { get; set; }
+    public decimal BaseAmount { get; set; }
     public string? Note { get; set; }
 
     public long CurrencyId { get; set; }

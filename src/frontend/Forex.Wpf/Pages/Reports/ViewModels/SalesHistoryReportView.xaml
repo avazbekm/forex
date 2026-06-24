@@ -350,15 +350,24 @@
                     <Run Text=" ta" />
                 </TextBlock>
 
-                <TextBlock
+                <StackPanel
                     Grid.Column="1"
-                    VerticalAlignment="Center"
-                    FontSize="16"
-                    FontWeight="Bold"
-                    Foreground="#2E7D32">
-                    <Run Text="Umumiy summa: " />
-                    <Run Text="{Binding TotalsSummary, Mode=OneWay}" />
-                </TextBlock>
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="#2E7D32">
+                        <Run Text="Jami (so'm): " />
+                        <Run Text="{Binding TotalSalesAmount, StringFormat={}{0:N2}, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontSize="12"
+                        Foreground="#6B7280"
+                        Text="{Binding TotalsSummary, Mode=OneWay}" />
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

@@ -125,7 +125,10 @@ public partial class SupplyPage : Page
 
         Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
         {
-            cbxUser.InternalComboBox.Focus();
+            var combo = cbxUser.InternalComboBox;
+            combo.Focus();
+            if (combo.Template?.FindName("PART_EditableTextBox", combo) is TextBox editBox)
+                editBox.SelectAll();
             _userGuard = false;
         });
     }
@@ -157,12 +160,5 @@ public partial class SupplyPage : Page
             NavigationService.GoBack();
         else
             Main.NavigateTo(new HomePage());
-    }
-
-    private void BtnCreateUser_Click(object sender, RoutedEventArgs e)
-    {
-        var created = OpenCreateUserWindow(string.Empty);
-        if (created is not null)
-            vm.AddCreatedUser(created);
     }
 }

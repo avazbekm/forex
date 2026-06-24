@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="Forex.Wpf.Pages.Sales.SalePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -11,147 +11,217 @@
     Title="SalePage"
     d:DesignHeight="650"
     d:DesignWidth="1100"
-    Background="{DynamicResource PrimaryBackground}"
     mc:Ignorable="d">
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Page.Resources>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0,0,4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="#7A8699" />
+        </Style>
 
-        <!--  Header  -->
-        <DockPanel Grid.Row="0" LastChildFill="False">
-            <Label
-                Content="🛒 Savdolar ro'yxati"
-                FontSize="18"
-                FontWeight="Bold"
-                Foreground="{StaticResource SecondaryTextColor}" />
+        <Style x:Key="StatChip" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="18,12" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+    </Page.Resources>
 
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button
-                    x:Name="btnAdd"
-                    Margin="0,0,10,0"
-                    Padding="8,0"
-                    md:ButtonAssist.CornerRadius="4"
-                    md:ElevationAssist.Elevation="Dp24"
-                    Background="{StaticResource SuccessButtonBackground}"
-                    BorderBrush="{StaticResource SuccessButtonBorder}"
-                    Click="BtnAddSale_Click"
-                    Content="➕ Yangi savdo"
-                    Foreground="{StaticResource SuccessButtonForeground}" />
+    <Grid Background="#F4F6FA">
+        <Grid Margin="18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-                <Button
-                    x:Name="btnBack"
-                    Padding="8,0"
-                    md:ButtonAssist.CornerRadius="4"
-                    md:ElevationAssist.Elevation="Dp24"
-                    Background="{DynamicResource BackButtonBackground}"
-                    BorderBrush="{StaticResource BackButtonBorder}"
-                    Click="BtnBack_Click"
-                    Content="🔙 Orqaga"
-                    Foreground="{StaticResource BackButtonForeground}" />
-            </StackPanel>
-        </DockPanel>
+            <!--  Header  -->
+            <Grid Grid.Row="0" Margin="2,0,2,4">
+                <StackPanel Orientation="Horizontal">
+                    <Border
+                        Width="42"
+                        Height="42"
+                        Background="#E8EDFB"
+                        CornerRadius="11">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#3B5BDB"
+                            Kind="Cart" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="22"
+                            FontWeight="Bold"
+                            Foreground="#1F2937"
+                            Text="Savdolar" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="#9AA4B2"
+                            Text="Savdolar ro'yxati va hisob-kitob" />
+                    </StackPanel>
+                </StackPanel>
 
-        <!--  Filters  -->
-        <Grid Grid.Row="1" Margin="0,10,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="200" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button
+                        x:Name="btnAdd"
+                        Height="38"
+                        Margin="0,0,10,0"
+                        Padding="16,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        md:ElevationAssist.Elevation="Dp2"
+                        Background="#16A34A"
+                        BorderThickness="0"
+                        Click="BtnAddSale_Click"
+                        Foreground="White">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon
+                                Width="18"
+                                Height="18"
+                                VerticalAlignment="Center"
+                                Kind="Plus" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Yangi savdo" />
+                        </StackPanel>
+                    </Button>
 
-            <TextBlock
-                VerticalAlignment="Center"
-                FontSize="16"
-                Text="Davr oralig'i:" />
+                    <Button
+                        x:Name="btnBack"
+                        Height="38"
+                        Padding="16,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="White"
+                        BorderBrush="#D9DEE7"
+                        BorderThickness="1"
+                        Click="BtnBack_Click"
+                        Foreground="#475467">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon
+                                Width="16"
+                                Height="16"
+                                VerticalAlignment="Center"
+                                Kind="ArrowLeft" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Orqaga" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
 
-            <controls:UserCalendar
-                Grid.Column="2"
-                Width="110"
-                Height="28"
-                HorizontalAlignment="Left"
-                FontSize="14"
-                SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
+            <!--  Filter bar  -->
+            <Border
+                Grid.Row="1"
+                Margin="0,14,0,0"
+                Padding="14,12"
+                Background="#F8FAFD"
+                BorderBrush="#EAEEF5"
+                BorderThickness="1"
+                CornerRadius="11">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-            <TextBlock
-                Grid.Column="4"
-                VerticalAlignment="Center"
-                FontSize="16"
-                Text="dan" />
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Boshlanish" />
+                        <controls:UserCalendar
+                            Width="120"
+                            Height="30"
+                            FontSize="14"
+                            SelectedDate="{Binding BeginDate, Mode=TwoWay}" />
+                    </StackPanel>
 
-            <controls:UserCalendar
-                Grid.Column="6"
-                Width="110"
-                Height="28"
-                HorizontalAlignment="Left"
-                FontSize="14"
-                SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+                    <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tugash" />
+                        <controls:UserCalendar
+                            Width="120"
+                            Height="30"
+                            FontSize="14"
+                            SelectedDate="{Binding EndDate, Mode=TwoWay}" />
+                    </StackPanel>
 
-            <TextBlock
-                Grid.Column="8"
-                VerticalAlignment="Center"
-                FontSize="16"
-                Text="gacha" />
+                    <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Mijoz" />
+                        <controls:FloatingImageComboBox
+                            Width="220"
+                            IsEditable="True"
+                            IsTextSearchEnabled="False"
+                            ItemsSource="{Binding FilteredCustomers}"
+                            PrimaryTextMemberPath="Name"
+                            SecondaryTextMemberPath="PhoneAndAddress"
+                            SelectedItem="{Binding SelectedCustomer}"
+                            ShowImage="False"
+                            Text="{Binding CustomerSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
 
-            <TextBlock
-                Grid.Column="10"
-                VerticalAlignment="Center"
-                FontSize="16"
-                Text="Mijoz:" />
+                    <StackPanel Grid.Column="3" Margin="0,0,12,0">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="" />
+                        <Button
+                            Height="30"
+                            Padding="14,0"
+                            md:ButtonAssist.CornerRadius="9"
+                            Background="White"
+                            BorderBrush="#D9DEE7"
+                            BorderThickness="1"
+                            Command="{Binding ClearFiltersCommand}"
+                            Foreground="#475467"
+                            ToolTip="Filterlarni tozalash">
+                            <StackPanel Orientation="Horizontal">
+                                <md:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    VerticalAlignment="Center"
+                                    Kind="FilterRemoveOutline" />
+                                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Tozalash" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
-            <controls:FloatingImageComboBox
-                Grid.Column="12"
-                Width="200"
-                Height="32"
-                IsEditable="True"
-                IsTextSearchEnabled="False"
-                ItemsSource="{Binding FilteredCustomers}"
-                PrimaryTextMemberPath="Name"
-                SecondaryTextMemberPath="PhoneAndAddress"
-                SelectedItem="{Binding SelectedCustomer}"
-                ShowImage="False"
-                Text="{Binding CustomerSearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel Grid.Column="5" Margin="0,0,0,0">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="" />
+                        <Button
+                            Height="30"
+                            Padding="14,0"
+                            md:ButtonAssist.CornerRadius="9"
+                            Background="#15803D"
+                            BorderThickness="0"
+                            Command="{Binding ExportToExcelCommand}"
+                            Foreground="White">
+                            <StackPanel Orientation="Horizontal">
+                                <md:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    VerticalAlignment="Center"
+                                    Kind="FileExcel" />
+                                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Excel" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-            <Button
-                x:Name="btnFilter"
-                Grid.Column="14"
-                Padding="8,0"
-                HorizontalAlignment="Left"
-                md:ButtonAssist.CornerRadius="4"
-                md:ElevationAssist.Elevation="Dp2"
-                Background="{DynamicResource BackButtonBackground}"
-                BorderBrush="{StaticResource BackButtonBorder}"
-                Command="{Binding FilterSalesCommand}"
-                Content="🔍 Yangilash"
-                Foreground="{StaticResource BackButtonForeground}" />
-        </Grid>
-
-        <!--  DataGrid  -->
-        <Grid Grid.Row="2" Margin="0,15,0,5">
+            <!--  DataGrid  -->
             <DataGrid
                 x:Name="dataGrid"
-                AlternatingRowBackground="#F9F9F9"
+                Grid.Row="2"
+                Margin="0,14,0,0"
                 AutoGenerateColumns="False"
-                BorderThickness="2"
+                Background="White"
+                BorderBrush="#EAEEF5"
+                BorderThickness="1"
                 CanUserAddRows="False"
                 CanUserDeleteRows="False"
+                ColumnHeaderHeight="40"
+                RowHeight="40"
+                GridLinesVisibility="Horizontal"
+                HorizontalGridLinesBrush="#F0F2F6"
                 VirtualizingStackPanel.VirtualizationMode="Standard"
                 EnableRowVirtualization="True"
                 FontSize="14"
@@ -163,8 +233,8 @@
                 SelectionUnit="FullRow">
 
                 <DataGrid.InputBindings>
-                    <MouseBinding Gesture="LeftDoubleClick" 
-                                  Command="{Binding PreviewSaleCommand}" 
+                    <MouseBinding Gesture="LeftDoubleClick"
+                                  Command="{Binding PreviewSaleCommand}"
                                   CommandParameter="{Binding SelectedSale}" />
                     <KeyBinding Key="Delete"
                                 Command="{Binding DeleteCommand}"
@@ -180,12 +250,18 @@
                     <Style x:Key="CenterAlignedCellStyle" TargetType="TextBlock">
                         <Setter Property="TextAlignment" Value="Center" />
                     </Style>
-
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="HorizontalContentAlignment" Value="Center" />
-                        <Setter Property="FontWeight" Value="SemiBold" />
-                    </Style>
                 </DataGrid.Resources>
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#F4F7FC" />
+                        <Setter Property="Foreground" Value="#5A6477" />
+                        <Setter Property="FontWeight" Value="SemiBold" />
+                        <Setter Property="Padding" Value="10,0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
 
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Width="60" Header="T/r">
@@ -200,8 +276,8 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTextColumn
-                        Width="110"
-                        Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy}}"
+                        Width="150"
+                        Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
                         ElementStyle="{StaticResource CenterAlignedCellStyle}"
                         Header="Sana" />
 
@@ -232,12 +308,6 @@
                         Header="Izoh" />
 
                     <DataGridTemplateColumn Width="110" Header="Amallar">
-                        <DataGridTemplateColumn.HeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="HorizontalContentAlignment" Value="Center" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                            </Style>
-                        </DataGridTemplateColumn.HeaderStyle>
                         <DataGridTemplateColumn.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="Padding" Value="4" />
@@ -251,16 +321,9 @@
                                                 <!--  EDIT BUTTON  -->
                                                 <Button
                                                     x:Name="btnEdit"
-                                                    Width="30"
-                                                    Height="26"
-                                                    Margin="2,0"
-                                                    Padding="0"
-                                                    Background="#FFB300"
                                                     Click="BtnEditSale_Click"
-                                                    FontSize="12"
-                                                    FontWeight="Bold"
-                                                    Foreground="White"
                                                     IsEnabled="{Binding DataContext.IsLoading, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource InverseBoolToBoolConverter}}"
+                                                    Style="{StaticResource EditActionButton}"
                                                     Tag="{Binding}"
                                                     ToolTip="Tahrirlash">
                                                     <md:PackIcon
@@ -270,17 +333,10 @@
                                                 </Button>
                                                 <!--  DELETE BUTTON  -->
                                                 <Button
-                                                    Width="30"
-                                                    Height="26"
-                                                    Margin="2,0"
-                                                    Padding="0"
-                                                    Background="#D32F2F"
                                                     Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
-                                                    FontSize="12"
-                                                    FontWeight="Bold"
-                                                    Foreground="White"
                                                     IsEnabled="{Binding DataContext.IsLoading, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource InverseBoolToBoolConverter}}"
+                                                    Style="{StaticResource DeleteActionButton}"
                                                     ToolTip="O'chirish">
                                                     <md:PackIcon
                                                         Width="16"
@@ -296,156 +352,207 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
+
+            <!--  Totals + Pagination  -->
+            <Border
+                Grid.Row="3"
+                Margin="0,14,0,0"
+                Padding="12,10"
+                Background="White"
+                BorderBrush="#EAEEF5"
+                BorderThickness="1"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            Grid.Column="0"
+                            Background="#EEF2FF"
+                            Style="{StaticResource StatChip}">
+                            <StackPanel>
+                                <TextBlock FontSize="12" Foreground="#6470B0" Text="Savdolar" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="20"
+                                    FontWeight="Bold"
+                                    Foreground="#3949AB"
+                                    Text="{Binding TotalCount, Mode=OneWay}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Grid.Column="1"
+                            Background="#E9F8EE"
+                            Style="{StaticResource StatChip}"
+                            ToolTip="{Binding CurrencyBreakdown}">
+                            <StackPanel>
+                                <TextBlock FontSize="12" Foreground="#2E8B57" Text="Summa (so'm)" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="20"
+                                    FontWeight="Bold"
+                                    Foreground="#1B7A3E"
+                                    Text="{Binding TotalSalesAmount, StringFormat={}{0:N2}, Mode=OneWay}" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="10"
+                                    Foreground="#5E8B6F"
+                                    Text="{Binding CurrencyBreakdown}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Grid.Column="2"
+                            Background="#FFF6E6"
+                            Style="{StaticResource StatChip}">
+                            <StackPanel>
+                                <TextBlock FontSize="12" Foreground="#B7791F" Text="Dona" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="20"
+                                    FontWeight="Bold"
+                                    Foreground="#A66A12"
+                                    Text="{Binding TotalItemsSold, Mode=OneWay}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <StackPanel
+                        Grid.Column="2"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Button
+                            Width="32"
+                            Height="32"
+                            Margin="2,0"
+                            Padding="0"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="Transparent"
+                            BorderBrush="#D9DEE7"
+                            BorderThickness="1"
+                            Command="{Binding GoToFirstPageCommand}"
+                            IsEnabled="{Binding CanGoPrevious}"
+                            ToolTip="Birinchi sahifa">
+                            <md:PackIcon Kind="ChevronDoubleLeft" />
+                        </Button>
+                        <Button
+                            Width="32"
+                            Height="32"
+                            Margin="2,0"
+                            Padding="0"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="Transparent"
+                            BorderBrush="#D9DEE7"
+                            BorderThickness="1"
+                            Command="{Binding GoToPreviousPageCommand}"
+                            IsEnabled="{Binding CanGoPrevious}"
+                            ToolTip="Oldingi sahifa">
+                            <md:PackIcon Kind="ChevronLeft" />
+                        </Button>
+
+                        <ItemsControl Margin="4,0" ItemsSource="{Binding VisiblePageNumbers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Width="32"
+                                        Height="32"
+                                        Margin="1,0"
+                                        Padding="0"
+                                        md:ButtonAssist.CornerRadius="8"
+                                        Command="{Binding DataContext.GoToPageCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding}"
+                                        Content="{Binding}">
+                                        <Button.Style>
+                                            <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
+                                                <Setter Property="Background" Value="Transparent" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Setter Property="BorderBrush" Value="#D9DEE7" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding}" Value="...">
+                                                        <Setter Property="IsEnabled" Value="False" />
+                                                        <Setter Property="BorderThickness" Value="0" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                                                <Binding />
+                                                                <Binding Path="DataContext.CurrentPage" RelativeSource="{RelativeSource AncestorType=Page}" />
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+                                                        <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Button
+                            Width="32"
+                            Height="32"
+                            Margin="2,0"
+                            Padding="0"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="Transparent"
+                            BorderBrush="#D9DEE7"
+                            BorderThickness="1"
+                            Command="{Binding GoToNextPageCommand}"
+                            IsEnabled="{Binding CanGoNext}"
+                            ToolTip="Keyingi sahifa">
+                            <md:PackIcon Kind="ChevronRight" />
+                        </Button>
+                        <Button
+                            Width="32"
+                            Height="32"
+                            Margin="2,0"
+                            Padding="0"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="Transparent"
+                            BorderBrush="#D9DEE7"
+                            BorderThickness="1"
+                            Command="{Binding GoToLastPageCommand}"
+                            IsEnabled="{Binding CanGoNext}"
+                            ToolTip="Oxirgi sahifa">
+                            <md:PackIcon Kind="ChevronDoubleRight" />
+                        </Button>
+
+                        <Border
+                            Margin="8,0,0,0"
+                            Padding="8,4"
+                            Background="#F4F6FA"
+                            BorderBrush="#E0E0E0"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#5A6477">
+                                <Run Text="{Binding CurrentPage, Mode=OneWay}" />
+                                <Run Text=" / " />
+                                <Run Text="{Binding TotalPages, Mode=OneWay}" />
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
-
-        <!--  Pagination  -->
-        <Border
-            Grid.Row="3"
-            Margin="0,10,0,0"
-            Padding="10,8"
-            Background="{DynamicResource SecondaryBackground}"
-            BorderBrush="{DynamicResource BorderColor}"
-            BorderThickness="1"
-            CornerRadius="4">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="13"
-                    Foreground="{DynamicResource SecondaryTextColor}">
-                    <Run Text="Jami: " />
-                    <Run FontWeight="SemiBold" Text="{Binding TotalCount, Mode=OneWay}" />
-                    <Run Text=" ta savdo | " />
-                    <Run Text="Summa: " />
-                    <Run FontWeight="SemiBold" Text="{Binding TotalSalesAmount, StringFormat={}{0:N2}, Mode=OneWay}" />
-                    <Run Text=" so'm | " />
-                    <Run Text="Dona: " />
-                    <Run FontWeight="SemiBold" Text="{Binding TotalItemsSold, Mode=OneWay}" />
-                    <Run Text=" ta" />
-                </TextBlock>
-
-                <StackPanel
-                    Grid.Column="2"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal">
-                    <Button
-                        Width="32"
-                        Height="32"
-                        Margin="2,0"
-                        Padding="0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        Command="{Binding GoToFirstPageCommand}"
-                        IsEnabled="{Binding CanGoPrevious}"
-                        ToolTip="Birinchi sahifa">
-                        <md:PackIcon Kind="ChevronDoubleLeft" />
-                    </Button>
-                    <Button
-                        Width="32"
-                        Height="32"
-                        Margin="2,0"
-                        Padding="0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        Command="{Binding GoToPreviousPageCommand}"
-                        IsEnabled="{Binding CanGoPrevious}"
-                        ToolTip="Oldingi sahifa">
-                        <md:PackIcon Kind="ChevronLeft" />
-                    </Button>
-
-                    <ItemsControl Margin="4,0" ItemsSource="{Binding VisiblePageNumbers}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button
-                                    Width="32"
-                                    Height="32"
-                                    Margin="1,0"
-                                    Padding="0"
-                                    md:ButtonAssist.CornerRadius="4"
-                                    Command="{Binding DataContext.GoToPageCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                    CommandParameter="{Binding}"
-                                    Content="{Binding}">
-                                    <Button.Style>
-                                        <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent" />
-                                            <Setter Property="BorderThickness" Value="1" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding}" Value="...">
-                                                    <Setter Property="IsEnabled" Value="False" />
-                                                    <Setter Property="BorderThickness" Value="0" />
-                                                </DataTrigger>
-                                                <DataTrigger Value="True">
-                                                    <DataTrigger.Binding>
-                                                        <MultiBinding Converter="{StaticResource EqualityConverter}">
-                                                            <Binding />
-                                                            <Binding Path="DataContext.CurrentPage" RelativeSource="{RelativeSource AncestorType=Page}" />
-                                                        </MultiBinding>
-                                                    </DataTrigger.Binding>
-                                                    <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}" />
-                                                    <Setter Property="Foreground" Value="White" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <Button
-                        Width="32"
-                        Height="32"
-                        Margin="2,0"
-                        Padding="0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        Command="{Binding GoToNextPageCommand}"
-                        IsEnabled="{Binding CanGoNext}"
-                        ToolTip="Keyingi sahifa">
-                        <md:PackIcon Kind="ChevronRight" />
-                    </Button>
-                    <Button
-                        Width="32"
-                        Height="32"
-                        Margin="2,0"
-                        Padding="0"
-                        md:ButtonAssist.CornerRadius="4"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        Command="{Binding GoToLastPageCommand}"
-                        IsEnabled="{Binding CanGoNext}"
-                        ToolTip="Oxirgi sahifa">
-                        <md:PackIcon Kind="ChevronDoubleRight" />
-                    </Button>
-
-                    <Border
-                        Margin="8,0,0,0"
-                        Padding="8,4"
-                        Background="{DynamicResource PrimaryBackground}"
-                        BorderBrush="{DynamicResource BorderColor}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-                        <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource SecondaryTextColor}">
-                            <Run Text="{Binding CurrentPage, Mode=OneWay}" />
-                            <Run Text=" / " />
-                            <Run Text="{Binding TotalPages, Mode=OneWay}" />
-                        </TextBlock>
-                    </Border>
-                </StackPanel>
-            </Grid>
-        </Border>
     </Grid>
 </Page>

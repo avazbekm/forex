@@ -1,5 +1,6 @@
 ﻿namespace Forex.Wpf.Pages.Sales.ViewModels;
 
+using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
@@ -53,6 +54,7 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
     
     [ObservableProperty] private decimal totalSalesAmount;
     [ObservableProperty] private int totalItemsSold;
+    [ObservableProperty] private string currencyBreakdown = string.Empty;
 
     public bool CanGoPrevious => CurrentPage > 1;
     public bool CanGoNext => CurrentPage < TotalPages;
@@ -229,8 +231,12 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
 
         if (response.IsSuccess && response.Data is not null)
         {
-            TotalSalesAmount = response.Data.Sum(s => s.TotalAmount);
+            TotalSalesAmount = response.Data.Sum(s => s.BaseAmount);
             TotalItemsSold = response.Data.Sum(s => s.TotalCount);
+            CurrencyBreakdown = string.Join("  |  ", response.Data
+                .GroupBy(s => string.IsNullOrWhiteSpace(s.CurrencyCode) ? "—" : s.CurrencyCode)
+                .OrderBy(g => g.Key)
+                .Select(g => $"{g.Key}: {g.Sum(x => x.TotalAmount):N2}"));
             TotalCount = response.Data.Count;
             TotalPages = PageSize > 0
                 ? Math.Max(1, (int)Math.Ceiling((double)TotalCount / PageSize))
@@ -268,6 +274,91 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
             LoadSalesAsync(),
             LoadSalesSummaryAsync()
         );
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        SelectedCustomer = null;
+        CustomerSearchText = string.Empty;
+        BeginDate = DateTime.Today.AddDays(-7);
+        EndDate = DateTime.Today;
+    }
+
+    [RelayCommand]
+    private async Task ExportToExcel()
+    {
+        FilteringRequest request = new()
+        {
+            Page = 0,
+            PageSize = 0,
+            SortBy = "date",
+            Descending = true,
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["customer"] = ["include"],
+                ["saleItems"] = ["include:productType.product"]
+            }
+        };
+
+        if (SelectedCustomer is not null)
+            request.Filters["customerId"] = [SelectedCustomer.Id.ToString()];
+
+        var response = await client.Sales.Filter(request).Handle(isLoading => IsLoading = isLoading);
+
+        if (!response.IsSuccess || response.Data is null)
+        {
+            ErrorMessage = response.Message ?? "Ma'lumotlarni yuklashda xatolik.";
+            return;
+        }
+
+        var list = mapper.Map<List<SaleViewModel>>(response.Data);
+
+        if (list.Count == 0)
+        {
+            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Excel fayllari (*.xlsx)|*.xlsx",
+            FileName = $"Savdolar_{BeginDate:dd.MM.yyyy}-{EndDate:dd.MM.yyyy}.xlsx"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("Savdolar");
+        string[] headers = ["T/r", "Sana", "Mijoz", "Jami dona", "Summa", "Izoh"];
+
+        for (var i = 0; i < headers.Length; i++)
+            ws.Cell(1, i + 1).Value = headers[i];
+
+        ws.Range(1, 1, 1, headers.Length).Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.LightGray);
+
+        var row = 2;
+        var index = 1;
+        foreach (var sale in list)
+        {
+            ws.Cell(row, 1).Value = index++;
+            ws.Cell(row, 2).Value = sale.Date.ToString("dd.MM.yyyy");
+            ws.Cell(row, 3).Value = sale.Customer?.Name ?? "-";
+            ws.Cell(row, 4).Value = sale.TotalCount;
+            ws.Cell(row, 5).Value = sale.TotalAmount;
+            ws.Cell(row, 6).Value = sale.Note;
+            row++;
+        }
+
+        ws.Cell(row, 3).Value = "Jami:";
+        ws.Cell(row, 4).Value = list.Sum(s => s.TotalCount);
+        ws.Cell(row, 5).Value = list.Sum(s => s.TotalAmount);
+        ws.Range(row, 3, row, 5).Style.Font.SetBold();
+        ws.Columns().AdjustToContents();
+        workbook.SaveAs(dialog.FileName);
+        MessageBox.Show("Excel fayl muvaffaqiyatli saqlandi.", "Tayyor", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
 

@@ -40,7 +40,6 @@ public partial class SalePage : Page
     {
         btnBack.RegisterShortcut(Key.Escape);
         btnAdd.RegisterShortcut(Key.Add);
-        btnFilter.RegisterShortcut(Key.F, ModifierKeys.Control);
     }
 
     private void BtnBack_Click(object sender, RoutedEventArgs e)

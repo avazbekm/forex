@@ -51,10 +51,11 @@ public class CreateSaleCommandHandler(
             context.Sales.Add(sale);
             context.SaleItems.AddRange(saleItems);
 
-            var currencyCode = await context.Currencies
-                .Where(c => c.Id == sale.CurrencyId)
-                .Select(c => c.Code)
-                .FirstOrDefaultAsync(ct) ?? string.Empty;
+            var currency = await context.Currencies
+                .FirstOrDefaultAsync(c => c.Id == sale.CurrencyId, ct);
+            var currencyCode = currency?.Code ?? string.Empty;
+            var baseRate = currency is null || currency.IsDefault || currency.ExchangeRate == 0 ? 1m : currency.ExchangeRate;
+            sale.BaseAmount = sale.TotalAmount * baseRate;
 
             var description = await GenerateDescription(sale, currencyCode);
 

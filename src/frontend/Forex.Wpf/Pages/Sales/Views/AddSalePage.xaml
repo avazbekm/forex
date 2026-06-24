@@ -24,24 +24,74 @@
 		</Grid.RowDefinitions>
 
 		<Grid Grid.Row="0">
-			<TextBlock
-                HorizontalAlignment="Left"
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+				<Border
+                    Width="36"
+                    Height="36"
+                    Background="#E8EDFB"
+                    CornerRadius="10">
+					<md:PackIcon
+                        Width="20"
+                        Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="#3B5BDB"
+                        Kind="CartPlus" />
+				</Border>
+				<TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="#1F2937"
+                    Text="Savdo qo'shish" />
+			</StackPanel>
+
+			<Border
+                Padding="14,5"
+                HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                FontSize="18"
-                FontWeight="Bold"
-                Foreground="{DynamicResource PrimaryTextColor}"
-                Text="🛒 Savdo bo'limi" />
+                Background="#E8EDFB"
+                CornerRadius="9">
+				<StackPanel Orientation="Horizontal">
+					<md:PackIcon
+                        Width="16"
+                        Height="16"
+                        VerticalAlignment="Center"
+                        Foreground="#3B5BDB"
+                        Kind="CashMultiple" />
+					<TextBlock
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="#3B5BDB"
+                        Text="{Binding Customer.CurrencyCode, StringFormat='Savdo valyutasi: {0}', FallbackValue='Mijoz tanlang', TargetNullValue='Mijoz tanlang'}" />
+				</StackPanel>
+			</Border>
 
 			<Button
                 x:Name="btnBack"
-                Grid.Row="0"
+                Height="34"
+                Padding="14,0"
                 HorizontalAlignment="Right"
-                md:ButtonAssist.CornerRadius="5"
-                Background="{DynamicResource OtherBackground}"
-                BorderThickness="0"
+                VerticalAlignment="Center"
+                md:ButtonAssist.CornerRadius="9"
+                Background="White"
+                BorderBrush="#D9DEE7"
+                BorderThickness="1"
                 Click="BtnBack_Click"
-                Content="🔙 Orqaga"
-                ToolTip="Orqaga" />
+                Foreground="#475467"
+                ToolTip="Orqaga">
+				<StackPanel Orientation="Horizontal">
+					<md:PackIcon
+                        Width="16"
+                        Height="16"
+                        VerticalAlignment="Center"
+                        Kind="ArrowLeft" />
+					<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Orqaga" />
+				</StackPanel>
+			</Button>
 		</Grid>
 
 		<Grid Grid.Row="1">
@@ -232,6 +282,32 @@
                     IsReadOnly="True"
                     IsTabStop="False"
                     Text="{Binding Customer.Phone}" />
+
+				<TextBlock
+                    Grid.Row="4"
+                    VerticalAlignment="Center"
+                    Text="Kurs (so'm):"
+                    Visibility="{Binding IsForeignCurrency, Converter={StaticResource BoolToVisibilityConverter}}" />
+				<Border
+                    Grid.Row="4"
+                    Grid.Column="1"
+                    Width="110"
+                    Height="26"
+                    Margin="2"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    BorderBrush="{DynamicResource PrimaryTextColor}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Visibility="{Binding IsForeignCurrency, Converter={StaticResource BoolToVisibilityConverter}}">
+					<TextBox
+                        Padding="4,0"
+                        VerticalContentAlignment="Center"
+                        BorderThickness="0"
+                        FontSize="12"
+                        Text="{Binding ExchangeRate, StringFormat={}{0:N0}, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
+                        TextAlignment="Right" />
+				</Border>
 			</Grid>
 		</Grid>
 
@@ -296,8 +372,8 @@
                 x:Name="tbxUnitPrice"
                 Grid.Column="5"
                 Margin="2,0"
-                Label="Narxi"
-                Text="{Binding CurrentSaleItem.UnitPrice, UpdateSourceTrigger=PropertyChanged}" />
+                Label="{Binding Customer.CurrencyCode, StringFormat='Narxi ({0})', FallbackValue='Narxi', TargetNullValue='Narxi'}"
+                Text="{Binding CurrentSaleItem.UnitPrice, UpdateSourceTrigger=LostFocus}" />
 
 			<controls:FloatingInput
                 x:Name="tbxQuantity"
@@ -314,7 +390,7 @@
                 Margin="2,0,8,0"
                 IsEnabled="False"
                 Focusable="False"
-                Label="Jami summa"
+                Label="{Binding Customer.CurrencyCode, StringFormat='Jami summa ({0})', FallbackValue='Jami summa', TargetNullValue='Jami summa'}"
                 Text="{Binding CurrentSaleItem.Amount, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
 
 			<Grid Grid.Column="8" HorizontalAlignment="Right">
@@ -326,27 +402,40 @@
 				<Button
                     x:Name="btnCancel"
                     Grid.Column="0"
-                    Height="30"
+                    Height="32"
                     Margin="2,0"
-                    Padding="10,0"
-                    md:ButtonAssist.CornerRadius="4"
-                    Background="#FF5252"
+                    Padding="14,0"
+                    md:ButtonAssist.CornerRadius="9"
+                    Background="White"
+                    BorderBrush="#E11D48"
+                    BorderThickness="1"
                     Command="{Binding CancelEditCommand}"
-                    Content="Bekor qilish"
                     FontSize="14"
-                    Visibility="{Binding IsEditingItem, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Foreground="#E11D48"
+                    Visibility="{Binding IsEditingItem, Converter={StaticResource BoolToVisibilityConverter}}">
+					<StackPanel Orientation="Horizontal">
+						<md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Close" />
+						<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Bekor" />
+					</StackPanel>
+				</Button>
 
 				<Button
                     x:Name="btnAdd"
                     Grid.Column="1"
-                    Height="30"
+                    Height="32"
                     Margin="2,0"
-                    Padding="10,0"
-                    md:ButtonAssist.CornerRadius="4"
-                    Background="{DynamicResource OtherBackground}"
+                    Padding="16,0"
+                    md:ButtonAssist.CornerRadius="9"
+                    Background="#16A34A"
+                    BorderThickness="0"
                     Command="{Binding AddCommand}"
-                    Content="Qo'shish"
-                    FontSize="14" />
+                    FontSize="14"
+                    Foreground="White">
+					<StackPanel Orientation="Horizontal">
+						<md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Plus" />
+						<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Qo'shish" />
+					</StackPanel>
+				</Button>
 			</Grid>
 		</Grid>
 
@@ -472,29 +561,15 @@
                                                 VerticalAlignment="Center"
                                                 Orientation="Horizontal">
 												<Button
-                                                    Width="30"
-                                                    Height="26"
-                                                    Margin="2,0"
-                                                    Padding="0"
-                                                    Background="#FFB300"
                                                     Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    FontSize="12"
-                                                    FontWeight="Bold"
-                                                    Foreground="White"
+                                                    Style="{StaticResource EditActionButton}"
                                                     ToolTip="Tahrirlash">
 													<md:PackIcon Width="16" Height="16" Kind="Pencil" />
 												</Button>
 												<Button
-                                                    Width="30"
-                                                    Height="26"
-                                                    Margin="2,0"
-                                                    Padding="0"
-                                                    Background="#D32F2F"
                                                     Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                     CommandParameter="{Binding}"
-                                                    FontSize="12"
-                                                    FontWeight="Bold"
-                                                    Foreground="White"
+                                                    Style="{StaticResource DeleteActionButton}"
                                                     ToolTip="O'chirish">
 													<md:PackIcon Width="16" Height="16" Kind="Delete" />
 												</Button>
@@ -509,50 +584,85 @@
 			</DataGrid>
 		</Grid>
 
-        <StackPanel
-            Grid.Row="4"
-            HorizontalAlignment="Center"
-            Orientation="Horizontal"
-            VerticalAlignment="Center">
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-            <TextBlock Text="Qatorlar: " FontWeight="Bold" Margin="0,0,5,0"/>
-            <TextBlock Text="{Binding TotalRowsCount}" Margin="0,0,15,0"/>
-
-            <TextBlock Text="Turli mahsulotlar: " FontWeight="Bold" Margin="0,0,5,0"/>
-            <TextBlock Text="{Binding DistinctProductsCount}" Margin="0,0,15,0"/>
-
-            <TextBlock Text="Jami qoplar: " FontWeight="Bold" Margin="0,0,5,0"/>
-            <TextBlock Text="{Binding TotalBundlesCount}" Margin="0,0,15,0"/>
-
-            <TextBlock Text="Jami soni: " FontWeight="Bold" Margin="0,0,5,0"/>
-            <TextBlock Text="{Binding TotalQuantityCount}"/>
-        </StackPanel>
+        <Grid Grid.Column="0" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Margin="0,0,8,0" Padding="14,8" Background="#EEF2FF" CornerRadius="10">
+                <StackPanel>
+                    <TextBlock FontSize="11" Foreground="#6470B0" Text="Qatorlar" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#3949AB" Text="{Binding TotalRowsCount}" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Margin="0,0,8,0" Padding="14,8" Background="#E6FBF6" CornerRadius="10">
+                <StackPanel>
+                    <TextBlock FontSize="11" Foreground="#0F9488" Text="Turli mahsulot" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#0D8276" Text="{Binding DistinctProductsCount}" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Margin="0,0,8,0" Padding="14,8" Background="#FFF6E6" CornerRadius="10">
+                <StackPanel>
+                    <TextBlock FontSize="11" Foreground="#B7791F" Text="Jami qoplar" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#A66A12" Text="{Binding TotalBundlesCount}" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Padding="14,8" Background="#E9F8EE" CornerRadius="10">
+                <StackPanel>
+                    <TextBlock FontSize="11" Foreground="#2E8B57" Text="Jami soni" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#1B7A3E" Text="{Binding TotalQuantityCount}" />
+                </StackPanel>
+            </Border>
+        </Grid>
 
 		<StackPanel
-            Grid.Row="4"
-            HorizontalAlignment="Right"
+            Grid.Column="1"
+            VerticalAlignment="Center"
             Orientation="Horizontal">
 
 			<Button
                 x:Name="btnClear"
+                Height="36"
                 Margin="0,0,10,0"
-                md:ElevationAssist.Elevation="Dp24"
-                Background="#FF5722"
-                BorderBrush="#FF5722"
+                Padding="16,0"
+                md:ButtonAssist.CornerRadius="9"
+                Background="White"
+                BorderBrush="#E11D48"
+                BorderThickness="1"
                 Command="{Binding ClearSaleCommand}"
-                Content="Tozalash"
-                Foreground="White"
-                ToolTip="Barcha ma'lumotlarni tozalash" />
+                Foreground="#E11D48"
+                ToolTip="Barcha ma'lumotlarni tozalash">
+				<StackPanel Orientation="Horizontal">
+					<md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="DeleteSweepOutline" />
+					<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Tozalash" />
+				</StackPanel>
+			</Button>
 
 			<Button
                 x:Name="btnSubmit"
-                md:ElevationAssist.Elevation="Dp24"
-                Background="{StaticResource SuccessButtonBackground}"
-                BorderBrush="{StaticResource SuccessButtonBorder}"
+                Height="36"
+                Padding="22,0"
+                md:ButtonAssist.CornerRadius="9"
+                md:ElevationAssist.Elevation="Dp2"
+                Background="#16A34A"
+                BorderThickness="0"
                 Command="{Binding SubmitCommand}"
-                Content="Yuborish"
-                Foreground="{StaticResource SuccessButtonForeground}" />
+                Foreground="White">
+				<StackPanel Orientation="Horizontal">
+					<md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Check" />
+					<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Yuborish" />
+				</StackPanel>
+			</Button>
 		</StackPanel>
+		</Grid>
 
 		<Grid
             Grid.RowSpan="5"
