@@ -167,6 +167,7 @@ public partial class UserPage : Page
                 MessageBox.Show("Muvaffaqiyatli yangilandi.", "Ok", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadUsers();
                 ClearForm();
+                brUserForm.Visibility = Visibility.Collapsed;
             }
         }
         catch (Exception ex)
@@ -551,8 +552,16 @@ public partial class UserPage : Page
 
         if (result == MessageBoxResult.Yes)
         {
+            brUserForm.Visibility = Visibility.Visible;
             LoadingUser(user.Id);
         }
+    }
+
+    private void BtnAddUser_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new UserWindow { AllowRoleSelection = true, Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() == true)
+            LoadUsers();
     }
 
     [RelayCommand]
@@ -715,6 +724,7 @@ public partial class UserPage : Page
         btnUpdate.Visibility = Visibility.Collapsed;
         btnCancel.Visibility = Visibility.Collapsed;
         btnSave.Visibility = GetSaveButtonVisibility();
+        brUserForm.Visibility = Visibility.Collapsed;
         currentUser = null!;
     }
 }

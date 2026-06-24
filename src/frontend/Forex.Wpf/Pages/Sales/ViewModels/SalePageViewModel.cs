@@ -18,19 +18,14 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
 {
     private readonly ForexClient client = App.AppHost!.Services.GetRequiredService<ForexClient>();
     private readonly IMapper mapper = App.AppHost!.Services.GetRequiredService<IMapper>();
+    private bool _suppressCustomerReload;
 
     public SalePageViewModel()
     {
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(BeginDate) or nameof(EndDate))
-            {
-                CurrentPage = 1;
-                _ = Task.WhenAll(
-                    LoadSalesAsync(),
-                    LoadSalesSummaryAsync()
-                );
-            }
+                _ = OnDateRangeChangedAsync();
         };
 
         _ = LoadDataAsync();
@@ -135,25 +130,49 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
             );
     }
 
+    private async Task OnDateRangeChangedAsync()
+    {
+        CurrentPage = 1;
+        await LoadCustomersAsync();
+        await Task.WhenAll(LoadSalesAsync(), LoadSalesSummaryAsync());
+    }
+
     private async Task LoadCustomersAsync()
     {
         FilteringRequest request = new()
         {
+            Page = 0,
+            PageSize = 0,
             Filters = new()
             {
-                ["role"] = ["mijoz"]
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["customer"] = ["include"]
             }
         };
 
-        var response = await client.Users.Filter(request)
+        var response = await client.Sales.Filter(request)
             .Handle(isLoading => IsLoading = isLoading);
 
-        if (response.IsSuccess)
+        if (response.IsSuccess && response.Data is not null)
         {
-            AvailableCustomers = mapper.Map<ObservableCollection<UserViewModel>>(response.Data);
-            FilteredCustomers = new ObservableCollection<UserViewModel>(AvailableCustomers);
+            var customers = response.Data
+                .Where(s => s.Customer is not null)
+                .Select(s => s.Customer!)
+                .GroupBy(c => c.Id)
+                .Select(g => g.First())
+                .OrderBy(c => c.Name)
+                .ToList();
+
+            AvailableCustomers = mapper.Map<ObservableCollection<UserViewModel>>(customers);
+
+            _suppressCustomerReload = true;
+            var keepId = SelectedCustomer?.Id;
+            SelectedCustomer = keepId is null ? null : AvailableCustomers.FirstOrDefault(c => c.Id == keepId);
+            _suppressCustomerReload = false;
+
+            ApplyCustomerFilter();
         }
-        else
+        else if (!response.IsSuccess)
         {
             ErrorMessage = response.Message ?? "Mijozlarni yuklashda xatolik.";
         }
@@ -442,6 +461,7 @@ public partial class SalePageViewModel : ViewModelBase, INavigationAware
 
     partial void OnSelectedCustomerChanged(UserViewModel? value)
     {
+        if (_suppressCustomerReload) return;
         CurrentPage = 1;
         _ = Task.WhenAll(
             LoadSalesAsync(),

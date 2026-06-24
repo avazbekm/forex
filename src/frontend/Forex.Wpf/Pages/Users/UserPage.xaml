@@ -101,14 +101,16 @@
                 </Button>
             </Grid>
 
-            <!--  Add / edit form  -->
+            <!--  Edit form  -->
             <Border
+                x:Name="brUserForm"
                 Grid.Row="1"
                 Margin="0,14,0,0"
                 Padding="14,12"
                 Background="White"
                 CornerRadius="14"
-                md:ElevationAssist.Elevation="Dp2">
+                md:ElevationAssist.Elevation="Dp2"
+                Visibility="Collapsed">
                 <WrapPanel Orientation="Horizontal">
                     <Border
                         Width="120"
@@ -444,6 +446,34 @@
                                     FontSize="14" />
                             </Grid>
                         </Border>
+
+                        <Button
+                            x:Name="btnAddUser"
+                            Grid.Row="0"
+                            Height="34"
+                            Margin="0,0,0,10"
+                            Padding="14,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            md:ButtonAssist.CornerRadius="9"
+                            Background="#3B5BDB"
+                            BorderThickness="0"
+                            Click="BtnAddUser_Click"
+                            Foreground="White"
+                            ToolTip="Yangi foydalanuvchi qo'shish">
+                            <StackPanel Orientation="Horizontal">
+                                <md:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="AccountPlus" />
+                                <TextBlock
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="Qo'shish" />
+                            </StackPanel>
+                        </Button>
 
                         <DataGrid
                             x:Name="dgUsers"

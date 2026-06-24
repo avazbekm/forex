@@ -22,6 +22,7 @@ public partial class TransactionPageViewModel : ViewModelBase
 {
     private readonly ForexClient client;
     private readonly IMapper mapper;
+    private bool _suppressFilterReload;
 
     // Edit qilinayotgan tranzaksiyaning original qiymati
     private decimal _originalTransactionNetAmount = 0;
@@ -35,7 +36,7 @@ public partial class TransactionPageViewModel : ViewModelBase
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(BeginDate) or nameof(EndDate))
-                _ = LoadTransactionsAsync();
+                _ = OnDateRangeChangedAsync();
         };
 
         Transaction.PropertyChanged += OnTransactionPropertyChanged;
@@ -87,7 +88,11 @@ public partial class TransactionPageViewModel : ViewModelBase
         _ = LoadTransactionsAsync();
     }
     partial void OnSelectedPaymentMethodFilterChanged(PaymentMethodFilterOption value) => _ = LoadTransactionsAsync();
-    partial void OnSelectedFilterUserChanged(TransactionUserFilterOption value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedFilterUserChanged(TransactionUserFilterOption value)
+    {
+        if (_suppressFilterReload) return;
+        _ = LoadTransactionsAsync();
+    }
     partial void OnSelectedUserRoleFilterChanged(UserRoleFilterOption value) => _ = LoadTransactionsAsync();
 
     public static IEnumerable<PaymentMethod> AvailablePaymentMethods => Enum.GetValues<PaymentMethod>();
@@ -168,8 +173,52 @@ public partial class TransactionPageViewModel : ViewModelBase
         await Task.WhenAll(
             LoadUsersAsync(),
             LoadCurrenciesAsync(),
-            LoadTransactionsAsync()
+            LoadTransactionsAsync(),
+            LoadFilterPersonsAsync()
         );
+    }
+
+    private async Task OnDateRangeChangedAsync()
+    {
+        await LoadFilterPersonsAsync();
+        await LoadTransactionsAsync();
+    }
+
+    private async Task LoadFilterPersonsAsync()
+    {
+        FilteringRequest request = new()
+        {
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["user"] = ["include"],
+            }
+        };
+
+        var response = await client.Transactions.Filter(request).Handle();
+        if (response.IsSuccess && response.Data is not null)
+        {
+            var users = response.Data
+                .Where(t => t.User is not null)
+                .Select(t => t.User!)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Where(u => u.Username != "admin")
+                .OrderBy(u => u.Name)
+                .ToList();
+
+            var userVms = mapper.Map<List<UserViewModel>>(users);
+            var keepId = SelectedFilterUser?.User?.Id;
+
+            FilterPanelUserOptions = new ObservableCollection<TransactionUserFilterOption>(
+                new[] { TransactionUserFilterOption.All }.Concat(userVms.Select(TransactionUserFilterOption.FromUser)));
+
+            _suppressFilterReload = true;
+            SelectedFilterUser = keepId is null
+                ? TransactionUserFilterOption.All
+                : FilterPanelUserOptions.FirstOrDefault(o => o.User?.Id == keepId) ?? TransactionUserFilterOption.All;
+            _suppressFilterReload = false;
+        }
     }
 
     private async Task LoadTransactionsAsync()
@@ -272,8 +321,6 @@ public partial class TransactionPageViewModel : ViewModelBase
             AvailableUsers = mapper.Map<ObservableCollection<UserViewModel>>(filteredData);
             FilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
             FilterPanelFilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
-            FilterPanelUserOptions = new ObservableCollection<TransactionUserFilterOption>(
-                new[] { TransactionUserFilterOption.All }.Concat(AvailableUsers.OrderBy(u => u.Name).Select(TransactionUserFilterOption.FromUser)));
         }
         else
         {

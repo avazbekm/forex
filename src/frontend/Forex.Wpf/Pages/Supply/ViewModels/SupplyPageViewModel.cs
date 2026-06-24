@@ -25,6 +25,7 @@ public partial class SupplyPageViewModel : ViewModelBase
     private readonly IApiCurrency currenciesApi;
     private readonly IMapper mapper;
     private readonly List<SupplyViewModel> allSupplies = [];
+    private bool _suppressSupplyFilter;
 
     public SupplyPageViewModel(
         IApiSupplies suppliesApi,
@@ -116,10 +117,38 @@ public partial class SupplyPageViewModel : ViewModelBase
 
     partial void OnSelectedUserChanged(UserViewModel? value) => UserInput = value?.Name ?? string.Empty;
 
-    partial void OnFilterBeginDateChanged(DateTime value) => ApplySupplyFilters();
-    partial void OnFilterEndDateChanged(DateTime value) => ApplySupplyFilters();
-    partial void OnSelectedFilterUserChanged(UserFilterOption value) => ApplySupplyFilters();
+    partial void OnFilterBeginDateChanged(DateTime value) => RebuildFilterUsers();
+    partial void OnFilterEndDateChanged(DateTime value) => RebuildFilterUsers();
+    partial void OnSelectedFilterUserChanged(UserFilterOption value)
+    {
+        if (_suppressSupplyFilter) return;
+        ApplySupplyFilters();
+    }
     partial void OnSelectedCurrencyFilterChanged(CurrencyFilterOption value) => ApplySupplyFilters();
+
+    private void RebuildFilterUsers()
+    {
+        var usersInRange = allSupplies
+            .Where(s => s.Date.Date >= FilterBeginDate.Date && s.Date.Date <= FilterEndDate.Date)
+            .Select(s => s.User)
+            .Where(u => u is not null)
+            .GroupBy(u => u.Id)
+            .Select(g => g.First())
+            .OrderBy(u => u.Name)
+            .ToList();
+
+        var keepId = SelectedFilterUser.User?.Id;
+        AvailableFilterUsers = new ObservableCollection<UserFilterOption>(
+            new[] { UserFilterOption.All }.Concat(usersInRange.Select(UserFilterOption.FromUser)));
+
+        _suppressSupplyFilter = true;
+        SelectedFilterUser = keepId is null
+            ? UserFilterOption.All
+            : AvailableFilterUsers.FirstOrDefault(o => o.User?.Id == keepId) ?? UserFilterOption.All;
+        _suppressSupplyFilter = false;
+
+        ApplySupplyFilters();
+    }
 
     partial void OnEditingSupplyChanged(SupplyViewModel? value)
     {
@@ -141,13 +170,10 @@ public partial class SupplyPageViewModel : ViewModelBase
             LoadSuppliesAsync());
 
         AvailableUsers = AvailableSuppliers;
-        AvailableFilterUsers = new ObservableCollection<UserFilterOption>(
-            new[] { UserFilterOption.All }
-                .Concat(AvailableSuppliers.Concat(AvailableConsolidators).OrderBy(u => u.Name).Select(UserFilterOption.FromUser)));
         SelectedUser = AvailableUsers.FirstOrDefault();
         SelectedCurrency = GetDefaultCurrency(SelectedPartyType);
         SelectedCurrencyFilter = CurrencyFilterOption.All;
-        ApplySupplyFilters();
+        RebuildFilterUsers();
     }
 
     private async Task LoadCurrenciesAsync()
@@ -192,7 +218,7 @@ public partial class SupplyPageViewModel : ViewModelBase
         {
             allSupplies.Clear();
             allSupplies.AddRange(mapper.Map<List<SupplyViewModel>>(response.Data));
-            ApplySupplyFilters();
+            RebuildFilterUsers();
         }
         else
             WarningMessage = response.Message ?? "Ta'minot tarixini yuklashda xatolik.";

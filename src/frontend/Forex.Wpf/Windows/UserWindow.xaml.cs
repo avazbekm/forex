@@ -22,6 +22,29 @@ public partial class UserWindow : Window
     public UserViewModel? user;
     public UserRole Role { get; set; } = UserRole.Mijoz;
     public long AccountCurrencyId { get; set; }
+
+    public bool AllowRoleSelection
+    {
+        get => brRole.Visibility == Visibility.Visible;
+        set
+        {
+            lblRole.Visibility = brRole.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+            if (value && cbWindowRole.Items.Count == 0)
+            {
+                cbWindowRole.ItemsSource = new[]
+                {
+                    new RoleOption(UserRole.Mijoz, "Mijoz"),
+                    new RoleOption(UserRole.Hodim, "Hodim"),
+                    new RoleOption(UserRole.Taminotchi, "Ta'minotchi"),
+                    new RoleOption(UserRole.Vositachi, "Vositachi"),
+                };
+                cbWindowRole.DisplayMemberPath = nameof(RoleOption.Label);
+                cbWindowRole.SelectedIndex = 0;
+            }
+        }
+    }
+
+    private sealed record RoleOption(UserRole Role, string Label);
     public UserWindow()
     {
         InitializeComponent();
@@ -74,6 +97,9 @@ public partial class UserWindow : Window
     {
         try
         {
+            if (AllowRoleSelection && cbWindowRole.SelectedItem is RoleOption option)
+                Role = option.Role;
+
             var currencyId = (cbCurrency.SelectedItem as CurrencyResponse)?.Id ?? 0;
 
             if (currencyId == 0)
