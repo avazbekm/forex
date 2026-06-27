@@ -160,9 +160,7 @@ public class UpdateProductCommandHandler(
                         ProductId = product.Id,
                         Product = product,
                         Currency = defaultCurrency,
-                        ProductTypeItems = [],
-                        ProductEntries = [],
-                        EntryToProcesses = []
+                        ProductEntries = []
                     };
 
                     context.ProductTypes.Add(newType);
@@ -245,18 +243,6 @@ public class UpdateProductCommandHandler(
             throw new ForbiddenException(
                 "Bu turdagi mahsulot savdoda qatnashgan. O'chirib bo'lmaydi!");
 
-        // EntryToProcess
-        var entryToProcesses = await context.EntryToProcesses
-            .Where(e => e.ProductTypeId == productTypeId)
-            .ToListAsync(ct);
-        context.EntryToProcesses.RemoveRange(entryToProcesses);
-
-        // InProcess
-        var inProcesses = await context.InProcesses
-            .Where(p => p.ProductTypeId == productTypeId)
-            .ToListAsync(ct);
-        context.InProcesses.RemoveRange(inProcesses);
-
         // ProductEntry
         var entries = await context.ProductEntries
             .Where(e => e.ProductTypeId == productTypeId)
@@ -268,12 +254,6 @@ public class UpdateProductCommandHandler(
             .Where(r => r.ProductTypeId == productTypeId)
             .ToListAsync(ct);
         context.ProductResidues.RemoveRange(residues);
-
-        // ProductTypeItem
-        var typeItems = await context.ProductTypeItems
-            .Where(ti => ti.ProductTypeId == productTypeId)
-            .ToListAsync(ct);
-        context.ProductTypeItems.RemoveRange(typeItems);
 
         // ProductType
         var productType = await context.ProductTypes

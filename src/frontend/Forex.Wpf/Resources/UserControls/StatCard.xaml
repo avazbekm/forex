@@ -1,0 +1,36 @@
+<UserControl
+    x:Class="Forex.Wpf.Resources.UserControls.StatCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Forex.Wpf.Resources.UserControls">
+    <Border
+        Margin="0,0,12,0"
+        Padding="20,14"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Background="{Binding CardBackground, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+        CornerRadius="12">
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock
+                FontSize="13"
+                FontWeight="Medium"
+                Foreground="{Binding TitleBrush, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+                Text="{Binding Title, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                Margin="0,4,0,0"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="{Binding Accent, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+                Text="{Binding Value, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+                TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                Margin="0,3,0,0"
+                FontSize="11"
+                Foreground="{Binding TitleBrush, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+                Text="{Binding Caption, RelativeSource={RelativeSource AncestorType=local:StatCard}}"
+                TextTrimming="CharacterEllipsis"
+                Visibility="{Binding CaptionVisibility, RelativeSource={RelativeSource AncestorType=local:StatCard}}" />
+        </StackPanel>
+    </Border>
+</UserControl>

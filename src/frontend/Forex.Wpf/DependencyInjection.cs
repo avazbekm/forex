@@ -63,7 +63,6 @@ public static class DependencyInjection
             provider.GetRequiredService<INavigationService>(),
             provider.GetRequiredService<SalesHistoryReportViewModel>(),
             provider.GetRequiredService<FinishedStockReportViewModel>(),
-            provider.GetRequiredService<SemiFinishedStockReportViewModel>(),
             provider.GetRequiredService<DebtorCreditorReportViewModel>(),
             provider.GetRequiredService<EmployeeBalanceReportViewModel>(),
             provider.GetRequiredService<CustomerTurnoverReportViewModel>(),
@@ -81,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IMapper, ServiceMapper>();
         services.AddSingleton<CommonReportDataService>();
         services.AddSingleton<SaleSessionService>();
+        services.AddSingleton<ReturnSessionService>();
         services.AddSingleton<INavigationService>(sp =>
         {
             var mainWindow = (MainWindow)Application.Current.MainWindow!;

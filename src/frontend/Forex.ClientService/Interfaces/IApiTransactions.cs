@@ -21,4 +21,10 @@ public interface IApiTransactions
 
     [Post("/api/transactions/filter")]
     Task<Response<List<TransactionResponse>>> Filter(FilteringRequest request);
+
+    [Get("/api/transactions/unlinked")]
+    Task<Response<List<UnlinkedPaymentResponse>>> GetUnlinked(long userId, DateTime date, long? saleId = null);
+
+    [Post("/api/transactions/link-to-sale")]
+    Task<Response<bool>> LinkToSale(LinkPaymentsToSaleRequest request);
 }

@@ -1,0 +1,33 @@
+# ============================================================
+# rclone konfiguratsiyasi NAMUNASI (backup tashqi manzili)
+# ============================================================
+# Bu faylni `rclone.conf` deb nusxalang va o'z kalitlaringizni kiriting.
+# `.env` dagi RCLONE_REMOTE qiymati shu yerdagi [bo'lim] nomiga mos kelishi kerak.
+#
+#   cp rclone.conf.example rclone.conf
+#
+# rclone qo'llab-quvvatlaydigan barcha remote'lar: https://rclone.org/docs/
+# Sozlamani interaktiv yaratish ham mumkin:  rclone config
+
+# ── Misol 1: Google Drive ─────────────────────────────────────────────
+# RCLONE_REMOTE=gdrive
+[gdrive]
+type = drive
+scope = drive
+token = {"access_token":"...","refresh_token":"...","expiry":"..."}
+
+# ── Misol 2: S3-mos xotira (AWS S3 / Backblaze B2 / MinIO) ─────────────
+# RCLONE_REMOTE=s3
+# [s3]
+# type = s3
+# provider = AWS
+# access_key_id = SIZNING_ACCESS_KEY
+# secret_access_key = SIZNING_SECRET_KEY
+# region = us-east-1
+
+# ── Misol 3: Backblaze B2 ─────────────────────────────────────────────
+# RCLONE_REMOTE=b2
+# [b2]
+# type = b2
+# account = SIZNING_KEY_ID
+# key = SIZNING_APPLICATION_KEY

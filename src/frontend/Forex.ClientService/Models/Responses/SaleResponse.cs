@@ -4,11 +4,13 @@ public sealed record SaleResponse
 {
     public long Id { get; set; }
     public DateTime Date { get; set; }
-    public decimal CostPrice { get; set; }
-    public decimal BenifitPrice { get; set; }
     public int TotalCount { get; set; }
     public decimal TotalAmount { get; set; }
+    public decimal BaseAmount { get; set; }
     public string? Note { get; set; }
+
+    public long CurrencyId { get; set; }
+    public string? CurrencyCode { get; set; }
 
     public long OperationRecordId { get; set; }
     public OperationRecordResponse OperationRecord { get; set; } = default!;

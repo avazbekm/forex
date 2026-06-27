@@ -2,11 +2,13 @@
     x:Class="Forex.Wpf.Pages.Home.HomePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:charts="clr-namespace:Forex.Wpf.Resources.Charts"
     xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Forex.Wpf.Pages.Home"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:svc="clr-namespace:Forex.Wpf.Common.Services"
     Title="HomePage"
     d:DesignHeight="580"
     d:DesignWidth="810"
@@ -14,6 +16,7 @@
 
     <Grid Background="{DynamicResource PrimaryBackground}">
         <!--  Main Content  -->
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel x:Name="mainContent">
             <!--  Modern Navbar  -->
             <Border
@@ -156,7 +159,7 @@
                     MinWidth="220"
                     Margin="10"
                     md:ElevationAssist.Elevation="Dp16"
-                    Background="White"
+                    Background="{DynamicResource SurfaceCard}"
                     BorderBrush="#FFE0E0E0"
                     BorderThickness="1"
                     CornerRadius="10">
@@ -177,12 +180,12 @@
                                 <TextBlock
                                     FontSize="14"
                                     FontWeight="SemiBold"
-                                    Foreground="#FF212121"
+                                    Foreground="{DynamicResource InkPrimary}"
                                     Text="{Binding FullName}" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="12"
-                                    Foreground="#FF757575"
+                                    Foreground="{DynamicResource InkMuted}"
                                     Text="{Binding Username}" />
                             </StackPanel>
                         </StackPanel>
@@ -219,7 +222,7 @@
                                     Margin="12,0,0,0"
                                     VerticalAlignment="Center"
                                     FontSize="14"
-                                    Foreground="#FF212121"
+                                    Foreground="{DynamicResource InkPrimary}"
                                     Text="Profilni tahrirlash" />
                             </StackPanel>
                         </Button>
@@ -247,13 +250,13 @@
                                     Width="20"
                                     Height="20"
                                     VerticalAlignment="Center"
-                                    Foreground="#FF757575"
+                                    Foreground="{DynamicResource InkMuted}"
                                     Kind="Settings" />
                                 <TextBlock
                                     Margin="12,0,0,0"
                                     VerticalAlignment="Center"
                                     FontSize="14"
-                                    Foreground="#FF212121"
+                                    Foreground="{DynamicResource InkPrimary}"
                                     Text="Sozlamalar" />
                             </StackPanel>
                         </Button>
@@ -308,7 +311,7 @@
                 <Border
                     Padding="12"
                     md:ElevationAssist.Elevation="Dp8"
-                    Background="White"
+                    Background="{DynamicResource SurfaceCard}"
                     BorderBrush="#FFE0E0E0"
                     BorderThickness="1"
                     CornerRadius="8">
@@ -335,6 +338,22 @@
                 </Button>
 
                 <Button
+                    x:Name="btnReturn"
+                    Height="120"
+                    MinWidth="220"
+                    Margin="10"
+                    md:ButtonAssist.CornerRadius="10"
+                    md:ElevationAssist.Elevation="Dp24"
+                    Background="#FFEF6C00"
+                    Click="BtnReturn_Click"
+                    FontSize="24"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource MainMenuTextColor}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
+                    ↩️ Qaytarish
+                </Button>
+
+                <Button
                     x:Name="btnCash"
                     Height="120"
                     MinWidth="220"
@@ -347,7 +366,7 @@
                     FontWeight="Medium"
                     Foreground="{DynamicResource MainMenuTextColor}"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
-                    O'tkazmalar
+					💰 To'lov
                 </Button>
 
                 <Button
@@ -379,11 +398,7 @@
                     FontWeight="Medium"
                     Foreground="{DynamicResource MainMenuTextColor}"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center">📦</TextBlock>
-                        <TextBlock TextAlignment="Center" TextWrapping="Wrap">
-                            Ta'minot</TextBlock>
-                    </StackPanel>
+                    📦 Ta'minot
                 </Button>
 
                 <Button
@@ -436,7 +451,124 @@
 
 
             </WrapPanel>
+
+            <!--  Dashboard  -->
+            <StackPanel x:Name="dashboardRoot" Margin="35,0,35,30">
+                <Grid
+                    Margin="0,0,0,14"
+                    Visibility="{Binding AnyDashboardVisible, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="#3B5BDB" Kind="ViewDashboardOutline" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource InkPrimary}" Text="Boshqaruv paneli" />
+                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource InkFaint}" Text="{Binding PeriodLabel}" />
+                    </StackPanel>
+
+                    <Border
+                        Padding="3"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource SurfaceChip}"
+                        CornerRadius="9">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="chipDay" Width="58" Click="Chip_Click" Style="{StaticResource ViewToggleButton}" Tag="Day">
+                                <TextBlock FontSize="12.5" Text="Kun" />
+                            </Button>
+                            <Button x:Name="chipWeek" Width="64" Click="Chip_Click" Style="{StaticResource ViewToggleButton}" Tag="Week">
+                                <TextBlock FontSize="12.5" Text="Xafta" />
+                            </Button>
+                            <Button x:Name="chipMonth" Width="58" Click="Chip_Click" Style="{StaticResource ViewToggleButton}" Tag="Month">
+                                <TextBlock FontSize="12.5" Text="Oy" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <UniformGrid
+                    Margin="0,0,0,14"
+                    Rows="1"
+                    Visibility="{Binding ShowDashboardStats, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <controls:StatCard Accent="#1B7A3E" CardBackground="#E9F8EE" Title="Savdo (so'm)" TitleBrush="#2E8B57" Value="{Binding RangeSales, StringFormat=N0}" />
+                    <controls:StatCard Accent="#3949AB" CardBackground="#EEF2FF" Title="Savdolar" TitleBrush="#6470B0" Value="{Binding RangeCount}" />
+                    <controls:StatCard Accent="#A66A12" CardBackground="#FFF6E6" Title="Sotilgan juft" TitleBrush="#B7791F" Value="{Binding RangePairs, StringFormat=N0}" />
+                    <controls:StatCard Accent="#B43E7C" CardBackground="#FDECF3" Title="O'rtacha savdo (so'm)" TitleBrush="#C0568A" Value="{Binding AvgSale, StringFormat=N0}" />
+                </UniformGrid>
+
+                <Border
+                    Height="260"
+                    Margin="0,0,0,14"
+                    Padding="16"
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Visibility="{Binding ShowSalesTrend, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="#3B5BDB" Kind="ChartLine" />
+                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource InkPrimary}" Text="Savdo va to'lovlar dinamikasi (so'm)" />
+                        </StackPanel>
+                        <charts:LineChart Grid.Row="1" Margin="0,10,0,0" Data="{Binding SalesTrend}" />
+                    </Grid>
+                </Border>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Grid.Column="0"
+                        Height="250"
+                        Padding="16"
+                        Background="{DynamicResource SurfaceCard}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        Visibility="{Binding ShowTopCustomers, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="#673AB7" Kind="AccountStar" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource InkPrimary}" Text="Top mijozlar (so'm)" />
+                            </StackPanel>
+                            <charts:BarChart Grid.Row="1" Margin="0,10,0,0" Accent="#673AB7" Points="{Binding TopCustomers}" />
+                        </Grid>
+                    </Border>
+
+                    <Border
+                        Grid.Column="2"
+                        Height="250"
+                        Padding="16"
+                        Background="{DynamicResource SurfaceCard}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        Visibility="{Binding ShowTopProducts, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="#15803D" Kind="ShoeSneaker" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource InkPrimary}" Text="Top mahsulotlar (juft)" />
+                            </StackPanel>
+                            <charts:BarChart Grid.Row="1" Margin="0,10,0,0" Accent="#15803D" Points="{Binding TopProducts}" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </StackPanel>
         </StackPanel>
+        </ScrollViewer>
 
         <!--  Profile Edit Modal Overlay  -->
         <Grid
@@ -477,7 +609,7 @@
                                 Padding="20"
                                 HorizontalAlignment="Center"
                                 md:ElevationAssist.Elevation="Dp4"
-                                Background="White"
+                                Background="{DynamicResource SurfaceCard}"
                                 CornerRadius="15">
                                 <Grid
                                     x:Name="avatarContainer"
@@ -552,7 +684,7 @@
                             <Border
                                 Padding="20"
                                 md:ElevationAssist.Elevation="Dp4"
-                                Background="White"
+                                Background="{DynamicResource SurfaceCard}"
                                 CornerRadius="12">
                                 <StackPanel>
                                     <!--  Full Name  -->
@@ -597,27 +729,27 @@
                                         Margin="0,0,0,10"
                                         FontSize="14"
                                         FontWeight="SemiBold"
-                                        Foreground="#FF757575"
+                                        Foreground="{DynamicResource InkMuted}"
                                         Text="Parolni o'zgartirish" />
 
                                     <PasswordBox
                                         x:Name="pwdNewPassword"
                                         Margin="0,0,0,10"
                                         Padding="10"
-                                        md:HintAssist.Foreground="Gray"
+                                        md:HintAssist.Foreground="{DynamicResource InkMuted}"
                                         md:HintAssist.Hint="Yangi parol (ixtiyoriy)"
                                         md:TextFieldAssist.HasClearButton="True"
-                                        BorderBrush="Gray"
+                                        BorderBrush="{DynamicResource HairlineBorder}"
                                         Style="{StaticResource MaterialDesignOutlinedRevealPasswordBox}" />
 
                                     <PasswordBox
                                         x:Name="pwdConfirmPassword"
                                         Margin="0,0,0,5"
                                         Padding="10"
-                                        md:HintAssist.Foreground="Gray"
+                                        md:HintAssist.Foreground="{DynamicResource InkMuted}"
                                         md:HintAssist.Hint="Parolni tasdiqlash"
                                         md:TextFieldAssist.HasClearButton="True"
-                                        BorderBrush="Gray"
+                                        BorderBrush="{DynamicResource HairlineBorder}"
                                         Style="{StaticResource MaterialDesignOutlinedRevealPasswordBox}" />
                                 </StackPanel>
                             </Border>

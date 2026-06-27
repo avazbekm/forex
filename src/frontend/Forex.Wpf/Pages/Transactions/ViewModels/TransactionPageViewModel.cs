@@ -22,6 +22,7 @@ public partial class TransactionPageViewModel : ViewModelBase
 {
     private readonly ForexClient client;
     private readonly IMapper mapper;
+    private bool _suppressFilterReload;
 
     // Edit qilinayotgan tranzaksiyaning original qiymati
     private decimal _originalTransactionNetAmount = 0;
@@ -35,7 +36,7 @@ public partial class TransactionPageViewModel : ViewModelBase
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(BeginDate) or nameof(EndDate))
-                _ = LoadTransactionsAsync();
+                _ = OnDateRangeChangedAsync();
         };
 
         Transaction.PropertyChanged += OnTransactionPropertyChanged;
@@ -59,6 +60,19 @@ public partial class TransactionPageViewModel : ViewModelBase
     [ObservableProperty] private TransactionTypeFilter selectedTransactionType = TransactionTypeFilter.All;
 
     public static IEnumerable<TransactionTypeFilter> TransactionTypes => Enum.GetValues<TransactionTypeFilter>();
+
+    public IReadOnlyList<TransactionTypeOption> TransactionTypeOptions { get; } =
+    [
+        new(TransactionTypeFilter.All, "Barchasi"),
+        new(TransactionTypeFilter.Income, "Kirim"),
+        new(TransactionTypeFilter.Expense, "Chiqim")
+    ];
+
+    public TransactionTypeOption SelectedTransactionTypeOption
+    {
+        get => TransactionTypeOptions.First(o => o.Value == SelectedTransactionType);
+        set => SelectedTransactionType = value.Value;
+    }
     public IReadOnlyList<UserRoleFilterOption> UserRoleFilterOptions { get; } =
     [
         UserRoleFilterOption.All,
@@ -68,9 +82,17 @@ public partial class TransactionPageViewModel : ViewModelBase
         new(UserRole.Hodim, "Hodim")
     ];
 
-    partial void OnSelectedTransactionTypeChanged(TransactionTypeFilter value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedTransactionTypeChanged(TransactionTypeFilter value)
+    {
+        OnPropertyChanged(nameof(SelectedTransactionTypeOption));
+        _ = LoadTransactionsAsync();
+    }
     partial void OnSelectedPaymentMethodFilterChanged(PaymentMethodFilterOption value) => _ = LoadTransactionsAsync();
-    partial void OnSelectedFilterUserChanged(TransactionUserFilterOption value) => _ = LoadTransactionsAsync();
+    partial void OnSelectedFilterUserChanged(TransactionUserFilterOption value)
+    {
+        if (_suppressFilterReload) return;
+        _ = LoadTransactionsAsync();
+    }
     partial void OnSelectedUserRoleFilterChanged(UserRoleFilterOption value) => _ = LoadTransactionsAsync();
 
     public static IEnumerable<PaymentMethod> AvailablePaymentMethods => Enum.GetValues<PaymentMethod>();
@@ -88,6 +110,7 @@ public partial class TransactionPageViewModel : ViewModelBase
     [ObservableProperty] private bool isIncomeEnabled = true;
     [ObservableProperty] private bool isExpenseEnabled = true;
     [ObservableProperty] private bool isDiscountEnabled = false;
+    [ObservableProperty] private bool isExchangeRateEnabled = true;
     [ObservableProperty] private decimal? totalAmountWithUserBalance;
     [ObservableProperty] private bool isDebtor;
     [ObservableProperty] private string submitButtonText = "To'lash";
@@ -150,8 +173,52 @@ public partial class TransactionPageViewModel : ViewModelBase
         await Task.WhenAll(
             LoadUsersAsync(),
             LoadCurrenciesAsync(),
-            LoadTransactionsAsync()
+            LoadTransactionsAsync(),
+            LoadFilterPersonsAsync()
         );
+    }
+
+    private async Task OnDateRangeChangedAsync()
+    {
+        await LoadFilterPersonsAsync();
+        await LoadTransactionsAsync();
+    }
+
+    private async Task LoadFilterPersonsAsync()
+    {
+        FilteringRequest request = new()
+        {
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["user"] = ["include"],
+            }
+        };
+
+        var response = await client.Transactions.Filter(request).Handle();
+        if (response.IsSuccess && response.Data is not null)
+        {
+            var users = response.Data
+                .Where(t => t.User is not null)
+                .Select(t => t.User!)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Where(u => u.Username != "admin")
+                .OrderBy(u => u.Name)
+                .ToList();
+
+            var userVms = mapper.Map<List<UserViewModel>>(users);
+            var keepId = SelectedFilterUser?.User?.Id;
+
+            FilterPanelUserOptions = new ObservableCollection<TransactionUserFilterOption>(
+                new[] { TransactionUserFilterOption.All }.Concat(userVms.Select(TransactionUserFilterOption.FromUser)));
+
+            _suppressFilterReload = true;
+            SelectedFilterUser = keepId is null
+                ? TransactionUserFilterOption.All
+                : FilterPanelUserOptions.FirstOrDefault(o => o.User?.Id == keepId) ?? TransactionUserFilterOption.All;
+            _suppressFilterReload = false;
+        }
     }
 
     private async Task LoadTransactionsAsync()
@@ -235,7 +302,15 @@ public partial class TransactionPageViewModel : ViewModelBase
 
     private async Task LoadUsersAsync()
     {
-        var response = await client.Users.GetAllAsync().Handle(isLoading => IsLoading = isLoading);
+        FilteringRequest usersRequest = new()
+        {
+            Filters = new()
+            {
+                ["accounts"] = ["include:currency"]
+            }
+        };
+
+        var response = await client.Users.Filter(usersRequest).Handle(isLoading => IsLoading = isLoading);
 
         if (response.IsSuccess)
         {
@@ -246,8 +321,6 @@ public partial class TransactionPageViewModel : ViewModelBase
             AvailableUsers = mapper.Map<ObservableCollection<UserViewModel>>(filteredData);
             FilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
             FilterPanelFilteredUsers = new ObservableCollection<UserViewModel>(AvailableUsers);
-            FilterPanelUserOptions = new ObservableCollection<TransactionUserFilterOption>(
-                new[] { TransactionUserFilterOption.All }.Concat(AvailableUsers.OrderBy(u => u.Name).Select(TransactionUserFilterOption.FromUser)));
         }
         else
         {
@@ -272,6 +345,7 @@ public partial class TransactionPageViewModel : ViewModelBase
             Transaction.Date = DateTime.Now;
 
         TransactionRequest request = mapper.Map<TransactionRequest>(Transaction);
+        request.ExchangeRate = IsSameAsSettlement() ? 1m : DirectionalRate() * GetSettlementRateToBase();
 
         if (IsEditing && Transaction.Id > 0)
         {
@@ -371,6 +445,18 @@ public partial class TransactionPageViewModel : ViewModelBase
             Transaction.Currency = AvailableCurrencies.FirstOrDefault(c => c.Id == selectedTransaction.CurrencyId)
                                   ?? selectedTransaction.Currency;
 
+            IsExchangeRateEnabled = !IsSameAsSettlement();
+            if (IsSameAsSettlement())
+            {
+                Transaction.ExchangeRate = 1m;
+            }
+            else
+            {
+                var settlementRate = GetSettlementRateToBase();
+                var directional = settlementRate != 0 ? (selectedTransaction.ExchangeRate ?? 1m) / settlementRate : 1m;
+                Transaction.ExchangeRate = directional >= 1m ? directional : (directional != 0 ? 1m / directional : 1m);
+            }
+
             // UI properties'ni o'rnatish
             if (Transaction.IsIncome)
             {
@@ -439,6 +525,19 @@ public partial class TransactionPageViewModel : ViewModelBase
         ApplyFilterPanelUserFilter(string.Empty);
     }
 
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        BeginDate = DateTime.Today.AddDays(-7);
+        EndDate = DateTime.Today;
+        SelectedUserRoleFilter = UserRoleFilterOption.All;
+        SelectedFilterUser = TransactionUserFilterOption.All;
+        SelectedTransactionType = TransactionTypeFilter.All;
+        SelectedPaymentMethodFilter = PaymentMethodFilterOption.All;
+        FilterPanelUserText = string.Empty;
+        ApplyFilterPanelUserFilter(string.Empty);
+    }
+
     private void OnTransactionPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
@@ -450,8 +549,10 @@ public partial class TransactionPageViewModel : ViewModelBase
                 OnExpenseChanged();
                 break;
             case nameof(Transaction.Discount):
-            case nameof(Transaction.User):
                 RecalculateTotalAmountWithUserBalance();
+                break;
+            case nameof(Transaction.User):
+                UpdateExchangeRateForSettlement();
                 break;
             case nameof(Transaction.ExchangeRate):
                 RecalculateAll();
@@ -483,6 +584,7 @@ public partial class TransactionPageViewModel : ViewModelBase
         IsIncomeEnabled = true;
         IsExpenseEnabled = true;
         IsDiscountEnabled = false;
+        IsExchangeRateEnabled = true;
 
         RecalculateAll();
     }
@@ -543,21 +645,57 @@ public partial class TransactionPageViewModel : ViewModelBase
 
     private void OnCurrencyChanged()
     {
-        if (Transaction.Currency is not null)
-        {
-            Transaction.Currency.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName == nameof(Transaction.Currency.ExchangeRate))
-                {
-                    Transaction.ExchangeRate = Transaction.Currency.ExchangeRate;
-                    RecalculateAll();
-                }
-            };
+        UpdateExchangeRateForSettlement();
+    }
 
-            Transaction.ExchangeRate = Transaction.Currency.ExchangeRate;
+    private void UpdateExchangeRateForSettlement()
+    {
+        if (Transaction.Currency is null)
+        {
+            RecalculateAll();
+            return;
+        }
+
+        if (IsSameAsSettlement())
+        {
+            IsExchangeRateEnabled = false;
+            Transaction.ExchangeRate = 1m;
+        }
+        else
+        {
+            IsExchangeRateEnabled = true;
+            Transaction.ExchangeRate = NaturalRate();
         }
 
         RecalculateAll();
+    }
+
+    private bool IsSameAsSettlement()
+        => Transaction.User is not null
+           && Transaction.Currency is not null
+           && Transaction.Currency.Id == Transaction.User.SettlementCurrencyId;
+
+    private static decimal GetRateToBase(CurrencyViewModel? currency)
+        => currency is null || currency.IsDefault || currency.ExchangeRate == 0 ? 1m : currency.ExchangeRate;
+
+    private decimal GetSettlementRateToBase()
+        => GetRateToBase(AvailableCurrencies.FirstOrDefault(c => c.Id == Transaction.User?.SettlementCurrencyId));
+
+    private bool PaymentIsHigher() => GetRateToBase(Transaction.Currency) >= GetSettlementRateToBase();
+
+    private decimal NaturalRate()
+    {
+        var pay = GetRateToBase(Transaction.Currency);
+        var settlement = GetSettlementRateToBase();
+        if (pay == 0 || settlement == 0)
+            return 1m;
+        return pay >= settlement ? pay / settlement : settlement / pay;
+    }
+
+    private decimal DirectionalRate()
+    {
+        var natural = (decimal)(Transaction.ExchangeRate > 0 ? Transaction.ExchangeRate : 1);
+        return PaymentIsHigher() ? natural : (natural != 0 ? 1m / natural : 0m);
     }
 
     private void RecalculateAll()
@@ -576,8 +714,7 @@ public partial class TransactionPageViewModel : ViewModelBase
 
         // Joriy tranzaksiya qiymati (IsIncome=true bo'lsa +, false bo'lsa -)
         decimal currentAmount = Transaction.Income ?? -(Transaction.Expense ?? 0);
-        decimal exchangeRate = (decimal)(Transaction.ExchangeRate > 0 ? Transaction.ExchangeRate : 1);
-        decimal currentNetAmount = currentAmount * exchangeRate;
+        decimal currentNetAmount = currentAmount * DirectionalRate();
         decimal discount = Transaction?.Discount ?? 0;
 
         decimal total;
@@ -722,3 +859,5 @@ public sealed record PaymentMethodFilterOption(PaymentMethod? Method, string Tex
 {
     public static PaymentMethodFilterOption All { get; } = new(null, "Barchasi");
 }
+
+public sealed record TransactionTypeOption(TransactionTypeFilter Value, string Text);

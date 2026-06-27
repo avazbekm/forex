@@ -61,6 +61,13 @@ public partial class SettingsPage : Page
             targetAction: () => tabControl.SelectedIndex = 3,
             tooltipText: "Server sozlamalari (F4)"
         );
+
+        ShortcutAttacher.RegisterShortcut(
+            targetElement: this,
+            key: Key.F5,
+            targetAction: () => tabControl.SelectedIndex = 4,
+            tooltipText: "Ko'rinish sozlamalari (F5)"
+        );
     }
 
     private void BtnBack_Click(object sender, RoutedEventArgs e)

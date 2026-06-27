@@ -1,6 +1,7 @@
 ﻿namespace Forex.Domain.Entities;
 
 using Forex.Domain.Commons;
+using Forex.Domain.Entities.Sales;
 using Forex.Domain.Enums;
 
 public class Transaction : Auditable
@@ -12,6 +13,10 @@ public class Transaction : Auditable
     public decimal Discount { get; set; }
     public PaymentMethod PaymentMethod { get; set; }
     public string? Description { get; set; }
+
+    // Bog'langan savdo (ixtiyoriy): to'lov qaysi savdoga tegishli ekani ID bilan belgilanadi.
+    public long? SaleId { get; set; }
+    public Sale? Sale { get; set; }
 
     public long ShopId { get; set; }
     public Shop Shop { get; set; } = default!;

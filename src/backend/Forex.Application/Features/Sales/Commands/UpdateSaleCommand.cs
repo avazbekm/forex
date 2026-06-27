@@ -32,8 +32,19 @@ public class UpdateSaleCommandHandler(
         try
         {
             var sale = await LoadSaleWithRelationsAsync(request.Id, ct);
+            var previousCustomerId = sale.CustomerId;
+            var previousDate = sale.Date;
 
             await RevertSaleEffectsAsync(sale, ct);
+
+            // Bog'lash faqat savdo sanasida qilingan to'lovlar uchun amal qiladi. Shuning uchun
+            // mijoz YOKI sana o'zgarsa, biriktirilgan to'lovlar uziladi (pul o'sha mijoz balansida
+            // qoladi, faqat savdoga bog'liqlik olib tashlanadi). Yangi sanadagi to'lovlarni
+            // keyin qaytadan biriktirish mumkin.
+            var customerChanged = request.CustomerId != previousCustomerId;
+            var dateChanged = request.Date.ToUtcSafe().Date != previousDate.Date;
+            if (customerChanged || dateChanged)
+                await UnlinkSalePaymentsAsync(sale.Id, ct);
 
             await ApplyNewSaleDataAsync(sale, request, ct);
 
@@ -59,9 +70,11 @@ public class UpdateSaleCommandHandler(
 
     private async Task RevertSaleEffectsAsync(Sale sale, CancellationToken ct)
     {
-        var userAccount = sale.Customer.Accounts.FirstOrDefault()
-            ?? throw new NotFoundException(nameof(UserAccount), nameof(sale.CustomerId), sale.CustomerId);
-        userAccount.Balance += sale.TotalAmount;
+        if (sale.OperationRecord is not null)
+        {
+            var account = await context.GetSettlementAccountAsync(sale.CustomerId, ct);
+            account.Balance -= sale.OperationRecord.Amount * sale.OperationRecord.Rate;
+        }
 
         var productTypeIds = sale.SaleItems.Select(si => si.ProductTypeId).Distinct().ToList();
         var productResidues = await LoadProductResiduesAsync(productTypeIds, ct);
@@ -71,16 +84,27 @@ public class UpdateSaleCommandHandler(
         sale.SaleItems.Clear();
     }
 
+    private async Task UnlinkSalePaymentsAsync(long saleId, CancellationToken ct)
+    {
+        var linked = await context.Transactions
+            .Where(t => t.SaleId == saleId && !t.IsDeleted)
+            .ToListAsync(ct);
+
+        foreach (var payment in linked)
+            payment.SaleId = null;
+    }
+
     private async Task ApplyNewSaleDataAsync(Sale sale, UpdateSaleCommand request, CancellationToken ct)
     {
-        var userAccount = await GetOrCreateUserAccountAsync(request.CustomerId, request.TotalAmount, ct);
-        userAccount.Balance -= request.TotalAmount;
+        var customer = await context.Users.FirstOrDefaultAsync(u => u.Id == request.CustomerId, ct)
+            ?? throw new NotFoundException(nameof(User), nameof(request.CustomerId), request.CustomerId);
 
         var productTypeIds = request.SaleItems.Select(i => i.ProductTypeId).Distinct().ToList();
         var productResidues = await LoadProductResiduesAsync(productTypeIds, ct);
 
         sale.Date = request.Date.ToUtcSafe();
         sale.CustomerId = request.CustomerId;
+        sale.CurrencyId = customer.SettlementCurrencyId;
         sale.TotalAmount = request.TotalAmount;
         sale.Note = request.Note;
 
@@ -92,32 +116,31 @@ public class UpdateSaleCommandHandler(
 
         sale.SaleItems = saleItems;
 
-        var description = await GenerateDescriptionAsync(saleItems, ct);
+        var currency = await context.Currencies
+            .FirstOrDefaultAsync(c => c.Id == sale.CurrencyId, ct);
+        var currencyCode = currency?.Code ?? string.Empty;
+        var baseRate = currency is null || currency.IsDefault || currency.ExchangeRate == 0 ? 1m : currency.ExchangeRate;
+        sale.BaseAmount = sale.TotalAmount * baseRate;
 
-        if (sale.OperationRecord is not null)
-        {
-            sale.OperationRecord.Amount = -sale.TotalAmount;
-            sale.OperationRecord.Date = sale.Date;
-            sale.OperationRecord.Description = description;
-            sale.OperationRecord.Type = OperationType.Sale;
-            sale.OperationRecord.UserId = sale.CustomerId;
-        }
-        else
-        {
-            sale.OperationRecord = new OperationRecord
-            {
-                Amount = -sale.TotalAmount,
-                Date = sale.Date,
-                Description = description,
-                Type = OperationType.Sale,
-                UserId = sale.CustomerId
-            };
-        }
+        var description = await GenerateDescriptionAsync(saleItems, currencyCode, ct);
+
+        var (rate, _) = await context.ApplyToSettlementAsync(
+            sale.CustomerId, sale.CurrencyId, 1m, -sale.TotalAmount, ct);
+
+        var record = sale.OperationRecord ?? new OperationRecord();
+        record.Amount = -sale.TotalAmount;
+        record.Rate = rate;
+        record.CurrencyId = sale.CurrencyId;
+        record.Date = sale.Date;
+        record.Description = description;
+        record.Type = OperationType.Sale;
+        record.UserId = sale.CustomerId;
+        sale.OperationRecord = record;
 
         context.Sales.Update(sale);
     }
 
-    private async Task<string> GenerateDescriptionAsync(List<SaleItem> saleItems, CancellationToken ct)
+    private async Task<string> GenerateDescriptionAsync(List<SaleItem> saleItems, string currencyCode, CancellationToken ct)
     {
         var text = new StringBuilder();
         var productTypeIds = saleItems.Select(i => i.ProductTypeId).ToList();
@@ -132,30 +155,10 @@ public class UpdateSaleCommandHandler(
             var productType = productTypes.FirstOrDefault(pt => pt.Id == item.ProductTypeId)
                 ?? throw new NotFoundException(nameof(ProductType), nameof(item.ProductTypeId), item.ProductTypeId);
 
-            text.AppendLine($"Kodi: {productType.Product.Code} ({productType.Type}), Soni: {item.TotalCount}, Narxi: {item.UnitPrice}, Jami: {item.Amount} UZS");
+            text.AppendLine($"Kodi: {productType.Product.Code} ({productType.Type}), Soni: {item.TotalCount}, Narxi: {item.UnitPrice}, Jami: {item.Amount} {currencyCode}");
         }
 
         return text.ToString();
-    }
-
-    private async Task<UserAccount> GetOrCreateUserAccountAsync(long customerId, decimal initialBalance, CancellationToken ct)
-    {
-        var user = await context.Users
-            .Include(u => u.Accounts)
-            .FirstOrDefaultAsync(u => u.Id == customerId, ct)
-            ?? throw new NotFoundException(nameof(User), nameof(customerId), customerId);
-
-        var account = user.Accounts.FirstOrDefault();
-        if (account is not null) return account;
-
-        var newAccount = new UserAccount
-        {
-            UserId = user.Id,
-            Balance = initialBalance
-        };
-
-        context.UserAccounts.Add(newAccount);
-        return newAccount;
     }
 
     private async Task<List<ProductResidue>> LoadProductResiduesAsync(List<long> productTypeIds, CancellationToken ct)
@@ -180,7 +183,6 @@ public class UpdateSaleCommandHandler(
                 ?? throw new NotFoundException(nameof(ProductEntry), nameof(residue.ProductTypeId), residue.ProductTypeId);
 
             var totalCount = cmd.BundleCount * entry.BundleItemCount;
-            var benifit = (cmd.UnitPrice - entry.UnitPrice) * totalCount;
 
             items.Add(new SaleItem
             {
@@ -189,8 +191,6 @@ public class UpdateSaleCommandHandler(
                 TotalCount = totalCount,
                 UnitPrice = cmd.UnitPrice,
                 Amount = cmd.Amount,
-                CostPrice = entry.UnitPrice * totalCount,
-                Benifit = benifit,
                 ProductTypeId = cmd.ProductTypeId,
                 Sale = sale
             });
@@ -230,8 +230,6 @@ public class UpdateSaleCommandHandler(
 
     private static void CalculateSaleTotals(Sale sale, List<SaleItem> items)
     {
-        sale.CostPrice = items.Sum(s => s.CostPrice);
-        sale.BenifitPrice = items.Sum(s => s.Benifit);
         sale.TotalCount = items.Sum(s => s.TotalCount);
     }
 }

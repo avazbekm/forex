@@ -3,6 +3,7 @@
 using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
+using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
@@ -17,20 +18,50 @@ public partial class CommonReportDataService : ViewModelBase
 
     public ObservableCollection<UserViewModel> AvailableCustomers { get; } = [];
     public ObservableCollection<ProductViewModel> AvailableProducts { get; } = [];
+    public ObservableCollection<CurrencyResponse> Currencies { get; } = [];
+
+    private bool _isRefreshing;
 
     public CommonReportDataService(ForexClient client, IMapper mapper)
     {
         _client = client;
         _mapper = mapper;
-        _ = LoadAsync(); // Bir marta yuklanadi, keyin cache
     }
 
-    private async Task LoadAsync()
+    public decimal BaseRate(string? code)
     {
-        await Task.WhenAll(
-            LoadCustomersAsync(),
-            LoadProductsAsync()
-        );
+        if (string.IsNullOrWhiteSpace(code)) return 1;
+        var currency = Currencies.FirstOrDefault(c => string.Equals(c.Code, code, StringComparison.OrdinalIgnoreCase));
+        if (currency is null) return 1;
+        return currency.IsDefault || currency.ExchangeRate == 0 ? 1 : currency.ExchangeRate;
+    }
+
+    public async Task RefreshAsync()
+    {
+        if (_isRefreshing) return;
+        _isRefreshing = true;
+        try
+        {
+            await Task.WhenAll(
+                LoadCustomersAsync(),
+                LoadProductsAsync(),
+                LoadCurrenciesAsync()
+            );
+        }
+        finally
+        {
+            _isRefreshing = false;
+        }
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        var response = await _client.Currencies.GetAllAsync().Handle(isLoading => IsLoading = isLoading);
+        if (response.IsSuccess && response.Data is not null)
+        {
+            Currencies.Clear();
+            foreach (var c in response.Data) Currencies.Add(c);
+        }
     }
 
     private async Task LoadCustomersAsync()

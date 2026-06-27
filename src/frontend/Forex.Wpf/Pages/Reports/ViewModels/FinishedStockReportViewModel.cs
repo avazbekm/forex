@@ -8,6 +8,7 @@ using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -22,12 +23,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Forex.Wpf.Windows;
 using System.Windows.Input;
 
-public partial class FinishedStockReportViewModel : ViewModelBase
+public partial class FinishedStockReportViewModel : PagedReportViewModel<FinishedStockItemViewModel>
 {
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
 
     private readonly ObservableCollection<FinishedStockItemViewModel> _allItems = [];
+    private List<FinishedStockItemViewModel> _filtered = [];
 
     // UI ga ko'rinadigan filtrlangan ro'yxat
     [ObservableProperty]
@@ -39,7 +41,25 @@ public partial class FinishedStockReportViewModel : ViewModelBase
 
     [ObservableProperty]
     private decimal totalAmount;
-    
+
+    [ObservableProperty]
+    private int summaryQty;
+
+    [ObservableProperty]
+    private ObservableCollection<ChartPoint> stockChart = [];
+
+    [ObservableProperty]
+    private double chartMax;
+
+    [ObservableProperty]
+    private bool stockByCount;
+
+    [ObservableProperty]
+    private bool stockDescending = true;
+
+    partial void OnStockByCountChanged(bool value) => SortAndApply();
+    partial void OnStockDescendingChanged(bool value) => SortAndApply();
+
     public bool HasData => Items?.Count > 0;
 
     public FinishedStockReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -116,12 +136,6 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Chop etish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dlg = new PrintDialog();
         if (dlg.ShowDialog() == true)
         {
@@ -132,12 +146,6 @@ public partial class FinishedStockReportViewModel : ViewModelBase
     [RelayCommand]
     private void ExportToExcel()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -206,14 +214,8 @@ public partial class FinishedStockReportViewModel : ViewModelBase
         [RelayCommand]
     private void Preview()
     {
-        if (!Items.Any())
-        {
-            MessageBox.Show("Ko'rsatish uchun ma'lumot yo'q!", "Xabar", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
+        var viewer = new DocumentViewer { Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfaceMuted"), Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { 
             Orientation = Orientation.Horizontal, 
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -354,7 +356,7 @@ public partial class FinishedStockReportViewModel : ViewModelBase
             Title = "Tayyor mahsulot qoldig'i",
             Width = 1000,
             Height = 800,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen, Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfacePage"),
             Content = layout,
             Owner = Application.Current.MainWindow,
             ShowInTaskbar = false
@@ -433,8 +435,28 @@ public partial class FinishedStockReportViewModel : ViewModelBase
                 TransliterationHelper.ContainsIgnoreScript(x.Name ?? "", SearchText));
         }
 
-        Items = new ObservableCollection<FinishedStockItemViewModel>(result);
+        _filtered = result.ToList();
+        SortAndApply();
+    }
+
+    private void SortAndApply()
+    {
+        Func<FinishedStockItemViewModel, double> metric = StockByCount ? x => x.TotalCount : x => (double)x.TotalAmount;
+        var ordered = StockDescending ? _filtered.OrderByDescending(metric) : _filtered.OrderBy(metric);
+        Items = new ObservableCollection<FinishedStockItemViewModel>(ordered);
+        ChartMax = Items.Count == 0 ? 0 : Items.Max(metric);
+        SetSource(Items);
         TotalAmount = Items.Sum(x => x.TotalAmount);
+        SummaryQty = Items.Sum(x => x.TotalCount);
+    }
+
+    protected override void OnPageApplied()
+    {
+        StockChart = new ObservableCollection<ChartPoint>(PagedItems.Select(x => new ChartPoint
+        {
+            Label = string.IsNullOrWhiteSpace(x.Name) ? x.Code ?? "-" : x.Name,
+            Value = StockByCount ? x.TotalCount : (double)x.TotalAmount
+        }));
     }
 
     // PDF/Print uchun document yaratish (PASTDAN 25mm BO'SH JOY!)

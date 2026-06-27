@@ -1,7 +1,6 @@
 ﻿namespace Forex.Domain.Entities.Products;
 
 using Forex.Domain.Commons;
-using Forex.Domain.Entities.Processes;
 
 public class ProductType : Auditable
 {
@@ -16,9 +15,6 @@ public class ProductType : Auditable
     public Currency Currency { get; set; } = default!;
 
     public ProductResidue? ProductResidue { get; set; } = default!;
-    public InProcess? InProcess { get; set; } = default!;
 
-    public ICollection<ProductTypeItem> ProductTypeItems { get; set; } = default!;
     public ICollection<ProductEntry> ProductEntries { get; set; } = default!;
-    public ICollection<EntryToProcess> EntryToProcesses { get; set; } = default!;
 }

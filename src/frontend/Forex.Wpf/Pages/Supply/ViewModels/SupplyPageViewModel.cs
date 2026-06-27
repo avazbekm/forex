@@ -9,6 +9,7 @@ using Forex.ClientService.Interfaces;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.ClientService.Models.Responses;
+using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
@@ -24,6 +25,7 @@ public partial class SupplyPageViewModel : ViewModelBase
     private readonly IApiCurrency currenciesApi;
     private readonly IMapper mapper;
     private readonly List<SupplyViewModel> allSupplies = [];
+    private bool _suppressSupplyFilter;
 
     public SupplyPageViewModel(
         IApiSupplies suppliesApi,
@@ -45,7 +47,7 @@ public partial class SupplyPageViewModel : ViewModelBase
     [ObservableProperty] private CurrencyViewModel? selectedCurrency;
     [ObservableProperty] private decimal? amount;
     [ObservableProperty] private string? description;
-    [ObservableProperty] private DateTime filterBeginDate = DateTime.Today.AddMonths(-1);
+    [ObservableProperty] private DateTime filterBeginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime filterEndDate = DateTime.Today;
     [ObservableProperty] private UserFilterOption selectedFilterUser = UserFilterOption.All;
     [ObservableProperty] private SupplyPartyFilter selectedSupplyFilter = SupplyPartyFilter.All;
@@ -58,6 +60,8 @@ public partial class SupplyPageViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<UserViewModel> availableSuppliers = [];
     [ObservableProperty] private ObservableCollection<UserViewModel> availableConsolidators = [];
     [ObservableProperty] private ObservableCollection<UserViewModel> availableUsers = [];
+    [ObservableProperty] private ObservableCollection<UserViewModel> filteredUsers = [];
+    [ObservableProperty] private string? userInput;
     [ObservableProperty] private ObservableCollection<UserFilterOption> availableFilterUsers = [];
     [ObservableProperty] private ObservableCollection<CurrencyViewModel> availableCurrencies = [];
     [ObservableProperty] private ObservableCollection<SupplyViewModel> supplies = [];
@@ -101,18 +105,59 @@ public partial class SupplyPageViewModel : ViewModelBase
     partial void OnSelectedPartyTypeChanged(SupplyPartyType value)
     {
         AvailableUsers = value == SupplyPartyType.Supplier ? AvailableSuppliers : AvailableConsolidators;
-        SelectedUser = AvailableUsers.FirstOrDefault();
         Amount = null;
-        SelectedCurrency = GetDefaultCurrency(value);
+        SelectedUser = AvailableUsers.FirstOrDefault();   // valyuta OnSelectedUserChanged orqali avto-tanlanadi
         OnPropertyChanged(nameof(IsSupplierMode));
         OnPropertyChanged(nameof(IsConsolidatorMode));
         OnPropertyChanged(nameof(SelectedPartyTypeOption));
     }
 
-    partial void OnFilterBeginDateChanged(DateTime value) => ApplySupplyFilters();
-    partial void OnFilterEndDateChanged(DateTime value) => ApplySupplyFilters();
-    partial void OnSelectedFilterUserChanged(UserFilterOption value) => ApplySupplyFilters();
+    partial void OnAvailableUsersChanged(ObservableCollection<UserViewModel> value) => FilteredUsers = value;
+
+    partial void OnSelectedUserChanged(UserViewModel? value)
+    {
+        UserInput = value?.Name ?? string.Empty;
+
+        // Shaxs tanlanganda valyuta avtomatik uning settlement valyutasiga o'tadi.
+        // Tahrirlashda ta'minotning o'z valyutasi saqlanadi (Edit qo'lda o'rnatadi).
+        if (IsSupplyEditing) return;
+        SelectedCurrency = value is not null
+            ? AvailableCurrencies.FirstOrDefault(c => c.Id == value.SettlementCurrencyId) ?? GetDefaultCurrency(SelectedPartyType)
+            : GetDefaultCurrency(SelectedPartyType);
+    }
+
+    partial void OnFilterBeginDateChanged(DateTime value) => RebuildFilterUsers();
+    partial void OnFilterEndDateChanged(DateTime value) => RebuildFilterUsers();
+    partial void OnSelectedFilterUserChanged(UserFilterOption value)
+    {
+        if (_suppressSupplyFilter) return;
+        ApplySupplyFilters();
+    }
     partial void OnSelectedCurrencyFilterChanged(CurrencyFilterOption value) => ApplySupplyFilters();
+
+    private void RebuildFilterUsers()
+    {
+        var usersInRange = allSupplies
+            .Where(s => s.Date.Date >= FilterBeginDate.Date && s.Date.Date <= FilterEndDate.Date)
+            .Select(s => s.User)
+            .Where(u => u is not null)
+            .GroupBy(u => u.Id)
+            .Select(g => g.First())
+            .OrderBy(u => u.Name)
+            .ToList();
+
+        var keepId = SelectedFilterUser.User?.Id;
+        AvailableFilterUsers = new ObservableCollection<UserFilterOption>(
+            new[] { UserFilterOption.All }.Concat(usersInRange.Select(UserFilterOption.FromUser)));
+
+        _suppressSupplyFilter = true;
+        SelectedFilterUser = keepId is null
+            ? UserFilterOption.All
+            : AvailableFilterUsers.FirstOrDefault(o => o.User?.Id == keepId) ?? UserFilterOption.All;
+        _suppressSupplyFilter = false;
+
+        ApplySupplyFilters();
+    }
 
     partial void OnEditingSupplyChanged(SupplyViewModel? value)
     {
@@ -134,13 +179,9 @@ public partial class SupplyPageViewModel : ViewModelBase
             LoadSuppliesAsync());
 
         AvailableUsers = AvailableSuppliers;
-        AvailableFilterUsers = new ObservableCollection<UserFilterOption>(
-            new[] { UserFilterOption.All }
-                .Concat(AvailableSuppliers.Concat(AvailableConsolidators).OrderBy(u => u.Name).Select(UserFilterOption.FromUser)));
-        SelectedUser = AvailableUsers.FirstOrDefault();
-        SelectedCurrency = GetDefaultCurrency(SelectedPartyType);
+        SelectedUser = AvailableUsers.FirstOrDefault();   // valyuta OnSelectedUserChanged orqali avto-tanlanadi
         SelectedCurrencyFilter = CurrencyFilterOption.All;
-        ApplySupplyFilters();
+        RebuildFilterUsers();
     }
 
     private async Task LoadCurrenciesAsync()
@@ -185,7 +226,7 @@ public partial class SupplyPageViewModel : ViewModelBase
         {
             allSupplies.Clear();
             allSupplies.AddRange(mapper.Map<List<SupplyViewModel>>(response.Data));
-            ApplySupplyFilters();
+            RebuildFilterUsers();
         }
         else
             WarningMessage = response.Message ?? "Ta'minot tarixini yuklashda xatolik.";
@@ -276,6 +317,49 @@ public partial class SupplyPageViewModel : ViewModelBase
         }
     }
 
+    public void ApplyUserFilter(string? searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            FilteredUsers = AvailableUsers;
+            return;
+        }
+
+        var results = AvailableUsers
+            .Where(u => TransliterationHelper.ContainsIgnoreScript(u.Name, searchText)
+                     || TransliterationHelper.ContainsIgnoreScript(u.Phone, searchText)
+                     || TransliterationHelper.ContainsIgnoreScript(u.Address, searchText))
+            .ToList();
+
+        FilteredUsers = new ObservableCollection<UserViewModel>(results);
+    }
+
+    public void AddCreatedUser(UserViewModel? user)
+    {
+        if (user is null)
+            return;
+
+        var collection = SelectedPartyType == SupplyPartyType.Supplier
+            ? AvailableSuppliers
+            : AvailableConsolidators;
+
+        collection.Add(user);
+        AvailableUsers = collection;
+        FilteredUsers = collection;
+        SelectedUser = user;
+        AvailableFilterUsers.Add(UserFilterOption.FromUser(user));
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        FilterBeginDate = DateTime.Today.AddDays(-7);
+        FilterEndDate = DateTime.Today;
+        SelectedFilterUser = UserFilterOption.All;
+        SelectedSupplyFilter = SupplyPartyFilter.All;
+        SelectedCurrencyFilter = CurrencyFilterOption.All;
+    }
+
     private bool Validate()
     {
         if (SelectedUser is null)
@@ -309,14 +393,13 @@ public partial class SupplyPageViewModel : ViewModelBase
 
     private void ResetForm()
     {
+        EditingSupply = null;   // avval nollab — valyuta avto-tanlash to'g'ri ishlasin
         Date = DateTime.Today;
         SelectedPartyType = SupplyPartyType.Supplier;
         AvailableUsers = AvailableSuppliers;
-        SelectedUser = AvailableUsers.FirstOrDefault();
+        SelectedUser = AvailableUsers.FirstOrDefault();   // valyuta OnSelectedUserChanged orqali avto-tanlanadi
         Amount = null;
         Description = null;
-        SelectedCurrency = GetDefaultCurrency(SelectedPartyType);
-        EditingSupply = null;
     }
 
     private CurrencyViewModel? GetDefaultCurrency(SupplyPartyType partyType)

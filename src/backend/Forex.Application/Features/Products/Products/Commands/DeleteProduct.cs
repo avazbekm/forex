@@ -39,18 +39,6 @@ public class DeleteProductCommandHandler(
         {
             foreach (var typeId in typeIds)
             {
-                // EntryToProcess
-                var entryToProcesses = await context.EntryToProcesses
-                    .Where(e => e.ProductTypeId == typeId)
-                    .ToListAsync(ct);
-                context.EntryToProcesses.RemoveRange(entryToProcesses);
-
-                // InProcess
-                var inProcesses = await context.InProcesses
-                    .Where(p => p.ProductTypeId == typeId)
-                    .ToListAsync(ct);
-                context.InProcesses.RemoveRange(inProcesses);
-
                 // ProductEntry
                 var entries = await context.ProductEntries
                     .Where(e => e.ProductTypeId == typeId)
@@ -62,12 +50,6 @@ public class DeleteProductCommandHandler(
                     .Where(r => r.ProductTypeId == typeId)
                     .ToListAsync(ct);
                 context.ProductResidues.RemoveRange(residues);
-
-                // ProductTypeItem
-                var typeItems = await context.ProductTypeItems
-                    .Where(ti => ti.ProductTypeId == typeId)
-                    .ToListAsync(ct);
-                context.ProductTypeItems.RemoveRange(typeItems);
             }
 
             // ProductType'lar

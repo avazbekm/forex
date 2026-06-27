@@ -16,4 +16,7 @@ public sealed record TransactionRequest
 
     public long UserId { get; set; }
     public long CurrencyId { get; set; }
+
+    // Ixtiyoriy: to'lov shu savdoga biriktiriladi.
+    public long? SaleId { get; set; }
 }

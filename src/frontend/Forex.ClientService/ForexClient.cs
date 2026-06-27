@@ -7,19 +7,16 @@ public class ForexClient(
     IApiUser users,
     IApiUserAccount userAccounts,
     IApiSemiProducts semiProduct,
-    IApiManufactory manufactory,
     IApiProductTypes productType,
-    IApiProductTypeItems productTypeItems,
     IApiCurrency currency,
     IApiUnitMeasures unitMeasure,
     IApiProducts products,
-    IApiSemiProductEntry semiProductEntry,
     IApiProductEntries productEntries,
     IApiSales sales,
+    IApiReturns returns,
     IApiTransactions transactions,
     IApiOperationRecord operationRecord,
     IApiShops shops,
-    IApiProcesses processes,
     IApiProductResidues productResidues,
     IApiSupplies supplies,
     IFileStorageClient fileStorage)
@@ -29,18 +26,15 @@ public class ForexClient(
     public IApiOperationRecord OperationRecords { get; } = operationRecord;
     public IApiUserAccount UserAccounts { get; } = userAccounts;
     public IApiSemiProducts SemiProduct { get; } = semiProduct;
-    public IApiManufactory Manufactories { get; } = manufactory;
     public IApiCurrency Currencies { get; } = currency;
     public IApiUnitMeasures UnitMeasures { get; } = unitMeasure;
     public IApiProducts Products { get; } = products;
     public IApiProductTypes ProductTypes { get; } = productType;
-    public IApiProductTypeItems ProductTypeItems { get; } = productTypeItems;
-    public IApiSemiProductEntry SemiProductEntry { get; } = semiProductEntry;
     public IApiProductEntries ProductEntries { get; } = productEntries;
     public IApiSales Sales { get; } = sales;
+    public IApiReturns Returns { get; } = returns;
     public IApiTransactions Transactions { get; set; } = transactions;
     public IApiShops Shops { get; set; } = shops;
-    public IApiProcesses Processes { get; set; } = processes;
     public IApiProductResidues ProductResidues { get; set; } = productResidues;
     public IApiSupplies Supplies { get; set; } = supplies;
     public IFileStorageClient FileStorage { get; } = fileStorage;

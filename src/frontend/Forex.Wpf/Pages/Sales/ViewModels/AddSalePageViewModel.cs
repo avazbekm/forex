@@ -6,6 +6,7 @@ using Forex.ClientService;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
+using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Common.Interfaces;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Common;
@@ -38,6 +39,20 @@ public partial class AddSalePageViewModel : ViewModelBase
 
     private readonly Task? _initializationTask;
 
+    // Hujjat (savdo fayli) oxiridagi hisob-kitob — chop etish vaqtida saleId bo'yicha
+    // serverdan real vaqtda olinadi (tarixiy qoldiq + biriktirilgan to'lovlar).
+    private long _printSaleId;
+    private SaleDocumentSummaryResponse? _printSummary;
+
+    // Hujjatning yagona zamonaviy rang palitrasi (slate)
+    private static readonly Color DocInk = Color.FromRgb(0x1E, 0x29, 0x3B);
+    private static readonly Color DocMuted = Color.FromRgb(0x64, 0x74, 0x8B);
+    private static readonly Color DocLine = Color.FromRgb(0xD2, 0xDA, 0xE5);
+    private static readonly Color DocHeaderBg = Color.FromRgb(0xF1, 0xF5, 0xF9);
+    private static readonly Color DocHeaderFg = Color.FromRgb(0x47, 0x55, 0x69);
+    private static readonly Color DocAccent = Color.FromRgb(0x25, 0x63, 0xEB);
+    private static readonly Color DocZebra = Color.FromRgb(0xFA, 0xFB, 0xFC);
+
     public AddSalePageViewModel(ForexClient client, IMapper mapper, INavigationService navigation, SaleSessionService saleSession)
     {
         this.client = client;
@@ -65,7 +80,11 @@ public partial class AddSalePageViewModel : ViewModelBase
     [ObservableProperty] private decimal? totalAmount;
     [ObservableProperty] private decimal? finalAmount;
     [ObservableProperty] private decimal? totalAmountWithUserBalance;
+    [ObservableProperty] private decimal? exchangeRate;
     [ObservableProperty] private string note = string.Empty;
+
+    public bool IsForeignCurrency =>
+        Customer?.CurrencyCode is { Length: > 0 } code && !code.Equals("UZS", StringComparison.OrdinalIgnoreCase);
 
     // Statistik ma'lumotlar
     [ObservableProperty] private int totalRowsCount;
@@ -137,6 +156,41 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         if (e.PropertyName == nameof(SaleItemViewModel.Amount))
             RecalculateTotals();
+        else if (e.PropertyName == nameof(SaleItemViewModel.ProductType))
+            ConvertCurrentItemPrice();
+    }
+
+    partial void OnExchangeRateChanged(decimal? value)
+    {
+        ConvertCurrentItemPrice();
+        ReconvertAllItems();
+    }
+
+    private decimal? ConvertSomToCustomer(decimal? somPrice)
+    {
+        if (somPrice is not > 0)
+            return null;
+
+        return IsForeignCurrency && ExchangeRate is > 0
+            ? Math.Round(somPrice.Value / ExchangeRate.Value, 2)
+            : somPrice;
+    }
+
+    private void ConvertCurrentItemPrice()
+    {
+        var converted = ConvertSomToCustomer(CurrentSaleItem.ProductType?.UnitPrice);
+        if (converted is not null)
+            CurrentSaleItem.UnitPrice = converted;
+    }
+
+    private void ReconvertAllItems()
+    {
+        foreach (var item in SaleItems)
+        {
+            var converted = ConvertSomToCustomer(item.ProductType?.UnitPrice);
+            if (converted is not null)
+                item.UnitPrice = converted;
+        }
     }
 
     partial void OnEditingSaleIdChanged(long value)
@@ -170,6 +224,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         if (EditingSaleId == 0) saleSession.SelectedCustomer = value;
         CustomerInput = value?.Name ?? string.Empty;
+        OnPropertyChanged(nameof(IsForeignCurrency));
+        ExchangeRate = IsForeignCurrency && value?.SettlementCurrencyRate is > 0
+            ? value.SettlementCurrencyRate
+            : null;
+        ConvertCurrentItemPrice();
+        ReconvertAllItems();
         RecalculateTotalAmountWithUserBalance();
     }
 
@@ -381,6 +441,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         await EnsureInitializedAsync();
 
         EditingSaleId = saleId;
+        _printSaleId = saleId;
 
         SaleItems = new ObservableCollection<SaleItemViewModel>();
         SaleItems.CollectionChanged += (s, e) => RecalculateTotals();
@@ -476,6 +537,12 @@ public partial class AddSalePageViewModel : ViewModelBase
     [RelayCommand]
     private async Task Add()
     {
+        if (Customer is null)
+        {
+            WarningMessage = "Avval mijozni tanlang (narx mijoz valyutasida kiritiladi).";
+            return;
+        }
+
         if (Date.Date > DateTime.Today)
         {
             WarningMessage = "Kelajakdagi sanani tanlab bo'lmaydi!";
@@ -743,6 +810,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         };
 
         bool isSuccess;
+        long saleId = EditingSaleId;
 
         if (EditingSaleId > 0)
         {
@@ -760,9 +828,41 @@ public partial class AddSalePageViewModel : ViewModelBase
 
             if (isSuccess = response.IsSuccess)
             {
+                saleId = response.Data ?? 0;
                 SuccessMessage = $"Savdo muvaffaqiyatli yuborildi. Mahsulotlar soni: {SaleItems.Count}";
+            }
+            else
+                ErrorMessage = response.Message ?? "Savdoni ro'yxatga olishda xatolik!";
+        }
 
-                // Mana shu yerda so'raydi va print funksiyasini chaqiradi
+        if (isSuccess)
+        {
+            _printSaleId = saleId;
+
+            // 1. Savdoga to'lovlarni biriktirish (ixtiyoriy) — yangi savdoda ham, tahrirlashda ham
+            if (Customer is not null && saleId > 0)
+            {
+                var ask = MessageBox.Show(
+                    "Savdoga tegishli to'lovlar bormi?",
+                    "To'lovlar",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (ask == MessageBoxResult.Yes)
+                {
+                    var payVm = new PaymentLinkViewModel(client, mapper, saleId, Customer.Id, Customer.Name, request.Date, EditingSaleId > 0);
+                    var payWin = new PaymentLinkWindow(payVm)
+                    {
+                        Owner = Application.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    };
+                    payWin.ShowDialog();
+                }
+            }
+
+            // 2. Chop etish (faqat yangi savdoda)
+            if (EditingSaleId == 0)
+            {
                 var result = MessageBox.Show(
                     "Savdo muvaffaqiyatli saqlandi!\n\nChop etishni xohlaysizmi?",
                     "Muvaffaqiyat",
@@ -772,12 +872,7 @@ public partial class AddSalePageViewModel : ViewModelBase
                 if (result == MessageBoxResult.Yes)
                     await ShowPrintPreview();
             }
-            else
-                ErrorMessage = response.Message ?? "Savdoni ro'yxatga olishda xatolik!";
-        }
 
-        if (isSuccess)
-        {
             Clear();
             navigation.GoBack();
         }
@@ -797,6 +892,18 @@ public partial class AddSalePageViewModel : ViewModelBase
 
         try
         {
+            // Hisob-kitobni real vaqtda serverdan olamiz (tarixiy qoldiq + biriktirilgan to'lovlar)
+            _printSummary = null;
+            if (_printSaleId > 0)
+            {
+                try
+                {
+                    var sumResp = await client.Sales.GetDocumentSummary(_printSaleId).Handle();
+                    if (sumResp.IsSuccess) _printSummary = sumResp.Data;
+                }
+                catch { }
+            }
+
             var uniqueUrls = SaleItems
                 .Select(i => i.Product?.DisplayImagePath)
                 .Where(url => !string.IsNullOrEmpty(url))
@@ -967,7 +1074,11 @@ public partial class AddSalePageViewModel : ViewModelBase
         const double pageWidth = 793.7;
         const double pageHeight = 1122.5;
         const double margin = 25;
-        const double footerSpace = 60;
+
+        // Oxirgi betda JAMI qatori + hisob-kitob kartasi uchun zaxira balandlik.
+        double footerSpace = 60;
+        if (Customer is not null && _printSummary is not null)
+            footerSpace = 150 + (_printSummary.Payments.Count + 3) * 30;
 
         // 8 ta ustun: T/r, Rasm, Kod/Nomi (birlashgan), Razmer, Qop soni, Jami soni, Narxi, Jami summa
         string[] headers = { "T/r", "Rasm", "Kod / Nomi", "Razmer", "Qop soni", "Jami soni", "Narxi", "Jami summa" };
@@ -1002,24 +1113,44 @@ public partial class AddSalePageViewModel : ViewModelBase
                 var title = new TextBlock
                 {
                     Text = "Sotilgan mahsulotlar ro'yxati",
-                    FontSize = 20,
-                    FontWeight = FontWeights.ExtraBold,
+                    FontSize = 19,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(DocInk),
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    Margin = new Thickness(0, 0, 0, 5)
+                    Margin = new Thickness(0, 0, 0, 10)
                 };
                 title.Measure(new Size(tableWidth, double.PositiveInfinity));
                 container.Children.Add(title);
-                currentY += title.DesiredSize.Height + 5;
+                currentY += title.DesiredSize.Height + 10;
 
-                var info = new TextBlock
+                var infoGrid = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+                infoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                infoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                var cust = new TextBlock { FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
+                cust.Inlines.Add(new Run("Mijoz: ") { Foreground = new SolidColorBrush(DocMuted) });
+                cust.Inlines.Add(new Run((Customer?.Name ?? "Naqd").ToUpper()) { Foreground = new SolidColorBrush(DocInk), FontWeight = FontWeights.SemiBold });
+
+                var dt = new TextBlock { FontSize = 13, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+                dt.Inlines.Add(new Run("Sana: ") { Foreground = new SolidColorBrush(DocMuted) });
+                dt.Inlines.Add(new Run($"{Date:dd.MM.yyyy}") { Foreground = new SolidColorBrush(DocInk), FontWeight = FontWeights.SemiBold });
+                Grid.SetColumn(dt, 1);
+
+                infoGrid.Children.Add(cust);
+                infoGrid.Children.Add(dt);
+                infoGrid.Measure(new Size(tableWidth, double.PositiveInfinity));
+                container.Children.Add(infoGrid);
+                currentY += infoGrid.DesiredSize.Height + 8;
+
+                var divider = new Border
                 {
-                    Text = $"Mijoz: {Customer?.Name.ToUpper() ?? "Naqd"} | Sana: {Date:dd.MM.yyyy}",
-                    FontSize = 14,
-                    Margin = new Thickness(0, 0, 0, 10)
+                    Height = 2,
+                    Background = new SolidColorBrush(DocAccent),
+                    CornerRadius = new CornerRadius(1),
+                    Margin = new Thickness(0, 0, 0, 12)
                 };
-                info.Measure(new Size(tableWidth, double.PositiveInfinity));
-                container.Children.Add(info);
-                currentY += info.DesiredSize.Height + 10;
+                container.Children.Add(divider);
+                currentY += 14;
             }
 
             var grid = new Grid { Width = tableWidth };
@@ -1125,11 +1256,13 @@ public partial class AddSalePageViewModel : ViewModelBase
             // Jami qatori faqat oxirgi betda (barcha guruhlar tugagan bo'lsa)
             if (currentGroupIndex >= groupedItems.Count)
             {
-                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(35) });
+                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(38) });
+
+                var totalBg = new SolidColorBrush(DocHeaderBg);
 
                 // 8 ta ustun: JAMI 0-3 ustunlarni egallaydi (4 ta ustun)
-                var totalLabel = CreateCell("JAMI:", true, TextAlignment.Right);
-                totalLabel.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
+                var totalLabel = CreateCell("JAMI", true, TextAlignment.Right);
+                totalLabel.Background = totalBg;
                 Grid.SetRow(totalLabel, gridRow);
                 Grid.SetColumn(totalLabel, 0);
                 Grid.SetColumnSpan(totalLabel, 4);
@@ -1141,63 +1274,35 @@ public partial class AddSalePageViewModel : ViewModelBase
 
                 // Narxi va Jami summa: 6-7 ustunlar (2 ta ustun)
                 var totalSumCell = CreateCell(grandTotalAmount.ToString("N2"), true, TextAlignment.Right);
-                totalSumCell.Background = new SolidColorBrush(Color.FromRgb(245, 245, 245));
+                totalSumCell.Background = totalBg;
                 Grid.SetRow(totalSumCell, gridRow);
                 Grid.SetColumn(totalSumCell, 6);
                 Grid.SetColumnSpan(totalSumCell, 2);
-                
+
                 if (totalSumCell.Child is TextBlock tbSum)
                 {
                     tbSum.FontSize = 14;
-                    tbSum.Foreground = new SolidColorBrush(Color.FromRgb(0, 50, 150));
+                    tbSum.FontWeight = FontWeights.Bold;
+                    tbSum.Foreground = new SolidColorBrush(DocAccent);
                 }
-                
+
                 grid.Children.Add(totalSumCell);
                 gridRow++;
-                
-                // Mijoz qoldig'i (qarzdorlik/haqdorlik)
-                if (Customer?.Balance is not null)
-                {
-                    grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(35) });
-                    
-                    var balanceLabel = CreateCell("Joriy qoldiq:", true, TextAlignment.Right);
-                    balanceLabel.Background = new SolidColorBrush(Color.FromRgb(230, 240, 255));
-                    Grid.SetRow(balanceLabel, gridRow);
-                    Grid.SetColumn(balanceLabel, 0);
-                    Grid.SetColumnSpan(balanceLabel, 6);
-                    grid.Children.Add(balanceLabel);
-                    
-                    var balanceValue = Customer.Balance.Value - (EditingSaleId == 0 ? grandTotalAmount : 0);
-                    var balanceText = balanceValue >= 0 
-                        ? $"+{balanceValue:N0} (Haqdor)" 
-                        : $"{balanceValue:N0} (Qarzdor)";
-                    
-                    var balanceCell = CreateCell(balanceText, true, TextAlignment.Right);
-                    balanceCell.Background = new SolidColorBrush(Color.FromRgb(230, 240, 255));
-                    Grid.SetRow(balanceCell, gridRow);
-                    Grid.SetColumn(balanceCell, 6);
-                    Grid.SetColumnSpan(balanceCell, 2);
-                    
-                    if (balanceCell.Child is TextBlock tbBal)
-                    {
-                        tbBal.FontSize = 13;
-                        tbBal.Foreground = balanceValue >= 0 
-                            ? new SolidColorBrush(Color.FromRgb(0, 128, 0)) 
-                            : new SolidColorBrush(Color.FromRgb(200, 0, 0));
-                    }
-                    
-                    grid.Children.Add(balanceCell);
-                }
             }
 
             container.Children.Add(grid);
+
+            // Oxirgi betda — zamonaviy hisob-kitob kartasi (tarixiy qoldiq + to'lovlar)
+            if (currentGroupIndex >= groupedItems.Count && Customer is not null && _printSummary is not null)
+                container.Children.Add(BuildDocSummary(_printSummary, tableWidth));
+
             page.Children.Add(container);
 
             var pnb = new TextBlock
             {
                 Text = $"{pageNumber}-bet",
                 FontSize = 10,
-                Foreground = Brushes.Gray
+                Foreground = new SolidColorBrush(DocMuted)
             };
             FixedPage.SetRight(pnb, margin);
             FixedPage.SetBottom(pnb, 15);
@@ -1212,6 +1317,110 @@ public partial class AddSalePageViewModel : ViewModelBase
         }
 
         return fixedDoc;
+    }
+
+    // Hujjat oxiridagi zamonaviy hisob-kitob kartasi: avvalgi qoldiq -> hujjat summasi ->
+    // to'lovlar (valyuta+kurs bo'yicha guruhlangan, settlement valyutaga konvertatsiya bilan) ->
+    // jami to'langan -> qolgan qoldiq.
+    private static Border BuildDocSummary(SaleDocumentSummaryResponse s, double width)
+    {
+        var code = s.SettlementCurrencyCode;
+        var green = new SolidColorBrush(Color.FromRgb(0x15, 0x7F, 0x3B));
+        var red = new SolidColorBrush(Color.FromRgb(0xC0, 0x28, 0x28));
+        var ink = new SolidColorBrush(Color.FromRgb(0x1E, 0x29, 0x3B));
+        var muted = new SolidColorBrush(Color.FromRgb(0x64, 0x74, 0x8B));
+        var line = new SolidColorBrush(Color.FromRgb(0xE2, 0xE8, 0xF0));
+
+        string Bal(decimal v) => v >= 0 ? $"+{v:N0} {code} (Haqdor)" : $"{v:N0} {code} (Qarzdor)";
+
+        var panel = new StackPanel();
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Hisob-kitob",
+            FontSize = 14,
+            FontWeight = FontWeights.Bold,
+            Foreground = ink,
+            Margin = new Thickness(0, 0, 0, 8)
+        });
+
+        panel.Children.Add(DocSummaryRow("Avvalgi qoldiq", Bal(s.PriorBalance), s.PriorBalance >= 0 ? green : red, muted, false));
+        panel.Children.Add(DocSummaryRow("Savdo summasi", $"{s.SaleAmount:N0} {code}", ink, muted, false));
+
+        if (s.Payments.Count > 0)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = "To'langan:",
+                FontSize = 12,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = muted,
+                Margin = new Thickness(0, 8, 0, 2)
+            });
+
+            foreach (var p in s.Payments)
+            {
+                // Settlement valyutasida kurs doim 1 — uni ko'rsatmaymiz.
+                var left = p.CurrencyCode == code
+                    ? p.Methods
+                    : $"{p.Methods} · kurs {p.ExchangeRate:N0}";
+                var right = p.CurrencyCode == code
+                    ? $"{p.Amount:N0} {p.CurrencyCode}"
+                    : $"{p.Amount:N0} {p.CurrencyCode}  ≈  {p.SettlementAmount:N0} {code}";
+                panel.Children.Add(DocSummaryRow(left, right, green, muted, false, indent: true));
+            }
+
+            panel.Children.Add(DocSummaryRow("Jami to'langan", $"{s.TotalPaid:N0} {code}", green, muted, true));
+        }
+        else
+        {
+            // To'lov qilinmagan bo'lsa ham qator turadi: 0.
+            panel.Children.Add(DocSummaryRow("To'langan", $"0 {code}", muted, muted, false));
+        }
+
+        panel.Children.Add(new Border { Height = 1, Background = line, Margin = new Thickness(0, 8, 0, 8) });
+        panel.Children.Add(DocSummaryRow("Qolgan qoldiq", Bal(s.RemainingBalance), s.RemainingBalance >= 0 ? green : red, ink, true, big: true));
+
+        return new Border
+        {
+            Width = width,
+            Background = new SolidColorBrush(Color.FromRgb(0xF8, 0xFA, 0xFC)),
+            BorderBrush = line,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(16, 14, 16, 14),
+            Margin = new Thickness(0, 14, 0, 0),
+            Child = panel
+        };
+    }
+
+    private static Grid DocSummaryRow(string label, string value, Brush valueColor, Brush labelColor, bool bold, bool indent = false, bool big = false)
+    {
+        var g = new Grid { Margin = new Thickness(indent ? 14 : 0, 3, 0, 3) };
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var l = new TextBlock
+        {
+            Text = label,
+            FontSize = big ? 15 : 13,
+            FontWeight = big ? FontWeights.Bold : FontWeights.Normal,
+            Foreground = labelColor,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var v = new TextBlock
+        {
+            Text = value,
+            FontSize = big ? 15 : 13,
+            FontWeight = bold || big ? FontWeights.Bold : FontWeights.Normal,
+            Foreground = valueColor,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            TextAlignment = TextAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(v, 1);
+        g.Children.Add(l);
+        g.Children.Add(v);
+        return g;
     }
 
     // Bir qatorning (bitta item) balandligini o'lchaydi
@@ -1269,8 +1478,8 @@ public partial class AddSalePageViewModel : ViewModelBase
         {
             Width = 140,
             Height = 140,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(230, 230, 230)),
-            BorderThickness = new Thickness(1),
+            BorderBrush = new SolidColorBrush(DocLine),
+            BorderThickness = new Thickness(0.5),
             Background = Brushes.White,
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -1294,8 +1503,8 @@ public partial class AddSalePageViewModel : ViewModelBase
             border.Child = new TextBlock
             {
                 Text = "Rasm yo'q",
-                FontSize = 8,
-                Foreground = Brushes.LightGray,
+                FontSize = 9,
+                Foreground = new SolidColorBrush(DocMuted),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
@@ -1338,17 +1547,18 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         var border = new Border
         {
-            BorderBrush = Brushes.Gray,
+            BorderBrush = new SolidColorBrush(DocLine),
             BorderThickness = new Thickness(0.5),
-            Background = isHeader ? new SolidColorBrush(Color.FromRgb(235, 235, 235)) : Brushes.White,
-            Padding = new Thickness(4, 5, 4, 5)
+            Background = isHeader ? new SolidColorBrush(DocHeaderBg) : Brushes.White,
+            Padding = new Thickness(6, isHeader ? 7 : 6, 6, isHeader ? 7 : 6)
         };
 
         var tb = new TextBlock
         {
             Text = text,
-            FontSize = isHeader ? 13 : 12,
-            FontWeight = isHeader ? FontWeights.Bold : FontWeights.Normal,
+            FontSize = isHeader ? 12 : 12,
+            FontWeight = isHeader ? FontWeights.SemiBold : FontWeights.Normal,
+            Foreground = new SolidColorBrush(isHeader ? DocHeaderFg : DocInk),
             TextAlignment = alignment,
             VerticalAlignment = VerticalAlignment.Center
         };
@@ -1361,10 +1571,10 @@ public partial class AddSalePageViewModel : ViewModelBase
     {
         var border = new Border
         {
-            BorderBrush = Brushes.Gray,
+            BorderBrush = new SolidColorBrush(DocLine),
             BorderThickness = new Thickness(0.5),
             Background = Brushes.White,
-            Padding = new Thickness(6, 4, 6, 4)
+            Padding = new Thickness(8, 6, 8, 6)
         };
 
         var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -1374,15 +1584,16 @@ public partial class AddSalePageViewModel : ViewModelBase
             Text = code,
             FontSize = 13,
             FontWeight = FontWeights.Bold,
-            Foreground = new SolidColorBrush(Color.FromRgb(0, 100, 180))
+            Foreground = new SolidColorBrush(DocAccent)
         };
 
         var nameBlock = new TextBlock
         {
             Text = name,
             FontSize = 11,
-            Foreground = Brushes.DimGray,
-            TextWrapping = TextWrapping.Wrap
+            Foreground = new SolidColorBrush(DocMuted),
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 2, 0, 0)
         };
 
         stack.Children.Add(codeBlock);

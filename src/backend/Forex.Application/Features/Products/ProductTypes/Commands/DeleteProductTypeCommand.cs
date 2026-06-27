@@ -28,18 +28,6 @@ public class DeleteProductTypeCommandHandler(IAppDbContext context)
 
         try
         {
-            // EntryToProcess
-            var entryToProcesses = await context.EntryToProcesses
-                .Where(e => e.ProductTypeId == request.Id)
-                .ToListAsync(ct);
-            context.EntryToProcesses.RemoveRange(entryToProcesses);
-
-            // InProcess
-            var inProcesses = await context.InProcesses
-                .Where(p => p.ProductTypeId == request.Id)
-                .ToListAsync(ct);
-            context.InProcesses.RemoveRange(inProcesses);
-
             // ProductEntry
             var entries = await context.ProductEntries
                 .Where(e => e.ProductTypeId == request.Id)
@@ -51,12 +39,6 @@ public class DeleteProductTypeCommandHandler(IAppDbContext context)
                 .Where(r => r.ProductTypeId == request.Id)
                 .ToListAsync(ct);
             context.ProductResidues.RemoveRange(residues);
-
-            // ProductTypeItem
-            var typeItems = await context.ProductTypeItems
-                .Where(ti => ti.ProductTypeId == request.Id)
-                .ToListAsync(ct);
-            context.ProductTypeItems.RemoveRange(typeItems);
 
             // ProductType
             context.ProductTypes.Remove(productType);

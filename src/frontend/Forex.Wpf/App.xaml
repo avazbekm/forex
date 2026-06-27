@@ -21,6 +21,7 @@
                 <!--  begin::Custom styles  -->
                 <ResourceDictionary Source="/Resources/Styles/FloatingLable.xaml" />
                 <ResourceDictionary Source="/Resources/Styles/ContextMenuButtonStyle.xaml" />
+                <ResourceDictionary Source="/Resources/Styles/ActionButtons.xaml" />
                 <!--  end::Custom styles  -->
 
                 <!--  begin::Converters  -->

@@ -52,7 +52,7 @@
         <TextBlock x:Name="txtStock" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="#EF6C00" FontWeight="SemiBold" />
 
         <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,5" Text="1 qopda:" />
-        <TextBlock x:Name="txtBundleInfo" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="#555" />
+        <TextBlock x:Name="txtBundleInfo" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="{DynamicResource InkSecondary}" />
 
         <TextBlock Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" Margin="0,5" Text="Kirim sanasi:" />
         <controls:UserCalendar
@@ -64,12 +64,12 @@
             FontSize="14" />
 
         <TextBlock Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Margin="0,5" Text="Qop soni:" />
-        <Border Grid.Row="8" Grid.Column="1" Margin="0,5" BorderBrush="#CCC" BorderThickness="1" CornerRadius="4">
+        <Border Grid.Row="8" Grid.Column="1" Margin="0,5" BorderBrush="{DynamicResource HairlineBorder}" BorderThickness="1" CornerRadius="4">
             <TextBox x:Name="txtBundleCount" Padding="3" BorderThickness="0" FontSize="14" />
         </Border>
 
         <TextBlock Grid.Row="9" Grid.Column="0" VerticalAlignment="Top" Margin="0,10" Text="Tan narxi:" />
-        <Border Grid.Row="9" Grid.Column="1" Margin="0,5" BorderBrush="#CCC" BorderThickness="1" CornerRadius="4">
+        <Border Grid.Row="9" Grid.Column="1" Margin="0,5" BorderBrush="{DynamicResource HairlineBorder}" BorderThickness="1" CornerRadius="4">
             <TextBox x:Name="txtUnitPrice" Padding="3" BorderThickness="0" FontSize="14" />
         </Border>
 
@@ -95,7 +95,7 @@
                 Height="32"
                 Margin="5"
                 Background="#E5E7EB"
-                BorderBrush="#D1D5DB"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 Content="Bekor qilish"
                 Foreground="#333"

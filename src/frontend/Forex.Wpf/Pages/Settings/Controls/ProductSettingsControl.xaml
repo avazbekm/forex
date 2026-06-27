@@ -11,8 +11,8 @@
 
 	<UserControl.Resources>
         <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#DDDDDD" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceCard}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairlineBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontSize" Value="14" />
@@ -29,7 +29,7 @@
         <Style x:Key="SearchTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
             <Setter Property="md:HintAssist.Hint" Value="🔍 Qidirish (Kod yoki Nom)" />
             <Setter Property="md:HintAssist.IsFloating" Value="False" />
-            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="Foreground" Value="{DynamicResource InkSecondary}" />
         </Style>
 
         <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
@@ -52,7 +52,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Background="AliceBlue"
+        <Border Background="{DynamicResource SurfaceCard}"
                 CornerRadius="8"
                 Padding="15"
                 md:ElevationAssist.Elevation="Dp2">
@@ -113,7 +113,7 @@
         </Border>
 
 		<Border Grid.Column="2"
-        Background="AliceBlue"
+        Background="{DynamicResource SurfaceCard}"
         CornerRadius="8"
         Padding="15"
         md:ElevationAssist.Elevation="Dp2"
@@ -148,11 +148,11 @@
 								<ColumnDefinition Width="*"/>
 							</Grid.ColumnDefinitions>
 							<StackPanel Grid.Column="0">
-								<TextBlock Text="Mahsulot Kodi" FontSize="12" FontWeight="Medium" Foreground="#666666" Margin="0 0 0,4"/>
+								<TextBlock Text="Mahsulot Kodi" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource InkMuted}" Margin="0 0 0,4"/>
 								<TextBox Text="{Binding SelectedProduct.Code, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBoxStyle}"/>
 							</StackPanel>
 							<StackPanel Grid.Column="2">
-								<TextBlock Text="Mahsulot Nomi" FontSize="12" FontWeight="Medium" Foreground="#666666" Margin="0 0 0,4"/>
+								<TextBlock Text="Mahsulot Nomi" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource InkMuted}" Margin="0 0 0,4"/>
 								<TextBox Text="{Binding SelectedProduct.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputTextBoxStyle}"/>
 							</StackPanel>
 						</Grid>
@@ -160,7 +160,7 @@
 						<TextBlock Text="Mahsulot Turlari (Razmerlar)" Style="{StaticResource SectionHeaderStyle}"/>
 						<Button Content="➕ Yangi Tur (Razmer) qo'shish" Command="{Binding AddProductTypeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" HorizontalAlignment="Left" Height="36" Padding="16 0" Margin="0 0 0 12"/>
 
-						<DataGrid ItemsSource="{Binding SelectedProduct.ProductTypes}" VerticalContentAlignment="Center" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="#DDDDDD" MaxHeight="250" Margin="0 0 0 20">
+						<DataGrid ItemsSource="{Binding SelectedProduct.ProductTypes}" VerticalContentAlignment="Center" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource HairlineBorder}" MaxHeight="250" Margin="0 0 0 20">
 							<DataGrid.Columns>
 								<DataGridTextColumn Header="Tur (Razmer)" Binding="{Binding Type, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
 								<DataGridTemplateColumn Header="Dona/Bog'" Width="*">
@@ -190,7 +190,7 @@
 					</StackPanel>
 				</ScrollViewer>
 
-				<Border Grid.Row="1" Padding="0,10,0,0" BorderBrush="#EEEEEE" BorderThickness="0,1,0,0">
+				<Border Grid.Row="1" Padding="0,10,0,0" BorderBrush="{DynamicResource HairlineBorder}" BorderThickness="0,1,0,0">
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 						<Button Content="💾 Saqlash"
                                 Command="{Binding SaveProductCommand}"
@@ -209,15 +209,15 @@
 		</Border>
 
 		<Border Grid.Column="2" 
-                Background="AliceBlue"
+                Background="{DynamicResource SurfaceCard}"
                 CornerRadius="8"
                 md:ElevationAssist.Elevation="Dp2"
                 Visibility="{Binding HasSelectedProduct, Converter={StaticResource InverseBoolToVisibilityConverter}}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <fa:IconImage Icon="BoxOpen" Width="64" Foreground="Gray"/>
+                <fa:IconImage Icon="BoxOpen" Width="64" Foreground="{DynamicResource InkMuted}"/>
                 <TextBlock Text="Tahrirlash uchun mahsulot tanlang"
                            FontSize="14"
-                           Foreground="Gray"
+                           Foreground="{DynamicResource InkMuted}"
                            Margin="0 12 0 0"/>
             </StackPanel>
         </Border>

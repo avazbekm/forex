@@ -1,0 +1,235 @@
+<Window x:Class="Forex.Wpf.Windows.PaymentLinkWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Savdoga to'lovlarni biriktirish"
+        Width="980" Height="680"
+        WindowStartupLocation="CenterScreen"
+        FontSize="14"
+        Background="{DynamicResource PrimaryBackground}"
+        TextElement.Foreground="{DynamicResource InkPrimary}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <StackPanel Grid.Row="0" Margin="2,0,2,16" Orientation="Horizontal">
+            <Border Width="44" Height="44" Background="#E8EDFB" CornerRadius="12">
+                <md:PackIcon Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                             Foreground="#3B5BDB" Kind="CashMultiple" />
+            </Border>
+            <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource InkPrimary}"
+                           Text="Savdoga to'lovlarni biriktirish" />
+                <TextBlock FontSize="12.5" Foreground="{DynamicResource InkSecondary}">
+                    <Run Text="Mijoz:" />
+                    <Run FontWeight="SemiBold" Text="{Binding CustomerName, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+
+        <!--  To'lov kiritish formasi  -->
+        <Border Grid.Row="1" Padding="16,24,16,16" Margin="0,0,0,14"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}" BorderThickness="1" CornerRadius="12">
+            <Grid Height="52">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.1*" />
+                    <ColumnDefinition Width="0.9*" />
+                    <ColumnDefinition Width="1.3*" />
+                    <ColumnDefinition Width="1.1*" />
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <controls:FloatingComboBox Grid.Column="0" Margin="4,0" VerticalAlignment="Bottom"
+                                           Label="Valyuta" DisplayMemberPath="Code"
+                                           ItemsSource="{Binding Currencies}" SelectedItem="{Binding FormCurrency}" />
+
+                <controls:FloatingInput Grid.Column="1" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="Kurs"
+                                        Text="{Binding FormExchangeRate, UpdateSourceTrigger=PropertyChanged}" />
+
+                <controls:FloatingComboBox Grid.Column="2" Margin="4,0" VerticalAlignment="Bottom"
+                                           Label="To'lov usuli" DisplayMemberPath="Text"
+                                           ItemsSource="{Binding PaymentMethods}" SelectedItem="{Binding FormMethod}" />
+
+                <controls:FloatingInput Grid.Column="3" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="Summa"
+                                        Text="{Binding FormAmount, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+
+                <controls:FloatingInput Grid.Column="4" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="Izoh"
+                                        Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Button Grid.Column="5" Height="30" Margin="8,0,0,0" Padding="18,0" VerticalAlignment="Bottom"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="#16A34A" BorderThickness="0" Foreground="White" Cursor="Hand"
+                        Command="{Binding AddOrUpdateCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Plus" />
+                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="{Binding AddButtonText}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!--  To'lovlar jadvali  -->
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}" BorderThickness="1" CornerRadius="12">
+            <DataGrid x:Name="dataGrid"
+                      Margin="6"
+                      RowBackground="{DynamicResource SurfaceCard}"
+                      AlternatingRowBackground="{DynamicResource SurfaceMuted}"
+                      AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                      RowHeight="40" FontSize="14" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      Background="Transparent" RowHeaderWidth="0" BorderThickness="0"
+                      ItemsSource="{Binding Payments}">
+                <DataGrid.Resources>
+                    <Style x:Key="RightCell" TargetType="TextBlock">
+                        <Setter Property="TextAlignment" Value="Right" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="Padding" Value="0,0,10,0" />
+                    </Style>
+                    <Style x:Key="CenterCell" TargetType="TextBlock">
+                        <Setter Property="TextAlignment" Value="Center" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                        <Setter Property="FontWeight" Value="SemiBold" />
+                        <Setter Property="Padding" Value="6,10" />
+                        <Setter Property="Background" Value="{DynamicResource SurfaceMuted}" />
+                        <Setter Property="Foreground" Value="{DynamicResource InkSecondary}" />
+                    </Style>
+
+                    <!--  Doimo ko'rinadigan, qora kvadratli checkbox  -->
+                    <Style x:Key="GridCheck" TargetType="CheckBox">
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="CheckBox">
+                                    <Border x:Name="box" Width="21" Height="21" CornerRadius="5"
+                                            Background="White" BorderBrush="#374151" BorderThickness="2">
+                                        <md:PackIcon x:Name="tick" Width="15" Height="15" Kind="Check"
+                                                     Foreground="White" Visibility="Collapsed"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="box" Property="Background" Value="#16A34A" />
+                                            <Setter TargetName="box" Property="BorderBrush" Value="#16A34A" />
+                                            <Setter TargetName="tick" Property="Visibility" Value="Visible" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="box" Property="BorderBrush" Value="#16A34A" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="50" Header="T/r">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource InkSecondary}"
+                                           Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Converter={StaticResource IndexConverter}}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Width="66" Header="Tanlash">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Style="{StaticResource GridCheck}"
+                                          IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Width="84" Header="Holat" Binding="{Binding OriginText}"
+                                        ElementStyle="{StaticResource CenterCell}" IsReadOnly="True" />
+                    <DataGridTextColumn Width="120" Header="Usul" Binding="{Binding MethodText}"
+                                        ElementStyle="{StaticResource CenterCell}" IsReadOnly="True" />
+                    <DataGridTextColumn Width="130" Header="Summa" Binding="{Binding Amount, StringFormat=N2}"
+                                        ElementStyle="{StaticResource RightCell}" IsReadOnly="True" />
+                    <DataGridTextColumn Width="78" Header="Valyuta" Binding="{Binding CurrencyCode}"
+                                        ElementStyle="{StaticResource CenterCell}" IsReadOnly="True" />
+                    <DataGridTextColumn Width="90" Header="Kurs" Binding="{Binding ExchangeRate, StringFormat=N2}"
+                                        ElementStyle="{StaticResource RightCell}" IsReadOnly="True" />
+                    <DataGridTextColumn Width="*" MinWidth="120" Header="Izoh" Binding="{Binding Description}" IsReadOnly="True" />
+
+                    <DataGridTemplateColumn Width="120" Header="Amallar">
+                        <DataGridTemplateColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                        </DataGridTemplateColumn.CellStyle>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource EditActionButton}" ToolTip="Tahrirlash"
+                                            Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}">
+                                        <md:PackIcon Width="16" Height="16" Kind="Pencil" />
+                                    </Button>
+                                    <Button Style="{StaticResource DeleteActionButton}" ToolTip="O'chirish"
+                                            Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}">
+                                        <md:PackIcon Width="16" Height="16" Kind="Delete" />
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!--  Footer: qarz to'lash sanasi + saqlash  -->
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Margin="0,0,12,0" VerticalAlignment="Center" FontSize="14"
+                           Foreground="{DynamicResource InkPrimary}"
+                           Text="Qarzni to'lash sanasi:" />
+                <controls:UserCalendar Width="150" Height="34" VerticalAlignment="Center" FontSize="14"
+                                       Background="{DynamicResource SurfaceCard}"
+                                       SelectedDate="{Binding DueDate, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Height="38" Padding="18,0" Margin="0,0,10,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="{DynamicResource SurfaceCard}" BorderThickness="1"
+                        BorderBrush="#E11D48" Foreground="#E11D48"
+                        Cursor="Hand" Command="{Binding CancelCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon Width="17" Height="17" VerticalAlignment="Center" Kind="Close" />
+                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Bekor qilish" />
+                    </StackPanel>
+                </Button>
+                <Button Height="38" Padding="26,0"
+                        md:ButtonAssist.CornerRadius="9" md:ElevationAssist.Elevation="Dp2"
+                        Background="#16A34A" BorderThickness="0" Foreground="White"
+                        Cursor="Hand" Command="{Binding SaveCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Check" />
+                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="Saqlash" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

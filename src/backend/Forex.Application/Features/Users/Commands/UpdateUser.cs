@@ -107,31 +107,4 @@ public class UpdateUserCommandHandler(
 
         return result;
     }
-
-    private void UpdateAccounts(User user, List<UpdateUserAccountDto> dtos)
-    {
-        if (dtos == null || dtos.Count == 0) return;
-
-        foreach (var dto in dtos)
-        {
-            var existingAcc = user.Accounts.FirstOrDefault(a => a.CurrencyId == dto.CurrencyId);
-            if (existingAcc != null)
-            {
-                existingAcc.OpeningBalance = dto.OpeningBalance;
-                existingAcc.Balance = dto.OpeningBalance; // Eslatma: Bu mantiq eski balansni o'chirib yuboradi
-                existingAcc.Discount = dto.Discount;
-            }
-            else
-            {
-                user.Accounts.Add(new UserAccount
-                {
-                    CurrencyId = dto.CurrencyId,
-                    OpeningBalance = dto.OpeningBalance,
-                    Balance = dto.OpeningBalance,
-                    Discount = dto.Discount,
-                    UserId = user.Id
-                });
-            }
-        }
-    }
 }

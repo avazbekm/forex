@@ -1,0 +1,50 @@
+# ============================================================
+# Traefik statik konfiguratsiyasi (Forex reverse proxy)
+# ============================================================
+# Ushbu fayl Traefik ishga tushganda bir marta o'qiladi.
+# Router/servis qoidalari dynamic/routers.yml da (file-provider, qayta yuklanadi).
+# Docker socket'ga bog'liqlik YO'Q — har qanday Docker Engine versiyasi bilan ishlaydi.
+
+api:
+  dashboard: true        # Traefik boshqaruv paneli (faqat ichki tarmoqda oching)
+  insecure: false
+
+entryPoints:
+  # 80-port: barcha HTTP so'rovlarni avtomatik HTTPS (443) ga yo'naltiradi
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  # 443-port: HTTPS (TLS) kirish nuqtasi
+  websecure:
+    address: ":443"
+
+providers:
+  # Router/servis konfiguratsiyasi shu papkadan o'qiladi va o'zgarsa qayta yuklanadi
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO
+
+# ------------------------------------------------------------
+# Cloudflare domeni bilan HAQIQIY (ogohlantirishsiz) Let's Encrypt sertifikati.
+# DNS-01 challenge — 80-portni ochish shart emas, avtomatik yangilanadi.
+# Token traefik konteyneriga CF_DNS_API_TOKEN env orqali beriladi (.env da).
+# ------------------------------------------------------------
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ovozadasturlar@gmail.com
+      storage: /etc/traefik/acme.json
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"

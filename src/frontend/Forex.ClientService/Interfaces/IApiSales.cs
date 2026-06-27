@@ -21,4 +21,7 @@ public interface IApiSales
     
     [Get("/api/sales")]
     Task<Response<List<SaleResponse>>> GetAll();
+
+    [Get("/api/sales/{id}/document-summary")]
+    Task<Response<SaleDocumentSummaryResponse>> GetDocumentSummary(long id);
 }

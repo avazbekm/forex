@@ -2,7 +2,6 @@
 
 using Forex.Application.Common.Interfaces;
 using Forex.Domain.Entities;
-using Forex.Domain.Entities.Processes;
 using Forex.Domain.Entities.Products;
 using Forex.Domain.Entities.Sales;
 using Forex.Domain.Entities.SemiProducts;
@@ -17,29 +16,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserAccount> UserAccounts { get; set; }
     public DbSet<ShopAccount> ShopCashAccounts { get; set; }
     public DbSet<Currency> Currencies { get; set; }
-    public DbSet<Invoice> Invoices { get; set; }
-    public DbSet<Manufactory> Manufactories { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductType> ProductTypes { get; set; }
     public DbSet<ProductEntry> ProductEntries { get; set; }
-    public DbSet<ProductTypeItem> ProductTypeItems { get; set; }
-    public DbSet<SemiProductResidue> SemiProductResidues { get; set; }
     public DbSet<ProductResidue> ResidueShops { get; set; }
     public DbSet<Sale> Sales { get; set; }
     public DbSet<SaleItem> SaleItems { get; set; }
+    public DbSet<Return> Returns { get; set; }
+    public DbSet<ReturnItem> ReturnItems { get; set; }
     public DbSet<SemiProduct> SemiProducts { get; set; }
-    public DbSet<SemiProductEntry> SemiProductEntries { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<ProductResidue> ProductResidues { get; set; }
     public DbSet<UnitMeasure> UnitMeasures { get; set; }
-    public DbSet<InvoicePayment> InvoicePayments { get; set; }
-    public DbSet<InProcess> InProcesses { get; set; }
     public DbSet<UserNotification> UserNotifications { get; set; }
-    public DbSet<ProductionBatch> ProductionBatches { get; set; }
-    public DbSet<WorkerPayment> WorkerPayments { get; set; }
-    public DbSet<ProductionStage> ProductionStages { get; set; }
-    public DbSet<EntryToProcess> EntryToProcesses { get; set; }
     public DbSet<CompanyInfo> CompanyInfo { get; set; }
     public DbSet<SocialLink> SocialLinks { get; set; }
     public DbSet<OperationRecord> OperationRecords { get; set; }
@@ -129,6 +119,48 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(o => o.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<OperationRecord>()
+            .HasOne(o => o.Currency)
+            .WithMany()
+            .HasForeignKey(o => o.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.SettlementCurrency)
+            .WithMany()
+            .HasForeignKey(u => u.SettlementCurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Sale>()
+            .HasOne(s => s.Currency)
+            .WithMany()
+            .HasForeignKey(s => s.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Return>()
+            .HasOne(r => r.Currency)
+            .WithMany()
+            .HasForeignKey(r => r.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Return>()
+            .HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Return>()
+            .HasOne(r => r.OperationRecord)
+            .WithOne(o => o.Return)
+            .HasForeignKey<Return>(r => r.OperationRecordId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.Sale)
+            .WithMany()
+            .HasForeignKey(t => t.SaleId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Ignore<System.Transactions.Transaction>();
     }

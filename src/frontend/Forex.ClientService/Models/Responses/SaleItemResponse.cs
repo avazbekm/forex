@@ -6,8 +6,6 @@ public sealed record SaleItemResponse
     public int BundleCount { get; set; }
     public int BundleItemCount { get; set; }
     public int TotalCount { get; set; }
-    public decimal CostPrice { get; set; }
-    public decimal Benifit { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal Amount { get; set; }
 

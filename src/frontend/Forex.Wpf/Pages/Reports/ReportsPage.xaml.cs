@@ -22,11 +22,13 @@ public partial class ReportsPage : Page
         Loaded += Page_Loaded;
     }
 
-    private void Page_Loaded(object sender, RoutedEventArgs e)
+    private async void Page_Loaded(object sender, RoutedEventArgs e)
     {
         this.ResizeWindow(1080, 700);
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
+
+        await App.AppHost!.Services.GetRequiredService<CommonReportDataService>().RefreshAsync();
     }
 
     private void RegisterFocusNavigation()

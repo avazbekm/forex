@@ -1,0 +1,182 @@
+# ============================================================
+# Forex — TO'LIQ stack (minimal + pgAdmin + backup + traefik/HTTPS)
+# ============================================================
+# Bitta faylda hammasi. Bitta domen ostida, haqiqiy HTTPS (Let's Encrypt):
+#   https://${DOMAIN}                      → API   (WPF ilova shuni ishlatadi)
+#   https://${DOMAIN}/pgadmin              → pgAdmin
+#   https://${DOMAIN}/<MINIO_BUCKET_NAME>  → rasm fayllar (yo'l = bucket nomi)
+# To'g'ridan portlar (5001/8080/9000/9001) yopiq — hammasi domen orqali.
+#
+# Yo'naltirish (routing) Docker label'da emas, traefik/dynamic/routers.yml faylida
+# (file-provider) — Docker socket'ga bog'liqlik yo'q, har qanday Docker Engine bilan ishlaydi.
+# Domeningizni traefik/dynamic/routers.yml ichida ham yangilang (file-provider .env o'qiy olmaydi).
+#
+#   cp .env.example .env                                  # DOMAIN, CF_DNS_API_TOKEN, parollar
+#   cp servers.json.example servers.json
+#   cp rclone.conf.example rclone.conf                    # backup uchun
+#   touch traefik/acme.json && chmod 600 traefik/acme.json
+#   docker compose -f docker-compose.full.yml up -d
+#
+# Qadamlar: HTTPS.md   ·   Eslatma: Docker Compose v2.24.4+ kerak.
+
+services:
+  traefik:
+    image: traefik:v3.5
+    container_name: forex_traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/acme.json:/etc/traefik/acme.json
+    networks:
+      - forex_network
+
+  postgres:
+    image: postgres:18.1-trixie
+    container_name: forex_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker-data/pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - forex_network
+
+  minio:
+    # Rasm fayllari faqat Traefik orqali https://${DOMAIN}/<bucket> da. Konsol (9001) chiqarilmaydi.
+    image: minio/minio:latest
+    container_name: forex_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./docker-data/minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - forex_network
+
+  app:
+    image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+    container_name: forex_backend
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=${POSTGRES_DB};
+      - Jwt__Key=${JWT_SECRET_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Minio__Endpoint=minio:9000
+      # Rasm URL'lari domen orqali (o'qish ham, presigned yuklash ham)
+      - Minio__PublicEndpoint=https://${DOMAIN}
+      - Minio__PublicPort=443
+      - Minio__AccessKey=${MINIO_ROOT_USER}
+      - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Minio__UseSsl=true
+      - Minio__BucketName=${MINIO_BUCKET_NAME}
+      - Minio__EnablePublicRead=true
+      - Minio__Prefix=uploads
+      - FileUpload__MaxFileSizeMB=${MAX_FILE_SIZE_MB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - forex_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: forex_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      SCRIPT_NAME: /pgadmin
+      PGADMIN_CONFIG_PROXY_X_PROTO_COUNT: "1"
+      PGADMIN_CONFIG_PROXY_X_HOST_COUNT: "1"
+    depends_on:
+      - postgres
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    networks:
+      - forex_network
+
+  backup:
+    image: muqimjon/zaxira
+    container_name: forex_backup
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      BACKUP_DRIVER: postgres-minio
+      # Hub rejimi (ixtiyoriy): bo'sh bo'lsa standalone (.env) rejimda ishlaydi.
+      # To'ldirilsa, agent Hub'ga (zaxira.xonqiz.uz) ulanib, mavjud zaxira jobini unga yuklaydi.
+      HUB_URL: ${HUB_URL:-}
+      HUB_TOKEN: ${HUB_TOKEN:-}
+      AGENT_NAME: ${AGENT_NAME:-}
+      PROJECT_NAME: ${PROJECT_NAME}
+      TZ: ${TZ}
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: ${POSTGRES_USER}
+      PG_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_DATABASE: ${POSTGRES_DB}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET_NAME}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
+      UPLOAD_SCHEDULE: ${UPLOAD_SCHEDULE:-}
+      CLEANUP_SCHEDULE: ${CLEANUP_SCHEDULE:-}
+      MIN_LOCAL_BACKUPS: ${MIN_LOCAL_BACKUPS}
+      MAX_LOCAL_BACKUPS: ${MAX_LOCAL_BACKUPS}
+      MAX_REMOTE_BACKUPS: ${MAX_REMOTE_BACKUPS}
+      COMPRESSION_LEVEL: ${COMPRESSION_LEVEL}
+      BACKUP_PASSWORD: ${BACKUP_PASSWORD}
+      RCLONE_REMOTE: ${RCLONE_REMOTE}
+      RCLONE_PATH: ${RCLONE_PATH}
+      RCLONE_CONFIG: /etc/rclone/rclone.conf
+      NOTIFY_ON: ${NOTIFY_ON:-failure}
+      NOTIFY_TELEGRAM_TOKEN: ${NOTIFY_TELEGRAM_TOKEN:-}
+      NOTIFY_TELEGRAM_CHAT_ID: ${NOTIFY_TELEGRAM_CHAT_ID:-}
+      NOTIFY_WEBHOOK_URL: ${NOTIFY_WEBHOOK_URL:-}
+      HEARTBEAT_URL: ${HEARTBEAT_URL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_TO: ${EMAIL_TO:-}
+    volumes:
+      - ./docker-data/backup:/backup
+      - ./rclone.conf:/etc/rclone/rclone.conf:ro
+    networks:
+      - forex_network
+
+networks:
+  forex_network:
+    driver: bridge

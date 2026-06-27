@@ -10,7 +10,7 @@ public class UserNotification : Auditable
 
     public string Title { get; set; } = string.Empty;       // qisqa sarlavha
     public string Message { get; set; } = string.Empty;     // to‘liq matn
-    public string? Link { get; set; }                       // agar action bo‘lsa (masalan, Invoice sahifasiga o‘tish)
+    public string? Link { get; set; }                       // agar action bo‘lsa
     public bool IsRead { get; set; } = false;               // o‘qilgan/o‘qilmagan holati
     public NotificationType Type { get; set; }              // enum: Info, Warning, Error, Success
     public DateTime SentAt { get; set; } = DateTime.UtcNow; // yuborilgan vaqt

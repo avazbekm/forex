@@ -11,6 +11,5 @@ public record ProductTypeResponse
     public ProductResponse Product { get; set; } = default!;
 
     public ProductResidueResponse ProductResidue { get; set; } = default!;
-    public ICollection<ProductTypeItemResponse> ProductTypeItems { get; set; } = default!;
-    public ICollection<SemiProductEntryResponse> ProductEntries { get; set; } = default!;
+    public ICollection<ProductEntryResponse> ProductEntries { get; set; } = default!;
 }

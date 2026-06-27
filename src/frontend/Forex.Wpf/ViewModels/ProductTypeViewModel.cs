@@ -3,7 +3,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Pages.Common;
-using System.Collections.ObjectModel;
 
 public partial class ProductTypeViewModel : ViewModelBase
 {
@@ -12,9 +11,8 @@ public partial class ProductTypeViewModel : ViewModelBase
     [ObservableProperty] private string type = string.Empty;
     [ObservableProperty] private int? bundleItemCount;
     [ObservableProperty] private decimal? unitPrice;
-    [ObservableProperty] private ObservableCollection<ProductTypeItemViewModel> productTypeItems = [];
     [ObservableProperty] private ProductResidueResponse productResidue = default!;
-    [ObservableProperty] private ICollection<SemiProductEntryResponse> productEntries = default!;
+    [ObservableProperty] private ICollection<ProductEntryResponse> productEntries = default!;
     [ObservableProperty] private bool isNew;
 
     public bool CanEditBundleCount => IsNew;
@@ -41,7 +39,6 @@ public partial class ProductTypeViewModel : ViewModelBase
                 Id = value.Id;
                 Type = value.Type;
                 BundleItemCount = value.BundleItemCount;
-                ProductTypeItems = value.ProductTypeItems;
                 UnitPrice = value.UnitPrice;
             }
         }

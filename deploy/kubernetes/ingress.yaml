@@ -1,0 +1,44 @@
+# Bitta domen ostida yo'llar bilan (docker'dagi Traefik mantig'ining aynan o'zi):
+#   https://DOMAIN                 -> app (API)
+#   https://DOMAIN/pgadmin         -> pgadmin
+#   https://DOMAIN/forex-storage   -> minio (rasm fayllar; yo'l = bucket nomi)
+#
+# DIQQAT: "host" va tls "hosts" ni o'z domeningizga o'zgartiring (configmap.yaml dagi DOMAIN bilan bir xil).
+# Rewrite YO'Q — pgAdmin SCRIPT_NAME=/pgadmin va MinIO /bucket/... yo'lni o'zi kutadi.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: forex
+  namespace: forex
+  annotations:
+    # Production (haqiqiy sertifikat): cert-manager + Let's Encrypt — issuer.example.yaml ga qarang.
+    cert-manager.io/cluster-issuer: "letsencrypt-cloudflare"
+    # minikube (nginx ingress addon) uchun odatda qo'shimcha annotatsiya kerak emas.
+spec:
+  ingressClassName: nginx          # minikube: `minikube addons enable ingress`. Traefik ishlatsangiz: traefik
+  tls:
+    - hosts:
+        - forex.example.com        # <-- o'z domeningiz
+      secretName: forex-tls
+  rules:
+    - host: forex.example.com      # <-- o'z domeningiz
+      http:
+        paths:
+          - path: /pgadmin
+            pathType: Prefix
+            backend:
+              service:
+                name: pgadmin
+                port: { number: 80 }
+          - path: /forex-storage
+            pathType: Prefix
+            backend:
+              service:
+                name: minio
+                port: { number: 9000 }
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port: { number: 8080 }

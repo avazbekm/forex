@@ -43,7 +43,7 @@
                     BorderThickness="0"
                     Click="BtnBrowse_Click"
                     Content="📁"
-                    Foreground="Black"
+                    Foreground="{DynamicResource InkPrimary}"
                     ToolTip="Fayl tanlash" />
             </Grid>
         </Border>

@@ -14,6 +14,7 @@ public partial class SaleViewModel : ViewModelBase
     [ObservableProperty] private decimal benifitPrice;
     [ObservableProperty] private int totalCount;
     [ObservableProperty] private decimal totalAmount;
+    [ObservableProperty] private decimal baseAmount;
     [ObservableProperty] private string? note;
 
     [ObservableProperty] private UserResponse customer = new();

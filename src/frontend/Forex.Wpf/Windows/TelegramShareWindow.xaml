@@ -7,7 +7,7 @@
         Title="Telegram orqali ulashish" Height="260" Width="380"
         WindowStyle="ToolWindow" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        Background="White">
+        Background="{DynamicResource SurfaceCard}">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

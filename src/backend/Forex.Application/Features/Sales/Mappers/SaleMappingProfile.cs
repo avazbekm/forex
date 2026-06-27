@@ -16,8 +16,11 @@ public class SaleMappingProfile : Profile
         CreateMap<UpdateSaleCommand, Sale>()
             .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date.ToUtcSafe()));
 
-        CreateMap<Sale, SaleDto>();
-        CreateMap<Sale, SaleForSaleItemDto>();
-        CreateMap<Sale, SaleForUserDto>();
+        CreateMap<Sale, SaleDto>()
+            .ForMember(d => d.CurrencyCode, o => o.MapFrom(s => s.Currency != null ? s.Currency.Code : null));
+        CreateMap<Sale, SaleForSaleItemDto>()
+            .ForMember(d => d.CurrencyCode, o => o.MapFrom(s => s.Currency != null ? s.Currency.Code : null));
+        CreateMap<Sale, SaleForUserDto>()
+            .ForMember(d => d.CurrencyCode, o => o.MapFrom(s => s.Currency != null ? s.Currency.Code : null));
     }
 }

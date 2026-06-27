@@ -1,6 +1,7 @@
 ﻿namespace Forex.Application.Features.Transactions.Commands;
 
 using Forex.Application.Common.Exceptions;
+using Forex.Application.Common.Extensions;
 using Forex.Application.Common.Interfaces;
 using Forex.Domain.Entities;
 using MediatR;
@@ -20,7 +21,7 @@ public class DeleteTransactionCommandHandler(
         {
             var transaction = await LoadTransactionAsync(request.TransactionId, ct);
 
-            await RevertUserAccountAsync(transaction, ct);
+            await RevertAsync(transaction, ct);
 
             RemoveOperationRecord(transaction);
             RemoveTransaction(transaction);
@@ -42,23 +43,13 @@ public class DeleteTransactionCommandHandler(
             ?? throw new NotFoundException(nameof(Transaction), nameof(transactionId), transactionId);
     }
 
-    private async Task RevertUserAccountAsync(Transaction transaction, CancellationToken ct)
+    private async Task RevertAsync(Transaction transaction, CancellationToken ct)
     {
-        var uzsCurrency = await context.Currencies
-            .FirstOrDefaultAsync(c => c.Code == "UZS", ct)
-            ?? throw new InvalidOperationException("UZS currency not found");
+        if (transaction.OperationRecord is null)
+            return;
 
-        var userAccount = await context.UserAccounts
-            .FirstOrDefaultAsync(a => a.UserId == transaction.UserId && a.CurrencyId == uzsCurrency.Id, ct)
-            ?? throw new NotFoundException(nameof(UserAccount), nameof(transaction.UserId), transaction.UserId);
-
-        var amountInUZS = transaction.Amount * transaction.ExchangeRate;
-        var delta = amountInUZS + transaction.Discount;
-
-        if (transaction.IsIncome)
-            userAccount.Balance -= delta;
-        else
-            userAccount.Balance += delta;
+        var account = await context.GetSettlementAccountAsync(transaction.UserId, ct);
+        account.Balance -= transaction.OperationRecord.Amount * transaction.OperationRecord.Rate;
     }
 
     private void RemoveOperationRecord(Transaction transaction)
