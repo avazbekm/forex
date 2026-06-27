@@ -105,9 +105,8 @@ public partial class SupplyPageViewModel : ViewModelBase
     partial void OnSelectedPartyTypeChanged(SupplyPartyType value)
     {
         AvailableUsers = value == SupplyPartyType.Supplier ? AvailableSuppliers : AvailableConsolidators;
-        SelectedUser = AvailableUsers.FirstOrDefault();
         Amount = null;
-        SelectedCurrency = GetDefaultCurrency(value);
+        SelectedUser = AvailableUsers.FirstOrDefault();   // valyuta OnSelectedUserChanged orqali avto-tanlanadi
         OnPropertyChanged(nameof(IsSupplierMode));
         OnPropertyChanged(nameof(IsConsolidatorMode));
         OnPropertyChanged(nameof(SelectedPartyTypeOption));
@@ -115,7 +114,17 @@ public partial class SupplyPageViewModel : ViewModelBase
 
     partial void OnAvailableUsersChanged(ObservableCollection<UserViewModel> value) => FilteredUsers = value;
 
-    partial void OnSelectedUserChanged(UserViewModel? value) => UserInput = value?.Name ?? string.Empty;
+    partial void OnSelectedUserChanged(UserViewModel? value)
+    {
+        UserInput = value?.Name ?? string.Empty;
+
+        // Shaxs tanlanganda valyuta avtomatik uning settlement valyutasiga o'tadi.
+        // Tahrirlashda ta'minotning o'z valyutasi saqlanadi (Edit qo'lda o'rnatadi).
+        if (IsSupplyEditing) return;
+        SelectedCurrency = value is not null
+            ? AvailableCurrencies.FirstOrDefault(c => c.Id == value.SettlementCurrencyId) ?? GetDefaultCurrency(SelectedPartyType)
+            : GetDefaultCurrency(SelectedPartyType);
+    }
 
     partial void OnFilterBeginDateChanged(DateTime value) => RebuildFilterUsers();
     partial void OnFilterEndDateChanged(DateTime value) => RebuildFilterUsers();
@@ -170,8 +179,7 @@ public partial class SupplyPageViewModel : ViewModelBase
             LoadSuppliesAsync());
 
         AvailableUsers = AvailableSuppliers;
-        SelectedUser = AvailableUsers.FirstOrDefault();
-        SelectedCurrency = GetDefaultCurrency(SelectedPartyType);
+        SelectedUser = AvailableUsers.FirstOrDefault();   // valyuta OnSelectedUserChanged orqali avto-tanlanadi
         SelectedCurrencyFilter = CurrencyFilterOption.All;
         RebuildFilterUsers();
     }
@@ -385,14 +393,13 @@ public partial class SupplyPageViewModel : ViewModelBase
 
     private void ResetForm()
     {
+        EditingSupply = null;   // avval nollab — valyuta avto-tanlash to'g'ri ishlasin
         Date = DateTime.Today;
         SelectedPartyType = SupplyPartyType.Supplier;
         AvailableUsers = AvailableSuppliers;
-        SelectedUser = AvailableUsers.FirstOrDefault();
+        SelectedUser = AvailableUsers.FirstOrDefault();   // valyuta OnSelectedUserChanged orqali avto-tanlanadi
         Amount = null;
         Description = null;
-        SelectedCurrency = GetDefaultCurrency(SelectedPartyType);
-        EditingSupply = null;
     }
 
     private CurrencyViewModel? GetDefaultCurrency(SupplyPartyType partyType)

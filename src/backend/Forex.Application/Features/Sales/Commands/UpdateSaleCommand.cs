@@ -32,8 +32,19 @@ public class UpdateSaleCommandHandler(
         try
         {
             var sale = await LoadSaleWithRelationsAsync(request.Id, ct);
+            var previousCustomerId = sale.CustomerId;
+            var previousDate = sale.Date;
 
             await RevertSaleEffectsAsync(sale, ct);
+
+            // Bog'lash faqat savdo sanasida qilingan to'lovlar uchun amal qiladi. Shuning uchun
+            // mijoz YOKI sana o'zgarsa, biriktirilgan to'lovlar uziladi (pul o'sha mijoz balansida
+            // qoladi, faqat savdoga bog'liqlik olib tashlanadi). Yangi sanadagi to'lovlarni
+            // keyin qaytadan biriktirish mumkin.
+            var customerChanged = request.CustomerId != previousCustomerId;
+            var dateChanged = request.Date.ToUtcSafe().Date != previousDate.Date;
+            if (customerChanged || dateChanged)
+                await UnlinkSalePaymentsAsync(sale.Id, ct);
 
             await ApplyNewSaleDataAsync(sale, request, ct);
 
@@ -71,6 +82,16 @@ public class UpdateSaleCommandHandler(
 
         context.SaleItems.RemoveRange(sale.SaleItems);
         sale.SaleItems.Clear();
+    }
+
+    private async Task UnlinkSalePaymentsAsync(long saleId, CancellationToken ct)
+    {
+        var linked = await context.Transactions
+            .Where(t => t.SaleId == saleId && !t.IsDeleted)
+            .ToListAsync(ct);
+
+        foreach (var payment in linked)
+            payment.SaleId = null;
     }
 
     private async Task ApplyNewSaleDataAsync(Sale sale, UpdateSaleCommand request, CancellationToken ct)

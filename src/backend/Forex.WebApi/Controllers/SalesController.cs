@@ -27,4 +27,8 @@ public class SalesController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetAll()
         => Ok(new Response { Data = await Mediator.Send(new GetAllSalesQuery(), Ct) });
+
+    [HttpGet("{id:long}/document-summary")]
+    public async Task<IActionResult> GetDocumentSummary(long id)
+        => Ok(new Response { Data = await Mediator.Send(new GetSaleDocumentSummaryQuery(id), Ct) });
 }

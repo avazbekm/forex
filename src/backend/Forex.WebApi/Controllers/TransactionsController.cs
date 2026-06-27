@@ -27,4 +27,12 @@ public class TransactionsController : BaseController
     [HttpPost("filter")]
     public async Task<IActionResult> GetFiltered(TransactionFilterQuery query)
         => Ok(new Response { Data = await Mediator.Send(query, Ct) });
+
+    [HttpGet("unlinked")]
+    public async Task<IActionResult> GetUnlinked([FromQuery] long userId, [FromQuery] DateTime date, [FromQuery] long? saleId = null)
+        => Ok(new Response { Data = await Mediator.Send(new GetUnlinkedPaymentsQuery(userId, date, saleId), Ct) });
+
+    [HttpPost("link-to-sale")]
+    public async Task<IActionResult> LinkToSale(LinkPaymentsToSaleCommand command)
+        => Ok(new Response { Data = await Mediator.Send(command, Ct) });
 }

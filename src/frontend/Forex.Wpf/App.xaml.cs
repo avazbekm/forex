@@ -1,6 +1,7 @@
 ﻿namespace Forex.Wpf;
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.IO;
@@ -12,22 +13,35 @@ public partial class App : Application
 
     public App()
     {
+#if DEBUG
+        const string environment = "Development";
+#else
+        const string environment = "Production";
+#endif
+
         AppHost = Host.CreateDefaultBuilder()
-            .ConfigureAppConfiguration((_, config) =>
+            .UseEnvironment(environment)
+            .UseDefaultServiceProvider(options =>
+            {
+                options.ValidateScopes = false;
+                options.ValidateOnBuild = false;
+            })
+            .ConfigureAppConfiguration((context, config) =>
             {
                 config.SetBasePath(Directory.GetCurrentDirectory());
 
                 // appsettings.Production.json - exe ichiga embedded (default ApiBaseUrl).
-                // Eng past ustuvorlik: quyidagi loose fayllar (dev) buni ustidan yozadi.
+                // Eng past ustuvorlik (Sources[0]): har qanday loose fayl buni ustidan yozadi.
                 var prodStream = typeof(App).Assembly
                     .GetManifestResourceStream("Forex.Wpf.appsettings.Production.json");
                 if (prodStream is not null)
-                    config.AddJsonStream(prodStream);
+                    config.Sources.Insert(0, new JsonStreamConfigurationSource { Stream = prodStream });
 
-                // appsettings.json / appsettings.Development.json - faqat development uchun
-                // (publish'ga kirmaydi; lokal ishga tushirishda default'ni ustidan yozadi)
+                // Joriy muhitga mos fayl (eng yuqori ustuvorlik). Development'da ishga tushirilsa
+                // appsettings.Development.json olinadi, Production'da embedded default qoladi.
+                var env = context.HostingEnvironment.EnvironmentName;
                 config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                config.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
+                config.AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>
             {

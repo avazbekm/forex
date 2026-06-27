@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton(_ => new ApiEndpointStore(config.GetValue<string>("ApiBaseUrl")!));
 
         services.AddTransient<AuthHeaderHandler>();
+        services.AddTransient<BaseUrlHandler>();
 
         services.AddAllRefitClients();
 
@@ -41,6 +42,7 @@ public static class DependencyInjection
                     c.BaseAddress = sp.GetRequiredService<ApiEndpointStore>().BaseUri;
                     c.Timeout = TimeSpan.FromSeconds(10);
                 })
+                .AddHttpMessageHandler<BaseUrlHandler>()
                 .AddHttpMessageHandler<AuthHeaderHandler>();
         }
 

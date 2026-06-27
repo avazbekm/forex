@@ -23,7 +23,9 @@ public class LoginViewModel(IApiAuth apiAuth) : ViewModelBase
 
         if (resp.StatusCode != 200)
         {
-            LastFailureWasConnectionError = resp.StatusCode is 0 or 404;
+            // URL / ulanish muammosi: tarmoq/SSL/timeout (0), noto'g'ri yo'l (404),
+            // noto'g'ri method (405), server/gateway xatosi (5xx). 400/401 = login xato (oyna ochilmaydi).
+            LastFailureWasConnectionError = resp.StatusCode is 0 or 404 or 405 || resp.StatusCode >= 500;
             ErrorMessage = resp.Message;
             return false;
         }

@@ -20,7 +20,8 @@ public sealed record CreateTransactionCommand(
     DateTime Date,
     DateTime DueDate,
     long UserId,
-    long CurrencyId)
+    long CurrencyId,
+    long? SaleId = null)
     : IRequest<long>;
 
 public class CreateTransactionCommandHandler(

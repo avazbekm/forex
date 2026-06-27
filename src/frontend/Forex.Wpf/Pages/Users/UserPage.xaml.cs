@@ -681,8 +681,8 @@ public partial class UserPage : Page
                 return;
             }
 
-            // O'chirish
-            var response = await client.Users.Delete(user.Id);
+            // O'chirish (.Handle() — 409/xato javobdagi do'stona xabarni oladi)
+            var response = await client.Users.Delete(user.Id).Handle();
 
             if (response.IsSuccess)
             {

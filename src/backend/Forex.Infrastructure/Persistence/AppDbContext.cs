@@ -156,6 +156,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey<Return>(r => r.OperationRecordId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.Sale)
+            .WithMany()
+            .HasForeignKey(t => t.SaleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Ignore<System.Transactions.Transaction>();
     }
 }
