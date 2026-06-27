@@ -76,14 +76,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
-    
-    <!-- appsettings.Production.json - faqat publish uchun -->
-    <None Update="appsettings.Production.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </None>
-    
+
+    <!-- appsettings.Production.json - exe ichiga embedded (yonida alohida fayl chiqmaydi).
+         Default ApiBaseUrl; har mashinada Settings orqali o'zgartiriladi. -->
+    <EmbeddedResource Include="appsettings.Production.json">
+      <LogicalName>Forex.Wpf.appsettings.Production.json</LogicalName>
+    </EmbeddedResource>
+
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

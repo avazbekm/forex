@@ -99,7 +99,7 @@
                                 <TextBlock
                                     x:Name="SecTxt"
                                     FontSize="11"
-                                    Foreground="Gray">
+                                    Foreground="{DynamicResource InkMuted}">
                                     <TextBlock.Text>
                                         <MultiBinding Converter="{StaticResource UniversalImageResolver}">
                                             <Binding Path="." />

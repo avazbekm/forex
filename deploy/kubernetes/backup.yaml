@@ -1,0 +1,77 @@
+# Zaxira agenti (ixtiyoriy). PostgreSQL + MinIO ni zaxiralab rclone bilan tashqi joyga yuklaydi.
+# rclone.conf ni avval secret qiling:
+#   kubectl -n forex create secret generic rclone-config --from-file=rclone.conf=./rclone.conf
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backup
+  namespace: forex
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: backup }
+  template:
+    metadata:
+      labels: { app: backup }
+    spec:
+      containers:
+        - name: backup
+          image: muqimjon/zaxira
+          env:
+            - name: BACKUP_DRIVER
+              value: "postgres-minio"
+            - name: PROJECT_NAME
+              valueFrom: { configMapKeyRef: { name: forex-config, key: PROJECT_NAME } }
+            - name: TZ
+              valueFrom: { configMapKeyRef: { name: forex-config, key: TZ } }
+            - name: PG_HOST
+              value: "postgres"
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_USER
+              valueFrom: { configMapKeyRef: { name: forex-config, key: POSTGRES_USER } }
+            - name: PG_PASSWORD
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: POSTGRES_PASSWORD } }
+            - name: PG_DATABASE
+              valueFrom: { configMapKeyRef: { name: forex-config, key: POSTGRES_DB } }
+            - name: MINIO_ENDPOINT
+              value: "http://minio:9000"
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { configMapKeyRef: { name: forex-config, key: MINIO_ROOT_USER } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: MINIO_ROOT_PASSWORD } }
+            - name: MINIO_BUCKET
+              valueFrom: { configMapKeyRef: { name: forex-config, key: MINIO_BUCKET_NAME } }
+            - name: BACKUP_SCHEDULE
+              value: "0 2 * * *"
+            - name: BACKUP_PASSWORD
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: BACKUP_PASSWORD } }
+            - name: RCLONE_CONFIG
+              value: "/etc/rclone/rclone.conf"
+            # RCLONE_REMOTE / RCLONE_PATH ni o'z bulutingizga moslang:
+            - name: RCLONE_REMOTE
+              value: "gdrive"
+            - name: RCLONE_PATH
+              value: "forex-backups"
+          volumeMounts:
+            - name: backup-data
+              mountPath: /backup
+            - name: rclone
+              mountPath: /etc/rclone
+              readOnly: true
+      volumes:
+        - name: backup-data
+          persistentVolumeClaim: { claimName: backup-pvc }
+        - name: rclone
+          secret: { secretName: rclone-config }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: forex
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi

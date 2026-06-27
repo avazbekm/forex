@@ -38,14 +38,35 @@ public partial class SettingsPage : Page
             targetElement: this,
             key: Key.F1,
             targetAction: () => tabControl.SelectedIndex = 0,
-            tooltipText: "Valyutalar sozlamalari (F1)"
+            tooltipText: "Mahsulotlar sozlamalari (F1)"
         );
 
         ShortcutAttacher.RegisterShortcut(
             targetElement: this,
             key: Key.F2,
             targetAction: () => tabControl.SelectedIndex = 1,
-            tooltipText: "O'lchov birliklari sozlamalari (F2)"
+            tooltipText: "Valyutalar sozlamalari (F2)"
+        );
+
+        ShortcutAttacher.RegisterShortcut(
+            targetElement: this,
+            key: Key.F3,
+            targetAction: () => tabControl.SelectedIndex = 2,
+            tooltipText: "O'lchov birliklari sozlamalari (F3)"
+        );
+
+        ShortcutAttacher.RegisterShortcut(
+            targetElement: this,
+            key: Key.F4,
+            targetAction: () => tabControl.SelectedIndex = 3,
+            tooltipText: "Server sozlamalari (F4)"
+        );
+
+        ShortcutAttacher.RegisterShortcut(
+            targetElement: this,
+            key: Key.F5,
+            targetAction: () => tabControl.SelectedIndex = 4,
+            tooltipText: "Ko'rinish sozlamalari (F5)"
         );
     }
 

@@ -1,9 +1,9 @@
 ﻿namespace Forex.Application.Features.Transactions.Commands;
 
 using Forex.Application.Common.Exceptions;
+using Forex.Application.Common.Extensions;
 using Forex.Application.Common.Interfaces;
 using Forex.Domain.Entities;
-using Forex.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,8 +21,7 @@ public class DeleteTransactionCommandHandler(
         {
             var transaction = await LoadTransactionAsync(request.TransactionId, ct);
 
-            await RevertUserAccountAsync(transaction, ct);
-            RevertShopAccount(transaction);
+            await RevertAsync(transaction, ct);
 
             RemoveOperationRecord(transaction);
             RemoveTransaction(transaction);
@@ -39,48 +38,18 @@ public class DeleteTransactionCommandHandler(
     private async Task<Transaction> LoadTransactionAsync(long transactionId, CancellationToken ct)
     {
         return await context.Transactions
-            .Include(t => t.Shop)
-                .ThenInclude(s => s.ShopAccounts)
             .Include(t => t.OperationRecord)
             .FirstOrDefaultAsync(t => t.Id == transactionId, ct)
             ?? throw new NotFoundException(nameof(Transaction), nameof(transactionId), transactionId);
     }
 
-    private async Task RevertUserAccountAsync(Transaction transaction, CancellationToken ct)
+    private async Task RevertAsync(Transaction transaction, CancellationToken ct)
     {
-        var uzsCurrency = await context.Currencies
-            .FirstOrDefaultAsync(c => c.Code == "UZS", ct)
-            ?? throw new InvalidOperationException("UZS currency not found");
+        if (transaction.OperationRecord is null)
+            return;
 
-        var userAccount = await context.UserAccounts
-            .FirstOrDefaultAsync(a => a.UserId == transaction.UserId && a.CurrencyId == uzsCurrency.Id, ct)
-            ?? throw new NotFoundException(nameof(UserAccount), nameof(transaction.UserId), transaction.UserId);
-
-        var amountInUZS = transaction.Amount * transaction.ExchangeRate;
-        var delta = amountInUZS + transaction.Discount;
-
-        if (transaction.IsIncome)
-            userAccount.Balance -= delta;
-        else
-            userAccount.Balance += delta;
-    }
-
-    private static void RevertShopAccount(Transaction transaction)
-    {
-        var shopAccount = transaction.Shop.ShopAccounts
-            .FirstOrDefault(sa => sa.CurrencyId == transaction.CurrencyId)
-            ?? throw new NotFoundException(nameof(ShopAccount), nameof(transaction.CurrencyId), transaction.CurrencyId);
-
-        if (transaction.PaymentMethod == PaymentMethod.Naqd)
-        {
-            if (transaction.IsIncome)
-                shopAccount.Balance -= transaction.Amount;
-            else
-                shopAccount.Balance += transaction.Amount;
-
-            if (shopAccount.Balance < 0)
-                throw new ConflictException("Do'kon kassasida mablag' yetarli emas!");
-        }
+        var account = await context.GetSettlementAccountAsync(transaction.UserId, ct);
+        account.Balance -= transaction.OperationRecord.Amount * transaction.OperationRecord.Rate;
     }
 
     private void RemoveOperationRecord(Transaction transaction)

@@ -1,0 +1,19 @@
+# Maxfiy BO'LMAGAN sozlamalar. Maxfiylar -> secret.yaml
+# DOMAIN'ni o'z domeningizga o'zgartiring (ingress.yaml da ham).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forex-config
+  namespace: forex
+data:
+  DOMAIN: "forex.example.com"
+  POSTGRES_USER: "postgres"
+  POSTGRES_DB: "forex"
+  MINIO_ROOT_USER: "minioadmin"
+  MINIO_BUCKET_NAME: "forex-storage"
+  PGADMIN_EMAIL: "admin@example.com"
+  JWT_ISSUER: "Forex"
+  JWT_AUDIENCE: "AuditoryForex"
+  PROJECT_NAME: "forex"
+  TZ: "Asia/Tashkent"
+  MAX_FILE_SIZE_MB: "1"

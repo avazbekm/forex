@@ -4,12 +4,12 @@ using Forex.ClientService;
 using Forex.ClientService.Services;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Auth;
-using Forex.Wpf.Pages.Processes;
 using Forex.Wpf.Pages.Products;
 using Forex.Wpf.Pages.Reports;
+using Forex.Wpf.Pages.Returns.Views;
 using Forex.Wpf.Pages.Sales;
-using Forex.Wpf.Pages.SemiProducts.Views;
 using Forex.Wpf.Pages.Settings;
+using Forex.Wpf.Pages.Supply.Views;
 using Forex.Wpf.Pages.Transactions.Views;
 using Forex.Wpf.Pages.Users;
 using Forex.Wpf.Windows;
@@ -20,6 +20,7 @@ using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
@@ -28,15 +29,24 @@ public partial class HomePage : Page
     private static MainWindow Main => (MainWindow)Application.Current.MainWindow;
     private readonly ForexClient client = App.AppHost!.Services.GetRequiredService<ForexClient>();
 
+    private static readonly Brush ChipActiveBg = new SolidColorBrush(Colors.White);
+    private static readonly Brush ChipActiveFg = new SolidColorBrush(Color.FromRgb(0x3B, 0x5B, 0xDB));
+    private static readonly Brush ChipInactiveFg = new SolidColorBrush(Color.FromRgb(0x7A, 0x86, 0x99));
+
     public ProfileEditViewModel ProfileViewModel { get; }
+    public HomeDashboardViewModel DashboardViewModel { get; }
 
     public HomePage()
     {
         InitializeComponent();
         ProfileViewModel = new ProfileEditViewModel(client);
+        DashboardViewModel = new HomeDashboardViewModel(client);
 
         // Main content needs AuthStore for navbar bindings
         mainContent.DataContext = AuthStore.Instance;
+
+        // Dashboard widgets bind to the dashboard view model
+        dashboardRoot.DataContext = DashboardViewModel;
 
         // Profile modal needs ProfileViewModel
         profileEditOverlay.DataContext = ProfileViewModel;
@@ -46,10 +56,32 @@ public partial class HomePage : Page
 
     private async void Page_Loaded(object sender, RoutedEventArgs e)
     {
-        this.ResizeWindow(810, 580);
+        this.ResizeWindow(1180, 800);
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
         await LoadUserAvatar();
+        UpdateChips("Week");
+        await DashboardViewModel.LoadAsync();
+    }
+
+    private async void Chip_Click(object sender, RoutedEventArgs e)
+    {
+        var period = (string)((Button)sender).Tag;
+        UpdateChips(period);
+        await DashboardViewModel.LoadAsync(period);
+    }
+
+    private void UpdateChips(string period)
+    {
+        SetChip(chipDay, period == "Day");
+        SetChip(chipWeek, period == "Week");
+        SetChip(chipMonth, period == "Month");
+    }
+
+    private static void SetChip(Button button, bool active)
+    {
+        button.Background = active ? ChipActiveBg : Brushes.Transparent;
+        button.Foreground = active ? ChipActiveFg : ChipInactiveFg;
     }
 
     private void RegisterGlobalShortcuts()
@@ -57,10 +89,10 @@ public partial class HomePage : Page
         btnSale.RegisterShortcut(Key.F1);
         btnCash.RegisterShortcut(Key.F2);
         btnProduct.RegisterShortcut(Key.F3);
-        //btnSemiProductEntry.RegisterShortcut(Key.F4);
-        btnUser.RegisterShortcut(Key.F4);
-        btnReports.RegisterShortcut(Key.F5);
-        btnSettings.RegisterShortcut(Key.F6);
+        btnSupply.RegisterShortcut(Key.F4);
+        btnUser.RegisterShortcut(Key.F5);
+        btnReports.RegisterShortcut(Key.F6);
+        btnSettings.RegisterShortcut(Key.F7);
     }
 
     private void RegisterFocusNavigation()
@@ -70,7 +102,7 @@ public partial class HomePage : Page
             btnSale,
             btnCash,
             btnProduct,
-            btnSemiProductEntry,
+            btnSupply,
             btnUser,
             btnReports,
             btnSettings,
@@ -89,11 +121,14 @@ public partial class HomePage : Page
     private void BtnSale_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new SalePage());
 
+    private void BtnReturn_Click(object sender, RoutedEventArgs e)
+        => Main.NavigateTo(new AddReturnPage());
+
     private void BtnSettings_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new SettingsPage());
 
-    private void BtnSemiProduct_Click(object sender, RoutedEventArgs e)
-        => Main.NavigateTo(new SemiProductPage());
+    private void BtnSupply_Click(object sender, RoutedEventArgs e)
+        => Main.NavigateTo(new SupplyPage());
 
     private void btnReports_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new ReportsPage());
@@ -104,9 +139,6 @@ public partial class HomePage : Page
         AuthStore.Instance.Logout();
         Main.NavigateTo(new LoginPage());
     }
-
-    private void btnProcess_Click(object sender, RoutedEventArgs e)
-          => Main.NavigateTo(new ProcessPage());
 
     private void BtnOverdue_Click(object sender, RoutedEventArgs e)
     {
@@ -129,7 +161,7 @@ public partial class HomePage : Page
         userProfilePopup.IsOpen = false;
 
         // Resize window for better modal visibility
-        this.ResizeWindow(810, 700, always: true);
+        this.ResizeWindow(1180, 800, always: true);
 
         // Load user data
         await ProfileViewModel.LoadUserDataAsync();
@@ -225,7 +257,7 @@ public partial class HomePage : Page
         mainContent.IsEnabled = true;
 
         // Restore original window size
-        this.ResizeWindow(810, 580, always: true);
+        this.ResizeWindow(1180, 800, always: true);
 
         pwdNewPassword.Clear();
         pwdConfirmPassword.Clear();

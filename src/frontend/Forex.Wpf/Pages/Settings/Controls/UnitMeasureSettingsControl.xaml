@@ -2,100 +2,90 @@
              x:Name="RootControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
              xmlns:local="clr-namespace:Forex.Wpf.Pages.Settings.Controls"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
-        <Style TargetType="CheckBox"
-               x:Key="PersistentCheckBoxStyle">
-            <Setter Property="Foreground"
-                    Value="Black" />
-            <Setter Property="Background"
-                    Value="Transparent" />
-            <Setter Property="BorderBrush"
-                    Value="Gray" />
+        <Style TargetType="CheckBox" x:Key="PersistentCheckBoxStyle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#B7C0CE" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <Grid>
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="2"
-                                    Width="16"
-                                    Height="16"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center" />
+                                    BorderThickness="1.5"
+                                    CornerRadius="4"
+                                    Width="18" Height="18"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center" />
                             <Path x:Name="CheckMark"
                                   Data="M0,4 L2,6 L6,0"
-                                  Stroke="Black"
+                                  Stroke="#3B5BDB"
                                   StrokeThickness="2"
                                   Visibility="Collapsed"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center" />
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked"
-                                     Value="True">
-                                <Setter TargetName="CheckMark"
-                                        Property="Visibility"
-                                        Value="Visible" />
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="RadioDotStyle"
-               TargetType="RadioButton">
+        <Style x:Key="RadioDotStyle" TargetType="RadioButton">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <Grid>
-                            <Ellipse x:Name="Outer"
-                                     Width="16"
-                                     Height="16"
-                                     Stroke="Gray"
-                                     StrokeThickness="1"
-                                     Fill="Transparent"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center" />
-                            <Ellipse x:Name="Inner"
-                                     Width="8"
-                                     Height="8"
-                                     Fill="Black"
+                            <Ellipse x:Name="Outer" Width="18" Height="18"
+                                     Stroke="#B7C0CE" StrokeThickness="1.5" Fill="Transparent"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Ellipse x:Name="Inner" Width="9" Height="9" Fill="#3B5BDB"
                                      Visibility="Collapsed"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center" />
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked"
-                                     Value="True">
-                                <Setter TargetName="Inner"
-                                        Property="Visibility"
-                                        Value="Visible" />
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Inner" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Outer" Property="Stroke" Value="#3B5BDB" />
                             </Trigger>
-                            <Trigger Property="IsEnabled"
-                                     Value="False">
-                                <Setter TargetName="Outer"
-                                        Property="Stroke"
-                                        Value="LightGray" />
-                                <Setter TargetName="Inner"
-                                        Property="Fill"
-                                        Value="Gray" />
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Outer" Property="Stroke" Value="#E0E4EB" />
+                                <Setter TargetName="Inner" Property="Fill" Value="#C7CFDD" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="HeaderText" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="CellInput" TargetType="TextBox">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource InkPrimary}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -104,12 +94,12 @@
 
         <!-- Header -->
         <Border Grid.Row="0"
-                BorderBrush="LightGray"
+                Background="{DynamicResource GridHeaderBg}"
+                BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
-                CornerRadius="6"
-                Padding="10"
-                Margin="0 5 17 0"
-                Background="White"
+                CornerRadius="10"
+                Padding="12,10"
+                Margin="0,0,17,0"
                 SnapsToDevicePixels="True">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -122,59 +112,30 @@
                     <ColumnDefinition Width="90" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Odatiy"
-                           FontWeight="SemiBold"
-                           Grid.Column="1"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
-
-                <TextBlock Text="Faol"
-                           FontWeight="SemiBold"
-                           Grid.Column="2"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
-
-                <TextBlock Text="Nomi"
-                           FontWeight="SemiBold"
-                           Grid.Column="3"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
-
-                <TextBlock Text="Belgilanish"
-                           Grid.Column="4"
-                           FontWeight="SemiBold"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
-
-                <TextBlock Text="Batafsil"
-                           Grid.Column="5"
-                           FontWeight="SemiBold"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
-
-                <TextBlock Text="Amallar"
-                           Grid.Column="6"
-                           FontWeight="SemiBold"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
+                <TextBlock Text="Odatiy" Grid.Column="1" Style="{StaticResource HeaderText}" />
+                <TextBlock Text="Faol" Grid.Column="2" Style="{StaticResource HeaderText}" />
+                <TextBlock Text="Nomi" Grid.Column="3" Style="{StaticResource HeaderText}" />
+                <TextBlock Text="Belgilanish" Grid.Column="4" Style="{StaticResource HeaderText}" />
+                <TextBlock Text="Batafsil" Grid.Column="5" Style="{StaticResource HeaderText}" />
+                <TextBlock Text="Amallar" Grid.Column="6" Style="{StaticResource HeaderText}" />
             </Grid>
         </Border>
 
         <!-- Scrollable o'lchov birliklari ro'yxati -->
         <ScrollViewer Grid.Row="1"
                       VerticalScrollBarVisibility="Auto"
-                      Margin="0,5">
+                      Margin="0,6">
             <ItemsControl ItemsSource="{Binding UnitMeasures}"
                           AllowDrop="True"
                           Drop="ItemsControl_Drop">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderBrush="LightGray"
+                        <Border BorderBrush="{DynamicResource HairlineBorder}"
                                 BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="10"
+                                CornerRadius="10"
+                                Padding="12,8"
                                 Margin="0,5"
-                                Background="White"
+                                Background="{DynamicResource SurfaceCard}"
                                 SnapsToDevicePixels="True">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -188,12 +149,12 @@
                                 </Grid.ColumnDefinitions>
 
                                 <fa:IconImage Icon="GripVertical"
-                                              Width="16"
-                                              Height="16"
+                                              Width="15" Height="15"
                                               Cursor="SizeAll"
+                                              Foreground="#B7C0CE"
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Left"
-                                              Margin="4"
+                                              Margin="2"
                                               MouseDown="DragHandle_MouseDown"
                                               MouseMove="DragHandle_MouseMove"
                                               MouseUp="DragHandle_MouseUp"
@@ -214,32 +175,26 @@
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center" />
 
-                                <TextBox Text="{Binding Name}"
-                                         BorderThickness="0"
-                                         HorizontalAlignment="Center"
-                                         Grid.Column="3" />
+                                <TextBox Text="{Binding Name}" Grid.Column="3" Style="{StaticResource CellInput}" />
+                                <TextBox Text="{Binding Symbol}" Grid.Column="4" Style="{StaticResource CellInput}" />
+                                <TextBox Text="{Binding Description}" Grid.Column="5" Style="{StaticResource CellInput}" HorizontalContentAlignment="Left" Padding="6,0" />
 
-                                <TextBox Text="{Binding Symbol}"
-                                         BorderThickness="0"
-                                         HorizontalAlignment="Center"
-                                         Grid.Column="4" />
-
-                                <TextBox Text="{Binding Description}"
-                                         BorderThickness="0"
-                                         HorizontalAlignment="Center"
-                                         Grid.Column="5" />
-
-                                <Button Content="O'chirish"
-                                        Grid.Column="6"
+                                <Button Grid.Column="6"
+                                        Height="30"
+                                        Padding="10,0"
                                         HorizontalAlignment="Center"
+                                        md:ButtonAssist.CornerRadius="8"
+                                        Background="#FEECEC"
                                         BorderThickness="0"
+                                        Foreground="#DC2626"
                                         Command="{Binding DataContext.RemoveUnitMeasureCommand, ElementName=RootControl}"
                                         CommandParameter="{Binding}"
-                                        Background="Tomato"
-                                        Foreground="White"
-                                        Width="80"
-                                        Padding="5 "
-                                        ToolTip="O'lchov birligini o'chirish" />
+                                        ToolTip="O'lchov birligini o'chirish">
+                                    <StackPanel Orientation="Horizontal">
+                                        <md:PackIcon Width="15" Height="15" VerticalAlignment="Center" Kind="DeleteOutline" />
+                                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="O'chirish" />
+                                    </StackPanel>
+                                </Button>
                             </Grid>
                         </Border>
                     </DataTemplate>
@@ -251,46 +206,27 @@
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
-                    Margin="0,10,0,0">
-            <Button Content="Birlik qo'shish"
-                    Command="{Binding AddUnitMeasureCommand}"
-                    Width="140"
-                    Height="35"
-                    Background="#007ACC"
-                    Foreground="White"
-                    FontWeight="SemiBold">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5"
-                                BorderThickness="0">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Margin="10,2" />
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
+                    Margin="0,12,0,0">
+            <Button Command="{Binding AddUnitMeasureCommand}"
+                    Height="38" Padding="18,0"
+                    md:ButtonAssist.CornerRadius="9"
+                    Background="#3B5BDB" BorderThickness="0"
+                    Foreground="White" FontWeight="SemiBold">
+                <StackPanel Orientation="Horizontal">
+                    <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Plus" />
+                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Birlik qo'shish" />
+                </StackPanel>
             </Button>
 
-            <Button Content="Saqlash"
-                    Command="{Binding SaveUnitMeasuresCommand}"
-                    Width="140"
-                    Height="35"
-                    Margin="15 0 0 0"
-                    Background="ForestGreen"
-                    Foreground="White"
-                    FontWeight="SemiBold">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="5"
-                                BorderThickness="0">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Margin="10 2" />
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
+            <Button Command="{Binding SaveUnitMeasuresCommand}"
+                    Height="38" Padding="22,0" Margin="12,0,0,0"
+                    md:ButtonAssist.CornerRadius="9"
+                    Background="#15803D" BorderThickness="0"
+                    Foreground="White" FontWeight="SemiBold">
+                <StackPanel Orientation="Horizontal">
+                    <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ContentSave" />
+                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Saqlash" />
+                </StackPanel>
             </Button>
         </StackPanel>
     </Grid>

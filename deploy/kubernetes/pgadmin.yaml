@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  namespace: forex
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: pgadmin }
+  template:
+    metadata:
+      labels: { app: pgadmin }
+    spec:
+      containers:
+        - name: pgadmin
+          image: dpage/pgadmin4:latest
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              valueFrom: { configMapKeyRef: { name: forex-config, key: PGADMIN_EMAIL } }
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: PGADMIN_PASSWORD } }
+            # /pgadmin subyo'lida ishlash + proxy (HTTPS) ni to'g'ri tushunish
+            - name: SCRIPT_NAME
+              value: "/pgadmin"
+            - name: PGADMIN_CONFIG_PROXY_X_PROTO_COUNT
+              value: "1"
+            - name: PGADMIN_CONFIG_PROXY_X_HOST_COUNT
+              value: "1"
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin
+  namespace: forex
+spec:
+  selector: { app: pgadmin }
+  ports:
+    - port: 80
+      targetPort: 80

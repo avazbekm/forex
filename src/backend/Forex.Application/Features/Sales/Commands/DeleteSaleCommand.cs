@@ -1,6 +1,7 @@
 ﻿namespace Forex.Application.Features.Sales.Commands;
 
 using Forex.Application.Common.Exceptions;
+using Forex.Application.Common.Extensions;
 using Forex.Application.Common.Interfaces;
 using Forex.Domain.Entities;
 using Forex.Domain.Entities.Products;
@@ -21,10 +22,12 @@ public class DeleteSaleCommandHandler(
         try
         {
             var sale = await LoadSaleAsync(request.SaleId, ct);
-            var userAccount = sale.Customer.Accounts.FirstOrDefault()
-                ?? throw new NotFoundException(nameof(UserAccount), nameof(sale.CustomerId), sale.CustomerId);
 
-            userAccount.Balance += sale.TotalAmount;
+            if (sale.OperationRecord is not null)
+            {
+                var account = await context.GetSettlementAccountAsync(sale.CustomerId, ct);
+                account.Balance -= sale.OperationRecord.Amount * sale.OperationRecord.Rate;
+            }
 
             var productResidues = await LoadProductResiduesAsync(sale.SaleItems, ct);
 

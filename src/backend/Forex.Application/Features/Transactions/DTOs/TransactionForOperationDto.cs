@@ -1,8 +1,5 @@
-﻿namespace Forex.Application.Features.Transactions.DTOs;
+namespace Forex.Application.Features.Transactions.DTOs;
 
-using Forex.Application.Features.Currencies.DTOs;
-using Forex.Application.Features.Shops.DTOs;
-using Forex.Application.Features.Users.DTOs;
 using Forex.Domain.Enums;
 
 public sealed record TransactionForOperationDto
@@ -17,13 +14,7 @@ public sealed record TransactionForOperationDto
     public DateTime Date { get; set; }
 
     public long OperationRecordId { get; set; }
-
     public long? ShopId { get; set; }
-    public ShopForTransactionDto? Shop { get; set; } = default!;
-
     public long UserId { get; set; }
-    public UserForTransactionDto User { get; set; } = default!;
-
     public long CurrencyId { get; set; }
-    public CurrencyDto Currency { get; set; } = default!;
 }

@@ -1,0 +1,15 @@
+# ============================================================
+# Traefik dinamik TLS konfiguratsiyasi
+# ============================================================
+# Cloudflare domeni rejimida (Let's Encrypt) bu yerda hech narsa shart emas —
+# sertifikatni Traefik avtomatik oladi. Fayl ataylab bo'sh qoldirilgan.
+#
+# (Domainsiz / self-signed IP uchun ishlatmoqchi bo'lsangiz, quyidagini izohdan
+#  chiqaring va `traefik/certs/generate-cert.sh <IP>` bilan sertifikat yarating.)
+
+# tls:
+#   stores:
+#     default:
+#       defaultCertificate:
+#         certFile: /etc/traefik/certs/server.crt
+#         keyFile: /etc/traefik/certs/server.key

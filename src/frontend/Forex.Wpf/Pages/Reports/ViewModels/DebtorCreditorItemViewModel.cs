@@ -11,4 +11,5 @@ public partial class DebtorCreditorItemViewModel
 
     public decimal DebtorAmount { get; set; }
     public decimal CreditorAmount { get; set; }
+    public string? CurrencyCode { get; set; }
 }

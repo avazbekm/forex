@@ -2,7 +2,6 @@
 
 using Forex.Domain.Commons;
 using Forex.Domain.Entities;
-using Forex.Domain.Entities.Products;
 
 public class SemiProduct : Auditable
 {
@@ -12,8 +11,4 @@ public class SemiProduct : Auditable
 
     public long UnitMeasureId { get; set; }
     public UnitMeasure UnitMeasure { get; set; } = default!;
-
-    public ICollection<ProductTypeItem>? ProductTypeItem { get; set; }
-    public ICollection<SemiProductResidue> SemiProductResidues { get; set; } = default!;
-    public ICollection<SemiProductEntry> SemiProductEntries { get; set; } = default!;
 }

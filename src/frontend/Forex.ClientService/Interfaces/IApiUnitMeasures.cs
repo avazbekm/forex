@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,21 +7,21 @@ using Refit;
 
 public interface IApiUnitMeasures
 {
-    [Post("/unit-measures")]
+    [Post("/api/unit-measures")]
     Task<Response<long?>> CreateAsync([Body] UnitMeasureRequest request);
 
-    [Put("/unit-measures​")]
+    [Put("/api/unit-measures")]
     Task<Response<bool>> UpdateAsync([Body] UnitMeasureRequest request);
 
-    [Put("/unit-measures/all")]
+    [Put("/api/unit-measures/all")]
     Task<Response<bool>> SaveAllAsync(List<UnitMeasureRequest> dtoList);
 
-    [Delete("/unit-measures​/{id}")]
+    [Delete("/api/unit-measures/{id}")]
     Task<Response<bool>> DeleteAsync(long id);
 
-    [Get("/unit-measures/{id}")]
+    [Get("/api/unit-measures/{id}")]
     Task<Response<UnitMeasureResponse>> GetByIdAsync(long id);
 
-    [Get("/unit-measures")]
+    [Get("/api/unit-measures")]
     Task<Response<List<UnitMeasureResponse>>> GetAllAsync();
 }

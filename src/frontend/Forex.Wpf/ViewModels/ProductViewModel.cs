@@ -29,12 +29,6 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty] private ProductTypeViewModel selectedType = new();
     private ProductViewModel? selected;
 
-
-    public decimal TotalAmount =>
-        ProductTypes?.Sum(pt =>
-            pt.ProductTypeItems?.Sum(item => item.SemiProduct.TotalAmount) ?? 0
-        ) ?? 0;
-
     #region Commands
 
     [RelayCommand]

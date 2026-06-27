@@ -7,11 +7,12 @@ public sealed record SaleForSaleItemDto
 {
     public long Id { get; set; }
     public DateTime Date { get; set; }
-    public decimal CostPrice { get; set; }      // 1 ta savdoda umumiy tannarxi
-    public decimal BenifitPrice { get; set; }    // 1 ta savdoda umumiy foydasi
-    public int TotalCount { get; set; }       // 1 ta savdoda jami necha dona sotildi
-    public decimal TotalAmount { get; set; }   // 1 ta savdoda jami summa
+    public int TotalCount { get; set; }
+    public decimal TotalAmount { get; set; }
     public string? Note { get; set; }
+
+    public long CurrencyId { get; set; }
+    public string? CurrencyCode { get; set; }
 
     public long OperationRecordId { get; set; }
     public OperationRecordForSaleDto OperationRecord { get; set; } = default!;

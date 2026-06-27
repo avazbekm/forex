@@ -1,0 +1,88 @@
+# ============================================================
+# Forex — MINIMAL stack (postgres + minio + app)
+# ============================================================
+# Eng sodda ishga tushirish: HTTPS yo'q, pgAdmin yo'q, backup yo'q.
+# Lokal sinov yoki sodda ichki server uchun.
+#
+#   cp .env.example .env        # qiymatlarni to'ldiring
+#   docker compose up -d
+#
+# To'liq variant (pgAdmin + backup + traefik/HTTPS): docker-compose.full.yml
+# Qo'llanma: README.md
+
+services:
+  postgres:
+    image: postgres:18.1-trixie
+    container_name: forex_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker-data/pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - forex_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: forex_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./docker-data/minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - forex_network
+
+  app:
+    image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+    container_name: forex_backend
+    restart: always
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=${POSTGRES_DB};
+      - Jwt__Key=${JWT_SECRET_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Minio__Endpoint=minio:9000
+      - Minio__PublicEndpoint=${MINIO_PUBLIC_ENDPOINT}
+      - Minio__PublicPort=9000
+      - Minio__AccessKey=${MINIO_ROOT_USER}
+      - Minio__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Minio__UseSsl=false
+      - Minio__BucketName=${MINIO_BUCKET_NAME}
+      - Minio__EnablePublicRead=true
+      - Minio__Prefix=uploads
+      - FileUpload__MaxFileSizeMB=${MAX_FILE_SIZE_MB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - forex_network
+
+networks:
+  forex_network:
+    driver: bridge

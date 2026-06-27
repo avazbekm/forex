@@ -3,7 +3,6 @@
 using Forex.Application.Features.Currencies.DTOs;
 using Forex.Application.Features.Products.ProductResidues.DTOs;
 using Forex.Application.Features.Products.Products.DTOs;
-using Forex.Application.Features.Products.ProductTypeItems.DTOs;
 
 public sealed record ProductTypeForProductEntryDto
 {
@@ -19,6 +18,4 @@ public sealed record ProductTypeForProductEntryDto
     public ProductForProductTypeDto Product { get; set; } = default!;
 
     public ProductResidueForProductTypeDto ProductResidue { get; set; } = default!;
-
-    public ICollection<ProductTypeItemForProductTypeDto> ProductTypeItems { get; set; } = default!;
 }

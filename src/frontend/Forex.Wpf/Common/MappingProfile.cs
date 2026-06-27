@@ -2,7 +2,6 @@
 
 using Forex.ClientService.Models.Requests;
 using Forex.ClientService.Models.Responses;
-using Forex.Wpf.Pages.Processes.ViewModels;
 using Forex.Wpf.ViewModels;
 using Mapster;
 
@@ -23,9 +22,6 @@ public static class MappingProfile
             .PreserveReference(true);
         config.NewConfig<ProductTypeViewModel, ProductTypeRequest>();
 
-        // 🔹 ProductTypeItem
-        config.NewConfig<ProductTypeItemViewModel, ProductTypeItemRequest>();
-
         config.NewConfig<ProductEntryViewModel, ProductEntryViewModel>()
             .PreserveReference(true);
 
@@ -44,16 +40,6 @@ public static class MappingProfile
         config.NewConfig<SaleResponse, SaleViewModel>()
             .Map(dest => dest.Date, src => src.Date.ToLocalTime());
 
-        // 🔹 Processes
-        config.NewConfig<InProcessResponse, InProcessViewModel>();
-        config.NewConfig<InProcessViewModel, InProcessRequest>();
-
-        // 🔹 EntryToProcess
-        config.NewConfig<EntryToProcessResponse, EntryToProcessViewModel>();
-        config.NewConfig<EntryToProcessViewModel, EntryToProcessRequest>();
-        config.NewConfig<EntryToProcessByProductViewModel, EntryToProcessRequest>()
-            .Map(dest => dest.ProductTypeId, src => src.Product.SelectedType!.Id);
-
         // 🔹 UnitMeasures
         config.NewConfig<UnitMeasureResponse, UnitMeasuerViewModel>();
         config.NewConfig<UnitMeasuerViewModel, UnitMeasureRequest>();
@@ -66,23 +52,16 @@ public static class MappingProfile
         config.NewConfig<CurrencyResponse, CurrencyViewModel>();
         config.NewConfig<CurrencyViewModel, CurrencyRequest>();
 
-        // 🔹 Manufactory
-        config.NewConfig<ManufactoryResponse, ManufactoryViewModel>();
-
-        // 🔹 Invoice
-        config.NewConfig<InvoiceResponse, InvoiceViewModel>();
-        config.NewConfig<InvoiceViewModel, InvoiceRequest>()
-            .Map(dest => dest.ManufactoryId, src => src.Manufactory.Id);
-
-        // Invoice payment
-        config.NewConfig<InvoicePaymentResponse, InvoicePaymentViewModel>();
-        config.NewConfig<InvoicePaymentViewModel, InvoicePaymentRequest>()
-            .Map(dest => dest.UserId, src => src.User.Id)
-            .Map(dest => dest.CurrencyId, src => src.Currency.Id);
-
         // Currency
         config.NewConfig<CurrencyResponse, CurrencyViewModel>();
         config.NewConfig<UserAccountResponse, UserAccountViewModel>();
+
+        // Supply
+        config.NewConfig<SupplyResponse, SupplyViewModel>()
+            .Map(dest => dest.Date, src => src.Date.ToLocalTime());
+        config.NewConfig<SupplyViewModel, SupplyRequest>()
+            .Map(dest => dest.UserId, src => src.User.Id)
+            .Map(dest => dest.CurrencyId, src => src.Currency.Id);
 
         // 🔹 Transaction
         config.NewConfig<TransactionResponse, TransactionViewModel>()

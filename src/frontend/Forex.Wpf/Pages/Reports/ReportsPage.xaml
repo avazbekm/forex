@@ -7,7 +7,7 @@
     xmlns:views="clr-namespace:Forex.Wpf.Pages.Reports.ViewModels"
     Title="Hisobotlar">
 
-    <Grid Margin="10">
+    <Grid Margin="10" Background="{DynamicResource SurfacePage}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -34,17 +34,17 @@
             UniformCornerRadius="4">
             <TabControl
                 x:Name="tabReports"
-                md:ColorZoneAssist.Mode="PrimaryLight"
+                Background="{DynamicResource SurfaceMuted}"
                 FontSize="15"
                 FontWeight="Medium"
                 SelectedIndex="0"
                 TabStripPlacement="Top">
 
-                <!--  1. Mijoz aylanmasi  -->
-                <TabItem Header="Mijoz aylanmasi">
+                <!--  1. Aylanma  -->
+                <TabItem Header="Aylanma">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="IsVisibleChanged">
-                            <i:InvokeCommandAction Command="{Binding CustomerTurnoverVM.PreviewCommand}" />
+                            <i:InvokeCommandAction Command="{Binding CustomerTurnoverVM.OnTabSelectedCommand}" />
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                     <views:CustomerTurnoverReportView DataContext="{Binding CustomerTurnoverVM}" />
@@ -54,8 +54,8 @@
                 <TabItem Header="Tayyor mahsulotlar qoldig‘i">
                     <views:FinishedStockReportView DataContext="{Binding FinishedStockVM}" />
                 </TabItem>
-                <!--  3. Savdo tarixi  -->
-                <TabItem Header="Savdo tarixi">
+                <!--  3. Maxsulot sotuvi  -->
+                <TabItem Header="Maxsulot sotuvi">
                     <views:SalesHistoryReportView DataContext="{Binding SalesHistoryVM}" />
                 </TabItem>
                 <!--  4. Debitor va Kreditor  -->
@@ -73,13 +73,7 @@
                 </TabItem>
 
 
-                <!--4. Yarim tayyor mahsulotlar
-                <TabItem Header="Yarim tayyor mahsulotlar">
-                <views:SemiFinishedStockReportView DataContext="{Binding SemiFinishedStockVM}"/>
-                </TabItem>
-
-
-                6. Hodimlar balansi
+                <!--6. Hodimlar balansi
                 <TabItem Header="Hodimlar balansi">
                 <views:EmployeeBalanceReportView DataContext="{Binding EmployeeBalanceVM}"/>
                 </TabItem>

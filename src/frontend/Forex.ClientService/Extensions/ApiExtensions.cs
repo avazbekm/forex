@@ -44,6 +44,22 @@ public static class ApiExtensions
                 Message = apiEx.ReasonPhrase ?? apiEx.Message
             };
         }
+        catch (HttpRequestException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
         catch (Exception ex)
         {
             return new Response<T>
@@ -101,6 +117,22 @@ public static class ApiExtensions
                 Message = apiEx.ReasonPhrase ?? apiEx.Message
             };
         }
+        catch (HttpRequestException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            return new Response<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
         catch (Exception ex)
         {
             return new Response<T>
@@ -127,7 +159,7 @@ public static class ApiExtensions
             PagedListMetadata? metadata = null;
             
             // Try different header variations
-            var headerKeys = new[] { "X-Pagination", "x-pagination", "Pagination", "pagination" };
+            var headerKeys = new[] { "X-Pagination", "x-pagination", "Pagination", "pagination", "X-Paging", "x-paging" };
             string? paginationJson = null;
 
             foreach (var key in headerKeys)
@@ -186,6 +218,22 @@ public static class ApiExtensions
             {
                 StatusCode = (int)apiEx.StatusCode,
                 Message = apiEx.ReasonPhrase ?? apiEx.Message
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            return new PagedResponse<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
+            };
+        }
+        catch (TaskCanceledException ex)
+        {
+            return new PagedResponse<T>
+            {
+                StatusCode = 0,
+                Message = ex.Message
             };
         }
         catch (Exception ex)

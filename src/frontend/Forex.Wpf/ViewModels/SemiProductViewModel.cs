@@ -17,9 +17,6 @@ public partial class SemiProductViewModel : ViewModelBase
     [ObservableProperty] private decimal costPrice;
     [ObservableProperty] private decimal totalAmount;
 
-    // UI-only
-    public ProductTypeItemViewModel? LinkedItem { get; set; }
-
     [RelayCommand]
     private void SelectImage()
     {

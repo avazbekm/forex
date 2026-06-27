@@ -17,7 +17,5 @@ public class GetAllProductsQueryHandler(
         => mapper.Map<IReadOnlyCollection<ProductDto>>(await context.Products.AsNoTracking()
             .Include(p => p.UnitMeasure)
             .Include(p => p.ProductTypes)
-            .ThenInclude(pt => pt.ProductTypeItems)
-            .ThenInclude(pti => pti.SemiProduct)
             .ToListAsync(cancellationToken));
 }

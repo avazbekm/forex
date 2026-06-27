@@ -10,8 +10,14 @@ public record OperationRecordDto
     public OperationType Type { get; set; }
     public DateTime Date { get; set; }
     public decimal Amount { get; set; }
+    public decimal Rate { get; set; }
+    public decimal SettlementAmount { get; set; }
+    public long CurrencyId { get; set; }
+    public string? CurrencyCode { get; set; }
     public string Description { get; set; } = string.Empty;
+    public long? UserId { get; set; }
 
     public SaleForOperationDto? Sale { get; set; }
     public TransactionForOperationDto? Transaction { get; set; }
+    public SupplyForOperationDto? Supply { get; set; }
 }

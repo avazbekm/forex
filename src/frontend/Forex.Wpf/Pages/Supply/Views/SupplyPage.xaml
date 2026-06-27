@@ -1,0 +1,527 @@
+<Page
+    x:Class="Forex.Wpf.Pages.Supply.Views.SupplyPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Title="Ta'minot"
+    d:DesignHeight="640"
+    d:DesignWidth="940"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0,0,4" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
+        </Style>
+
+        <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceCard}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairlineBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="StatCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Margin" Value="6,0" />
+        </Style>
+    </Page.Resources>
+
+    <Grid Background="{DynamicResource SurfacePage}" TextElement.Foreground="{DynamicResource InkPrimary}">
+        <Grid Margin="18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!--  Header  -->
+            <Grid Margin="2,0,2,4">
+                <StackPanel Orientation="Horizontal">
+                    <Border
+                        Width="42"
+                        Height="42"
+                        Background="#E8EDFB"
+                        CornerRadius="11">
+                        <md:PackIcon
+                            Width="24"
+                            Height="24"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#3B5BDB"
+                            Kind="TruckFast" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="22"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource InkPrimary}"
+                            Text="Ta'minot" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InkFaint}"
+                            Text="Ta'minotchi va vositachilar bilan hisob-kitob" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Button
+                    x:Name="btnBack"
+                    Height="38"
+                    Padding="16,0"
+                    HorizontalAlignment="Right"
+                    md:ButtonAssist.CornerRadius="9"
+                    Background="{DynamicResource SurfaceCard}"
+                    BorderBrush="{DynamicResource HairlineBorder}"
+                    BorderThickness="1"
+                    Click="BtnBack_Click"
+                    Foreground="{DynamicResource InkSecondary}">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon
+                            Width="16"
+                            Height="16"
+                            VerticalAlignment="Center"
+                            Kind="ArrowLeft" />
+                        <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Orqaga" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!--  Entry form  -->
+            <Border
+                Grid.Row="1"
+                Margin="0,14,0,14"
+                Padding="18"
+                Background="{DynamicResource SurfaceCard}"
+                CornerRadius="14"
+                md:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="240" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="160" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Margin="0,0,12,12">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Sana" />
+                        <controls:UserCalendar
+                            Height="30"
+                            FontSize="14"
+                            SelectedDate="{Binding Date, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,12,12">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Hisob turi" />
+                        <controls:FloatingComboBox
+                            DisplayMemberPath="Text"
+                            ItemsSource="{Binding PartyTypes}"
+                            SelectedItem="{Binding SelectedPartyTypeOption, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="0,0,12,12">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Ta'minotchi / Vositachi" />
+                        <controls:FloatingImageComboBox
+                            x:Name="cbxUser"
+                            IsEditable="True"
+                            IsSearchEnabled="True"
+                            IsTextSearchEnabled="False"
+                            ItemsSource="{Binding FilteredUsers}"
+                            PrimaryTextMemberPath="Name"
+                            SecondaryTextMemberPath="PhoneAndAddress"
+                            SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                            ShowImage="False"
+                            Text="{Binding UserInput, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Margin="0,0,12,12">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Valyuta" />
+                        <controls:FloatingComboBox
+                            DisplayMemberPath="Code"
+                            ItemsSource="{Binding AvailableCurrencies}"
+                            SelectedItem="{Binding SelectedCurrency, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Margin="0,0,12,12">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Summa" />
+                        <TextBox
+                            PreviewTextInput="NumericTextBox_PreviewTextInput"
+                            Style="{StaticResource InputTextBoxStyle}"
+                            Text="{Binding Amount, StringFormat={}{0:N0}, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="4"
+                        Margin="0,0,12,0">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Izoh" />
+                        <TextBox
+                            Style="{StaticResource InputTextBoxStyle}"
+                            Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <Button
+                        Grid.Row="1"
+                        Grid.Column="4"
+                        Grid.ColumnSpan="2"
+                        Width="170"
+                        Height="38"
+                        Margin="0,18,0,0"
+                        HorizontalAlignment="Left"
+                        md:ButtonAssist.CornerRadius="9"
+                        md:ElevationAssist.Elevation="Dp2"
+                        Background="#16A34A"
+                        BorderThickness="0"
+                        Command="{Binding SubmitCommand}"
+                        Foreground="White"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon
+                                Width="18"
+                                Height="18"
+                                VerticalAlignment="Center"
+                                Kind="ContentSave" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="{Binding SubmitButtonText}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!--  List + filters + totals  -->
+            <Border
+                Grid.Row="2"
+                Padding="0"
+                Background="{DynamicResource SurfaceCard}"
+                CornerRadius="14"
+                md:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Filter bar  -->
+                    <Border
+                        Grid.Row="0"
+                        Margin="14,14,14,6"
+                        Padding="14,12"
+                        Background="{DynamicResource SurfaceMuted}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
+                        BorderThickness="1"
+                        CornerRadius="11">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Boshlanish" />
+                                <controls:UserCalendar
+                                    Width="135"
+                                    Height="30"
+                                    FontSize="14"
+                                    SelectedDate="{Binding FilterBeginDate, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Tugash" />
+                                <controls:UserCalendar
+                                    Width="135"
+                                    Height="30"
+                                    FontSize="14"
+                                    SelectedDate="{Binding FilterEndDate, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Shaxs" />
+                                <controls:FloatingComboBox
+                                    Width="180"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{Binding AvailableFilterUsers}"
+                                    SelectedItem="{Binding SelectedFilterUser, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Turi" />
+                                <controls:FloatingComboBox
+                                    Width="150"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{Binding SupplyFilterOptions}"
+                                    SelectedItem="{Binding SelectedSupplyFilterOption, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Valyuta" />
+                                <controls:FloatingComboBox
+                                    Width="120"
+                                    DisplayMemberPath="Text"
+                                    ItemsSource="{Binding CurrencyFilterOptions}"
+                                    SelectedItem="{Binding SelectedCurrencyFilter, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <Button
+                                Grid.Column="5"
+                                Height="38"
+                                Margin="0,18,0,0"
+                                Padding="14,0"
+                                md:ButtonAssist.CornerRadius="9"
+                                Background="{DynamicResource SurfaceCard}"
+                                BorderBrush="{DynamicResource HairlineBorder}"
+                                BorderThickness="1"
+                                Command="{Binding ClearFiltersCommand}"
+                                Foreground="{DynamicResource InkSecondary}"
+                                ToolTip="Filterlarni tozalash">
+                                <StackPanel Orientation="Horizontal">
+                                    <md:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        VerticalAlignment="Center"
+                                        Kind="FilterRemoveOutline" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Tozalash" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button
+                                Grid.Column="7"
+                                Height="38"
+                                Margin="0,18,0,0"
+                                Padding="14,0"
+                                md:ButtonAssist.CornerRadius="9"
+                                Background="#15803D"
+                                BorderThickness="0"
+                                Command="{Binding ExportToExcelCommand}"
+                                Foreground="White">
+                                <StackPanel Orientation="Horizontal">
+                                    <md:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        VerticalAlignment="Center"
+                                        Kind="FileExcel" />
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Excel" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid
+                        Grid.Row="1"
+                        Margin="14,8,14,8"
+                        AutoGenerateColumns="False"
+                        Background="{DynamicResource SurfaceCard}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
+                        BorderThickness="1"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        ColumnHeaderHeight="40"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="Column"
+                        HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding Supplies}"
+                        RowHeight="42">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource GridHeaderBg}" />
+                                <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Padding" Value="10,0" />
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="150"
+                                Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
+                                Header="Sana" />
+                            <DataGridTextColumn
+                                Width="110"
+                                Binding="{Binding PartyTypeText}"
+                                Header="Turi" />
+                            <DataGridTextColumn
+                                Width="170"
+                                Binding="{Binding User.Name}"
+                                Header="Kimdan" />
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding Amount, StringFormat={}{0:N0}}"
+                                Header="Summa">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="Padding" Value="0,0,10,0" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Currency.Code}"
+                                Header="Valyuta" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Description}"
+                                Header="Izoh" />
+                            <DataGridTemplateColumn Width="104" Header="">
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="Padding" Value="4" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="DataGridCell">
+                                                    <StackPanel
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Orientation="Horizontal">
+                                                        <Button
+                                                            Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource EditActionButton}"
+                                                            ToolTip="Tahrirlash">
+                                                            <md:PackIcon Width="16" Height="16" Kind="Pencil" />
+                                                        </Button>
+                                                        <Button
+                                                            Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource DeleteActionButton}"
+                                                            ToolTip="O'chirish">
+                                                            <md:PackIcon Width="16" Height="16" Kind="Delete" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!--  Totals row — horizontal stat cards  -->
+                    <Grid Grid.Row="2" Margin="14,4,14,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            Grid.Column="0"
+                            Background="#EEF2FF"
+                            Style="{StaticResource StatCard}">
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="Medium"
+                                    Foreground="#6470B0"
+                                    Text="Yozuvlar" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="22"
+                                    FontWeight="Bold"
+                                    Foreground="#3949AB"
+                                    Text="{Binding FilteredCount}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Grid.Column="1"
+                            Background="#E6FBF6"
+                            Style="{StaticResource StatCard}">
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="Medium"
+                                    Foreground="#0F9488"
+                                    Text="Ta'minotchi" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="22"
+                                    FontWeight="Bold"
+                                    Foreground="#0D8276"
+                                    Text="{Binding FilteredSupplierAmount, StringFormat={}{0:N0}}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Grid.Column="2"
+                            Background="#FFF6E6"
+                            Style="{StaticResource StatCard}">
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="Medium"
+                                    Foreground="#B7791F"
+                                    Text="Vositachi" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="22"
+                                    FontWeight="Bold"
+                                    Foreground="#A66A12"
+                                    Text="{Binding FilteredConsolidatorAmount, StringFormat={}{0:N0}}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Grid.Column="3"
+                            Background="#E9F8EE"
+                            Style="{StaticResource StatCard}">
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="Medium"
+                                    Foreground="#2E8B57"
+                                    Text="Jami" />
+                                <TextBlock
+                                    Margin="0,2,0,0"
+                                    FontSize="22"
+                                    FontWeight="Bold"
+                                    Foreground="#1B7A3E"
+                                    Text="{Binding FilteredTotalAmount, StringFormat={}{0:N0}}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

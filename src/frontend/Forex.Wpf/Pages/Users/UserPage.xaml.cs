@@ -27,6 +27,7 @@ public partial class UserPage : Page
     private ObservableCollection<UserResponse> filteredUsers = [];
     private bool isCreatingNewUser = false;
     private UserResponse? currentUser;
+    private string _filterRole = string.Empty;
 
     public UserPage()
     {
@@ -46,6 +47,7 @@ public partial class UserPage : Page
         LoadValyutaType();
         LoadUsers();
         UpdateRoleList();
+        lstRoleFilter.SelectedIndex = 0;
 
         Loaded += Page_Loaded;
     }
@@ -165,6 +167,7 @@ public partial class UserPage : Page
                 MessageBox.Show("Muvaffaqiyatli yangilandi.", "Ok", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadUsers();
                 ClearForm();
+                brUserForm.Visibility = Visibility.Collapsed;
             }
         }
         catch (Exception ex)
@@ -238,17 +241,15 @@ public partial class UserPage : Page
     private void ApplyFilters()
     {
         string query = txtSearch.Text.Trim();
-        string selectedRole = cbRole.SelectedItem?.ToString() ?? "";
+        string selectedRole = _filterRole;
 
         var filtered = rawUsers.AsEnumerable();
 
-        // 🔴 Filter logikasi: "User" tanlanganida HAMMA ko'rinadi
-        if (!string.IsNullOrWhiteSpace(selectedRole) && selectedRole != "User")
+        // Rol bo'yicha filter: "Barchasi" (bo'sh) tanlanganida hamma ko'rinadi
+        if (!string.IsNullOrWhiteSpace(selectedRole))
         {
-            // Boshqa rol tanlanganida faqat o'sha rolni ko'rsatish
             filtered = filtered.Where(u => u.Role.ToString() == selectedRole);
         }
-        // "User" tanlanganida yoki bo'sh bo'lganida hamma ko'rinadi
 
         // Search bo'yicha filter
         if (!string.IsNullOrWhiteSpace(query))
@@ -272,10 +273,14 @@ public partial class UserPage : Page
     // AuthStore orqali tizimga kirgan odamni tekshiramiz
     private bool IsLoggedInAsAdmin =>
         ClientService.Services.AuthStore.Instance.Username?.ToLower() == "admin";
+    private void RoleFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _filterRole = (lstRoleFilter.SelectedItem as ListBoxItem)?.Tag?.ToString() ?? string.Empty;
+        ApplyFilters();
+    }
+
     private void CbRole_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyFilters();
-
         if (cbRole.SelectedItem is not string role) return;
 
         bool isUser = role.Equals("User", StringComparison.OrdinalIgnoreCase);
@@ -412,6 +417,10 @@ public partial class UserPage : Page
         tbDebt.Text = "";
         tbAccount.Text = "";
 
+        cbxValutaType.IsEnabled = true;
+        tbAccount.IsEnabled = true;
+        tbDebt.IsEnabled = true;
+
         // 🔴 User default qiymat
         cbRole.SelectedItem = "User";
         isCreatingNewUser = false; // 🔴 Reset
@@ -514,11 +523,17 @@ public partial class UserPage : Page
         // Accountlar qismi... (o'zgarishsiz qoladi)
         if (currentUser.Accounts != null && currentUser.Accounts.Count > 0)
         {
-            var account = currentUser.Accounts[0];
+            var account = currentUser.Accounts.FirstOrDefault(a => a.CurrencyId == currentUser.SettlementCurrencyId)
+                ?? currentUser.Accounts[0];
             cbxValutaType.SelectedValue = account.CurrencyId;
             if (account.Balance < 0) { tbDebt.Text = Math.Abs(account.Balance).ToString("N2"); tbAccount.Text = ""; }
             else if (account.Balance > 0) { tbAccount.Text = account.Balance.ToString("N2"); tbDebt.Text = ""; }
         }
+
+        // Asosiy valyuta va balans faqat yaratishda; tahrirda bloklanadi
+        cbxValutaType.IsEnabled = false;
+        tbAccount.IsEnabled = false;
+        tbDebt.IsEnabled = false;
 
         btnSave.Visibility = Visibility.Collapsed;
         btnUpdate.Visibility = Visibility.Visible;
@@ -537,8 +552,16 @@ public partial class UserPage : Page
 
         if (result == MessageBoxResult.Yes)
         {
+            brUserForm.Visibility = Visibility.Visible;
             LoadingUser(user.Id);
         }
+    }
+
+    private void BtnAddUser_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new UserWindow { AllowRoleSelection = true, Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() == true)
+            LoadUsers();
     }
 
     [RelayCommand]
@@ -658,8 +681,8 @@ public partial class UserPage : Page
                 return;
             }
 
-            // O'chirish
-            var response = await client.Users.Delete(user.Id);
+            // O'chirish (.Handle() — 409/xato javobdagi do'stona xabarni oladi)
+            var response = await client.Users.Delete(user.Id).Handle();
 
             if (response.IsSuccess)
             {
@@ -701,6 +724,7 @@ public partial class UserPage : Page
         btnUpdate.Visibility = Visibility.Collapsed;
         btnCancel.Visibility = Visibility.Collapsed;
         btnSave.Visibility = GetSaveButtonVisibility();
+        brUserForm.Visibility = Visibility.Collapsed;
         currentUser = null!;
     }
 }

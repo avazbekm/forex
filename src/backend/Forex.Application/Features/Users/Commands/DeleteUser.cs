@@ -1,4 +1,4 @@
-﻿namespace Forex.Application.Features.Users.Commands;
+namespace Forex.Application.Features.Users.Commands;
 
 using Forex.Application.Common.Exceptions;
 using Forex.Application.Common.Interfaces;
@@ -14,26 +14,32 @@ public class DeleteUserCommandHandler(IAppDbContext context)
     public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
         var user = await context.Users
-            .Include(u => u.Accounts)
-                .ThenInclude(a => a.Currency)
-            .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken)
+            .FirstOrDefaultAsync(u => u.Id == request.Id && !u.IsDeleted, cancellationToken)
             ?? throw new NotFoundException(nameof(User), nameof(request.Id), request.Id);
 
-        var nonZeroAccounts = user.Accounts
-            .Where(a => Math.Round(a.Balance, 2) != 0m || Math.Round(a.Discount, 2) != 0m)
-            .ToList();
+        var hasOperations =
+            await context.Sales.AnyAsync(s => s.CustomerId == user.Id && !s.IsDeleted, cancellationToken)
+            || await context.Transactions.AnyAsync(t => t.UserId == user.Id && !t.IsDeleted, cancellationToken)
+            || await context.Supplies.AnyAsync(s => s.UserId == user.Id && !s.IsDeleted, cancellationToken)
+            || await context.Returns.AnyAsync(r => r.CustomerId == user.Id && !r.IsDeleted, cancellationToken)
+            || await context.OperationRecords.AnyAsync(o => o.UserId == user.Id && !o.IsDeleted, cancellationToken);
 
-        if (nonZeroAccounts.Count != 0)
-        {
-            var details = nonZeroAccounts
-                .Select(a => $"{a.Currency.Name}: Balance = {a.Balance}, Discount = {a.Discount}")
-                .ToList();
+        if (hasOperations)
+            throw new ConflictException(
+                "Bu foydalanuvchini o'chirib bo'lmaydi: unda operatsiyalar (savdo, to'lov, ta'minot yoki qaytarish) mavjud. " +
+                "Avval o'sha operatsiyalarni o'chiring, so'ng foydalanuvchini o'chirish mumkin bo'ladi.");
 
-            throw new ForbiddenException($"Foydalanuvchi hisobida mablag' mavjud:\n{string.Join("\n", details)}");
-        }
+        // Operatsiyalar yo'q — foydalanuvchini va unga tegishli qolgan ma'lumotlarni
+        // (balans hisoblari va bildirishnomalar) butunlay o'chiramiz (yetim ma'lumot qolmasin).
+        var accounts = await context.UserAccounts
+            .Where(a => a.UserId == user.Id)
+            .ToListAsync(cancellationToken);
+        context.UserAccounts.RemoveRange(accounts);
 
-        foreach (var account in user.Accounts)
-            context.Accounts.Remove(account);
+        var notifications = await context.UserNotifications
+            .Where(n => n.UserId == user.Id)
+            .ToListAsync(cancellationToken);
+        context.UserNotifications.RemoveRange(notifications);
 
         context.Users.Remove(user);
 

@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,9 +7,9 @@ using Refit;
 
 public interface IApiUserAccount
 {
-    [Get("/user-account")]
+    [Get("/api/user-account")]
     Task<Response<List<UserAccountResponse>>> GetAllAsync();
 
-    [Put("/user-account")]
+    [Put("/api/user-account")]
     Task<Response<bool>> UpdateAsync(UserAccountRequest request);
 }

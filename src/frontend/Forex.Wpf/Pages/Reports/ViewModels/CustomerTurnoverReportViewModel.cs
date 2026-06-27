@@ -3,11 +3,15 @@ namespace Forex.Wpf.Pages.Reports.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
+using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
+using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using PdfSharp.Drawing;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
@@ -20,20 +24,54 @@ using System.Windows.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
 using Forex.Wpf.Windows;
 
-public partial class CustomerTurnoverReportViewModel : ViewModelBase
+public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<TurnoversViewModel>
 {
     private readonly ForexClient _client;
     private readonly CommonReportDataService _commonData;
+    private HashSet<long>? participantIds;
+    private bool _suppress;
 
     [ObservableProperty] private UserViewModel? selectedCustomer;
-    [ObservableProperty] private DateTime beginDate = DateTime.Today;
+    [ObservableProperty] private TurnoverPartyFilter selectedPartyFilter = TurnoverPartyFilter.All;
+    [ObservableProperty] private DateTime beginDate = DateTime.Today.AddMonths(-1);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
 
-    partial void OnSelectedCustomerChanged(UserViewModel? value) => _ = LoadDataAsync();
-    partial void OnBeginDateChanged(DateTime value) => _ = LoadDataAsync();
-    partial void OnEndDateChanged(DateTime value) => _ = LoadDataAsync();
+    [ObservableProperty] private decimal summaryDebit;
+    [ObservableProperty] private decimal summaryCredit;
 
-    public ObservableCollection<UserViewModel> AvailableCustomers => _commonData.AvailableCustomers;
+    [ObservableProperty] private ChartData turnoverChart = new();
+
+    partial void OnSelectedCustomerChanged(UserViewModel? value) { if (!_suppress) _ = LoadDataAsync(); }
+    partial void OnSelectedPartyFilterChanged(TurnoverPartyFilter value)
+    {
+        ApplyPartyFilter();
+        OnPropertyChanged(nameof(SelectedPartyFilterOption));
+    }
+
+    partial void OnBeginDateChanged(DateTime value) { if (!_suppress) _ = OnDateRangeChangedAsync(); }
+    partial void OnEndDateChanged(DateTime value) { if (!_suppress) _ = OnDateRangeChangedAsync(); }
+
+    private async Task OnDateRangeChangedAsync()
+    {
+        await RebuildParticipantsAsync();
+        await LoadDataAsync();
+    }
+
+    public ObservableCollection<UserViewModel> AvailableCustomers { get; } = [];
+
+    public IReadOnlyList<TurnoverPartyFilterOption> PartyFilterOptions { get; } =
+    [
+        new(TurnoverPartyFilter.Customers, "Mijozlar"),
+        new(TurnoverPartyFilter.Suppliers, "Ta'minotchilar"),
+        new(TurnoverPartyFilter.Consolidators, "Vositachilar"),
+        new(TurnoverPartyFilter.All, "Barchasi")
+    ];
+
+    public TurnoverPartyFilterOption SelectedPartyFilterOption
+    {
+        get => PartyFilterOptions.First(p => p.Value == SelectedPartyFilter);
+        set => SelectedPartyFilter = value.Value;
+    }
 
 
     public ObservableCollection<TurnoversViewModel> Operations { get; } = [];
@@ -41,7 +79,8 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
     [ObservableProperty] private decimal _beginBalance;
     [ObservableProperty] private decimal _lastBalance;
-    
+    [ObservableProperty] private string? _settlementCurrencyCode;
+
     public bool HasData => Operations?.Count > 0;
 
     public CustomerTurnoverReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -50,6 +89,8 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         _commonData = commonData;
 
         Operations.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasData));
+        _commonData.AvailableCustomers.CollectionChanged += OnCommonCustomersChanged;
+        ApplyPartyFilter();
     }
 
 
@@ -60,8 +101,12 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
         if (SelectedCustomer is null)
         {
             Operations.Clear();
+            SetSource(Operations);
+            TurnoverChart = new();
             BeginBalance = 0;
             LastBalance = 0;
+            SummaryDebit = 0;
+            SummaryCredit = 0;
             return;
         }
 
@@ -78,8 +123,12 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             .GetTurnover(requset)
             .Handle(l => IsLoading = l);
 
-        if (!response.IsSuccess)
+        if (!response.IsSuccess || response.Data is null)
+        {
+            BeginBalance = 0;
+            LastBalance = 0;
             return;
+        }
 
 
         var data = response.Data;
@@ -87,30 +136,39 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
         BeginBalance = data.BeginBalance;
         LastBalance = data.EndBalance;
+        SettlementCurrencyCode = data.SettlementCurrencyCode;
 
         foreach (var op in data.OperationRecords.OrderBy(o => o.Date))
         {
+            var amount = op.SettlementAmount;
             decimal debit = 0;
             decimal credit = 0;
 
-            // SOTUV → har doim Credit (chiqim)
             if (op.Type == ClientService.Enums.OperationType.Sale)
             {
-                debit = -op.Amount;
+                debit = Math.Abs(amount);
             }
-            // TO‘LOV → Transaction bo‘lsa → IsIncome ga qarab, bo‘lmasa Amount ga qarab
             else if (op.Type == ClientService.Enums.OperationType.Transaction)
             {
                 if (op.Transaction is not null)
                 {
-                    credit = op.Transaction.IsIncome == true ? op.Amount : 0;
-                    debit = op.Transaction.IsIncome == false ? Math.Abs(op.Amount) : 0;
+                    credit = op.Transaction.IsIncome == true ? Math.Abs(amount) : 0;
+                    debit = op.Transaction.IsIncome == false ? Math.Abs(amount) : 0;
                 }
                 else
                 {
-                    debit = op.Amount < 0 ? op.Amount : 0;
-                    credit = op.Amount > 0 ? Math.Abs(op.Amount) : 0;
+                    debit = amount < 0 ? Math.Abs(amount) : 0;
+                    credit = amount > 0 ? Math.Abs(amount) : 0;
                 }
+            }
+            else if (op.Type == ClientService.Enums.OperationType.Supply)
+            {
+                credit = amount > 0 ? amount : 0;
+                debit = amount < 0 ? Math.Abs(amount) : 0;
+            }
+            else if (op.Type == ClientService.Enums.OperationType.Return)
+            {
+                credit = Math.Abs(amount);
             }
 
             Operations.Add(new TurnoversViewModel
@@ -122,6 +180,77 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                 Credit = credit
             });
         }
+
+        SummaryDebit = Operations.Sum(x => x.Debit);
+        SummaryCredit = Operations.Sum(x => x.Credit);
+        SetSource(Operations);
+
+        var byDay = data.OperationRecords
+            .GroupBy(o => o.Date.ToLocalTime().Date)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        static double AbsAmt(decimal a) => (double)Math.Abs(a);
+
+        var paymentVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Transaction && o.Transaction?.IsIncome == true).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var saleVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Sale).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var returnVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Return).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var supplyVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Supply).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var outflowVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Transaction && o.Transaction?.IsIncome == false).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+
+        var series = new List<ChartSeries>
+        {
+            new() { Name = "To'lov", Color = Color.FromRgb(0x1B, 0x7A, 0x3E), Values = paymentVals },
+            new() { Name = "Savdo", Color = Color.FromRgb(0x3B, 0x5B, 0xDB), Values = saleVals },
+            new() { Name = "Qaytarish", Color = Color.FromRgb(0xC6, 0x28, 0x28), Values = returnVals }
+        };
+        if (supplyVals.Any(v => v > 0))
+            series.Add(new() { Name = "Ta'minot", Color = Color.FromRgb(0x7C, 0x3A, 0xED), Values = supplyVals });
+        if (outflowVals.Any(v => v > 0))
+            series.Add(new() { Name = "Chiqim", Color = Color.FromRgb(0xD9, 0x77, 0x06), Values = outflowVals });
+
+        TurnoverChart = new ChartData
+        {
+            Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
+            Series = series
+        };
+    }
+
+    private async Task RebuildParticipantsAsync()
+    {
+        var ids = new HashSet<long>();
+        var range = new Dictionary<string, List<string>>
+        {
+            ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"]
+        };
+
+        try
+        {
+            var salesReq = new FilteringRequest { Filters = new(range) { ["customer"] = ["include"] } };
+            var sres = await _client.Sales.Filter(salesReq).Handle();
+            if (sres.IsSuccess && sres.Data is not null)
+                foreach (var s in sres.Data.Where(s => s.Customer is not null))
+                    ids.Add(s.Customer.Id);
+
+            var txReq = new FilteringRequest { Filters = new(range) };
+            var tres = await _client.Transactions.Filter(txReq).Handle();
+            if (tres.IsSuccess && tres.Data is not null)
+                foreach (var t in tres.Data)
+                    ids.Add(t.UserId);
+
+            var supRes = await _client.Supplies.GetAllAsync().Handle();
+            if (supRes.IsSuccess && supRes.Data is not null)
+                foreach (var sup in supRes.Data.Where(x =>
+                    x.Date.ToLocalTime().Date >= BeginDate.Date &&
+                    x.Date.ToLocalTime().Date <= EndDate.Date))
+                    ids.Add(sup.UserId);
+        }
+        catch
+        {
+        }
+
+        participantIds = ids;
+        ApplyPartyFilter();
     }
 
     #endregion Load Data
@@ -142,11 +271,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void Preview()
     {
-        if (Operations.Count == 0)
-        {
-            MessageBox.Show("Ko‘rsatish uchun ma’lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        if (Operations.Count == 0) return;
 
         var doc = CreateFixedDocument();
         ShowPreviewWindow(doc);
@@ -155,12 +280,6 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void Print()
     {
-        if (Operations.Count == 0)
-        {
-            MessageBox.Show("Chop etish uchun ma’lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var doc = CreateFixedDocument();
         var printDialog = new PrintDialog();
         if (printDialog.ShowDialog() == true)
@@ -172,12 +291,6 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void ExportToExcel()
     {
-        if (Operations.Count == 0)
-        {
-            MessageBox.Show("Eksport qilish uchun ma’lumot yo‘q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var saveDialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -224,7 +337,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             ws.Range(row, 1, row, 3).Merge().Style
                 .Font.SetBold().Font.SetFontSize(14)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Center);
-            ws.Cell(row, 4).Value = BeginBalance.ToString("N2");
+            ws.Cell(row, 4).Value = $"{BeginBalance:N2} {SettlementCurrencyCode}".Trim();
             ws.Cell(row, 4).Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(ClosedXML.Excel.XLColor.DarkBlue)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Right);
             row++;
@@ -264,7 +377,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             ws.Range(row, 1, row, 3).Merge().Style
                 .Font.SetBold().Font.SetFontSize(15)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Center);
-            ws.Cell(row, 4).Value = LastBalance.ToString("N2");
+            ws.Cell(row, 4).Value = $"{LastBalance:N2} {SettlementCurrencyCode}".Trim();
             ws.Cell(row, 4).Style.Font.SetBold().Font.SetFontSize(18)
                 .Font.SetFontColor(LastBalance >= 0 ? ClosedXML.Excel.XLColor.DarkGreen : ClosedXML.Excel.XLColor.DarkRed)
                 .Alignment.SetHorizontal(ClosedXML.Excel.XLAlignmentHorizontalValues.Right);
@@ -284,21 +397,58 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
     [RelayCommand]
     private void ClearFilter()
     {
+        _suppress = true;
+        SelectedPartyFilter = TurnoverPartyFilter.All;
         SelectedCustomer = null;
         BeginDate = DateTime.Today.AddMonths(-1);
         EndDate = DateTime.Today;
+        _suppress = false;
         Operations.Clear();
+        SetSource(Operations);
         BeginBalance = 0;
         LastBalance = 0;
+        SummaryDebit = 0;
+        SummaryCredit = 0;
+        _ = RebuildParticipantsAsync();
     }
 
     #endregion Commands
 
     #region Private Helpers
 
+    private void OnCommonCustomersChanged(object? sender, NotifyCollectionChangedEventArgs e) => ApplyPartyFilter();
+
+    private void ApplyPartyFilter()
+    {
+        var selectedId = SelectedCustomer?.Id;
+        var users = _commonData.AvailableCustomers
+            .Where(MatchesPartyFilter)
+            .Where(u => participantIds is null || participantIds.Contains(u.Id))
+            .OrderBy(u => u.Name)
+            .ToList();
+
+        AvailableCustomers.Clear();
+        foreach (var user in users)
+            AvailableCustomers.Add(user);
+
+        _suppress = true;
+        SelectedCustomer = selectedId is null
+            ? null
+            : AvailableCustomers.FirstOrDefault(u => u.Id == selectedId.Value);
+        _suppress = false;
+    }
+
+    private bool MatchesPartyFilter(UserViewModel user) => SelectedPartyFilter switch
+    {
+        TurnoverPartyFilter.Customers => user.Role == UserRole.Mijoz,
+        TurnoverPartyFilter.Suppliers => user.Role == UserRole.Taminotchi,
+        TurnoverPartyFilter.Consolidators => user.Role == UserRole.Vositachi,
+        _ => user.Role is UserRole.Mijoz or UserRole.Taminotchi or UserRole.Vositachi
+    };
+
     private void ShowPreviewWindow(FixedDocument doc)
     {
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(15) };
+        var viewer = new DocumentViewer { Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfaceMuted"), Document = doc, Margin = new Thickness(15) };
 
         var toolbar = new StackPanel
         {
@@ -444,7 +594,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             Title = "Mijoz aylanma hisoboti - Ko'rish",
             Width = 1000,
             Height = 800,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen, Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfacePage"),
             Content = layout,
             Icon = Application.Current.MainWindow?.Icon,
             Owner = Application.Current.MainWindow,
@@ -505,7 +655,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
             // 2. Boshlang'ich qoldiq (Faqat 1-sahifada)
             if (isFirstPage)
             {
-                var initialBalanceGrid = CreateBalanceRow(finalColWidths, "Boshlang‘ich qoldiq", BeginBalance.ToString("N2"));
+                var initialBalanceGrid = CreateBalanceRow(finalColWidths, "Boshlang‘ich qoldiq", $"{BeginBalance:N2} {SettlementCurrencyCode}".Trim());
                 container.Children.Add(initialBalanceGrid);
                 currentY += balanceRowHeight;
             }
@@ -580,7 +730,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                     "");
                 container.Children.Add(totalGrid);
 
-                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", LastBalance.ToString("N2"));
+                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", $"{LastBalance:N2} {SettlementCurrencyCode}".Trim());
                 container.Children.Add(lastBalanceGrid);
             }
 
@@ -589,7 +739,7 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
                 var totalGrid = CreateRow(finalColWidths, true, "JAMI", "", "", "");
                 container.Children.Add(totalGrid);
 
-                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", BeginBalance.ToString("N2"));
+                var lastBalanceGrid = CreateBalanceRow(finalColWidths, "Oxirgi qoldiq", $"{BeginBalance:N2} {SettlementCurrencyCode}".Trim());
                 container.Children.Add(lastBalanceGrid);
             }
 
@@ -893,3 +1043,13 @@ public partial class CustomerTurnoverReportViewModel : ViewModelBase
 
     #endregion Private Helpers
 }
+
+public enum TurnoverPartyFilter
+{
+    All,
+    Customers,
+    Suppliers,
+    Consolidators
+}
+
+public sealed record TurnoverPartyFilterOption(TurnoverPartyFilter Value, string Text);

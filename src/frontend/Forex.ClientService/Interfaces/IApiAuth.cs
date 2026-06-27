@@ -1,4 +1,4 @@
-﻿namespace Forex.ClientService.Interfaces;
+namespace Forex.ClientService.Interfaces;
 
 using Forex.ClientService.Models.Commons;
 using Forex.ClientService.Models.Requests;
@@ -7,9 +7,12 @@ using Refit;
 
 public interface IApiAuth
 {
-    [Post("/auth/login")]
+    [Get("/api/auth/ping")]
+    Task<Response<string>> Ping();
+
+    [Post("/api/auth/login")]
     Task<Response<LoginResponse>> Login([Body] LoginRequest request);
 
-    [Post("/auth/register")]
+    [Post("/api/auth/register")]
     Task<Response<LoginResponse>> Register([Body] RegisterRequest request);
 }

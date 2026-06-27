@@ -1,0 +1,120 @@
+<UserControl
+    x:Class="Forex.Wpf.Pages.Settings.Controls.ServerSettingsControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <Grid Margin="20">
+        <Border
+            Width="600"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Padding="26"
+            Background="{DynamicResource SurfaceCard}"
+            BorderBrush="{DynamicResource HairlineBorder}"
+            BorderThickness="1"
+            CornerRadius="14">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border
+                        Width="38"
+                        Height="38"
+                        Background="#E8EDFB"
+                        CornerRadius="10">
+                        <md:PackIcon
+                            Width="22"
+                            Height="22"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#3B5BDB"
+                            Kind="Server" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource InkPrimary}"
+                            Text="Server ulanishi" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource InkFaint}"
+                            Text="API manzilini kiriting, tekshiring va saqlang" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock
+                    Margin="2,20,0,4"
+                    FontSize="12"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource InkMuted}"
+                    Text="API URL" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Height="40"
+                        BorderBrush="{DynamicResource HairlineBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <TextBox
+                            VerticalContentAlignment="Center"
+                            Padding="12,0"
+                            md:HintAssist.Hint="https://..."
+                            BorderThickness="0"
+                            FontSize="14"
+                            Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" />
+                    </Border>
+
+                    <Button
+                        Grid.Column="1"
+                        Height="40"
+                        Margin="10,0,0,0"
+                        Padding="16,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="{DynamicResource SurfaceCard}"
+                        BorderBrush="{DynamicResource HairlineBorder}"
+                        BorderThickness="1"
+                        Command="{Binding TestCommand}"
+                        Foreground="{DynamicResource InkSecondary}">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="LanConnect" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Tekshirish" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button
+                        Grid.Column="2"
+                        Height="40"
+                        Margin="10,0,0,0"
+                        Padding="18,0"
+                        md:ButtonAssist.CornerRadius="9"
+                        Background="#15803D"
+                        BorderThickness="0"
+                        Command="{Binding SaveCommand}"
+                        Foreground="White">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ContentSave" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Saqlash" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <TextBlock
+                    Margin="2,14,0,0"
+                    FontSize="13"
+                    Foreground="#667085"
+                    Text="{Binding StatusText}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

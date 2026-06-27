@@ -161,11 +161,8 @@ public partial class AddSalePage : Page
             var newCustomer = OpenCreateCustomerWindow(text);
             if (newCustomer is not null)
             {
-                vm.AvailableCustomers.Add(newCustomer);
-                vm.Customer = newCustomer;
-                cbxCustomerName.SelectedItem = newCustomer;
-                vm.ApplyCustomerFilter(null);
                 _customerGuard = false;
+                _ = SelectCreatedCustomerAsync(newCustomer.Id);
                 return;
             }
         }
@@ -174,6 +171,18 @@ public partial class AddSalePage : Page
         // Guard flag BeginInvoke ICHIDA reset bo'ladi, chunki fokus qaytguncha
         // yana bir LostFocus yonishi mumkin.
         RestoreFocusWithSelectAll(cbxCustomerName, onComplete: () => _customerGuard = false);
+    }
+
+    private async Task SelectCreatedCustomerAsync(long id)
+    {
+        await vm.LoadUsersAsync();
+
+        var full = vm.AvailableCustomers.FirstOrDefault(c => c.Id == id);
+        if (full is not null)
+        {
+            vm.Customer = full;
+            cbxCustomerName.SelectedItem = full;
+        }
     }
 
     // ─────────────────────────────────────────────

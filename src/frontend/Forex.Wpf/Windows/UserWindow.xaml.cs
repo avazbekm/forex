@@ -4,6 +4,7 @@ using Forex.ClientService;
 using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Requests;
+using Forex.ClientService.Models.Responses;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.ViewModels;
 using MapsterMapper;
@@ -19,6 +20,31 @@ public partial class UserWindow : Window
     private readonly IMapper mapper;
 
     public UserViewModel? user;
+    public UserRole Role { get; set; } = UserRole.Mijoz;
+    public long AccountCurrencyId { get; set; }
+
+    public bool AllowRoleSelection
+    {
+        get => brRole.Visibility == Visibility.Visible;
+        set
+        {
+            lblRole.Visibility = brRole.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+            if (value && cbWindowRole.Items.Count == 0)
+            {
+                cbWindowRole.ItemsSource = new[]
+                {
+                    new RoleOption(UserRole.Mijoz, "Mijoz"),
+                    new RoleOption(UserRole.Hodim, "Hodim"),
+                    new RoleOption(UserRole.Taminotchi, "Ta'minotchi"),
+                    new RoleOption(UserRole.Vositachi, "Vositachi"),
+                };
+                cbWindowRole.DisplayMemberPath = nameof(RoleOption.Label);
+                cbWindowRole.SelectedIndex = 0;
+            }
+        }
+    }
+
+    private sealed record RoleOption(UserRole Role, string Label);
     public UserWindow()
     {
         InitializeComponent();
@@ -48,9 +74,17 @@ public partial class UserWindow : Window
         try
         {
             var valyutaTypes = await client.Currencies.GetAllAsync().Handle();
+            var data = valyutaTypes.Data ?? [];
 
-            somId = valyutaTypes.Data?.FirstOrDefault(v =>
-                v.Symbol.Equals("UZS", StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+            somId = data.FirstOrDefault(v =>
+                v.Code.Equals("UZS", StringComparison.OrdinalIgnoreCase))?.Id ?? 0;
+
+            cbCurrency.ItemsSource = data;
+            cbCurrency.SelectedItem =
+                data.FirstOrDefault(v => v.Id == AccountCurrencyId)
+                ?? data.FirstOrDefault(v => v.IsDefault)
+                ?? data.FirstOrDefault(v => v.Id == somId)
+                ?? data.FirstOrDefault();
         }
         catch (Exception ex)
         {
@@ -63,8 +97,19 @@ public partial class UserWindow : Window
     {
         try
         {
-            if (somId == 0)
-                await LoadValyutaTypeAsync();
+            if (AllowRoleSelection && cbWindowRole.SelectedItem is RoleOption option)
+                Role = option.Role;
+
+            var currencyId = (cbCurrency.SelectedItem as CurrencyResponse)?.Id ?? 0;
+
+            if (currencyId == 0)
+            {
+                if (somId == 0)
+                    await LoadValyutaTypeAsync();
+
+                currencyId = (cbCurrency.SelectedItem as CurrencyResponse)?.Id
+                    ?? (AccountCurrencyId > 0 ? AccountCurrencyId : somId);
+            }
 
             decimal balance = 0;
 
@@ -81,12 +126,12 @@ public partial class UserWindow : Window
                 Phone = txtPhone.Text.Trim(),
                 Address = txtAddress.Text.Trim(),
                 Description = txtDescription.Text.Trim(),
-                Role = UserRole.Mijoz,
+                Role = Role,
                 Accounts =
                 [
                     new UserAccount
                     {
-                        CurrencyId = somId,
+                        CurrencyId = currencyId,
                         OpeningBalance = balance,
                         Discount = 0
                     }

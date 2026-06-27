@@ -12,7 +12,6 @@ public partial class ReportsPageViewModel : ViewModelBase
     // Har bir tab uchun alohida ViewModel
     public SalesHistoryReportViewModel SalesHistoryVM { get; }
     public FinishedStockReportViewModel FinishedStockVM { get; }
-    public SemiFinishedStockReportViewModel SemiFinishedStockVM { get; }
     public DebtorCreditorReportViewModel DebtorCreditorVM { get; }
     public EmployeeBalanceReportViewModel EmployeeBalanceVM { get; }
     public CustomerTurnoverReportViewModel CustomerTurnoverVM { get; }
@@ -25,7 +24,6 @@ public partial class ReportsPageViewModel : ViewModelBase
         INavigationService navigation,
         SalesHistoryReportViewModel salesHistoryVM,
         FinishedStockReportViewModel finishedStockVM,
-        SemiFinishedStockReportViewModel semiFinishedStockVM,
         DebtorCreditorReportViewModel debtorCreditorVM,
         EmployeeBalanceReportViewModel employeeBalanceVM,
         CustomerTurnoverReportViewModel customerTurnoverVM,
@@ -35,7 +33,6 @@ public partial class ReportsPageViewModel : ViewModelBase
         _navigation = navigation;
         SalesHistoryVM = salesHistoryVM;
         FinishedStockVM = finishedStockVM;
-        SemiFinishedStockVM = semiFinishedStockVM;
         DebtorCreditorVM = debtorCreditorVM;
         EmployeeBalanceVM = employeeBalanceVM;
         CustomerTurnoverVM = customerTurnoverVM;

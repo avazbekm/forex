@@ -4,9 +4,11 @@ using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Forex.ClientService;
+using Forex.ClientService.Enums;
 using Forex.ClientService.Extensions;
 using Forex.ClientService.Models.Commons;
 using Forex.Wpf.Pages.Common;
+using Forex.Wpf.Resources.Charts;
 using Forex.Wpf.ViewModels;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -21,11 +23,12 @@ using Forex.Wpf.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
-public partial class SalesHistoryReportViewModel : ViewModelBase
+public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHistoryItemViewModel>
 {
     private readonly ForexClient client;
     private readonly CommonReportDataService commonData;
     private readonly ObservableCollection<SaleHistoryItemViewModel> allItems = [];
+    private bool _suppress;
 
     [ObservableProperty]
     private ObservableCollection<SaleHistoryItemViewModel> filteredItems = [];
@@ -33,7 +36,14 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [ObservableProperty]
     private decimal totalSalesAmount;
 
-    public ObservableCollection<UserViewModel> AvailableCustomers => commonData.AvailableCustomers;
+    [ObservableProperty]
+    private string totalsSummary = string.Empty;
+
+    [ObservableProperty] private int summaryQty;
+
+    [ObservableProperty] private ChartData salesChart = new();
+
+    [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
     public ObservableCollection<ProductViewModel> AvailableProducts => commonData.AvailableProducts;
 
     [ObservableProperty] private UserViewModel? selectedCustomer;
@@ -41,11 +51,10 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [ObservableProperty] private ProductViewModel? selectedCode;
     [ObservableProperty] private DateTime beginDate = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime endDate = DateTime.Today;
-    
-    partial void OnSelectedCustomerChanged(UserViewModel? value) => _ = LoadAsync();
-    partial void OnBeginDateChanged(DateTime value) => _ = LoadAsync();
-    partial void OnEndDateChanged(DateTime value) => _ = LoadAsync();
-    
+
+    partial void OnBeginDateChanged(DateTime value) { if (!_suppress) _ = LoadAsync(); }
+    partial void OnEndDateChanged(DateTime value) { if (!_suppress) _ = LoadAsync(); }
+
     public bool HasData => FilteredItems?.Count > 0;
 
     public SalesHistoryReportViewModel(ForexClient client, CommonReportDataService commonData)
@@ -54,7 +63,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         this.commonData = commonData;
         PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(SelectedCustomer) or nameof(SelectedProduct) or nameof(SelectedCode))
+            if (!_suppress && e.PropertyName is nameof(SelectedCustomer) or nameof(SelectedProduct) or nameof(SelectedCode))
                 ApplyFilters();
             if (e.PropertyName is nameof(FilteredItems))
                 OnPropertyChanged(nameof(HasData));
@@ -71,6 +80,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             {
                 ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
                 ["customer"] = ["include"],
+                ["currency"] = ["include"],
                 ["saleItems"] = ["include:productType.product.unitMeasure"]
             },
             Descending = true,
@@ -84,6 +94,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             return;
         }
 
+        RebuildCustomers(response.Data);
+
         foreach (var sale in response.Data)
         {
             if (sale.SaleItems == null) continue;
@@ -95,6 +107,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                 {
                     Date = sale.Date.ToLocalTime(),
                     Customer = sale.Customer?.Name ?? "-",
+                    ProductionOrigin = product.ProductionOrigin,
                     Code = product.Code ?? "-",
                     ProductName = product.Name ?? "-",
                     Type = item.ProductType?.Type ?? "-",
@@ -103,21 +116,86 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                     TotalCount = item.TotalCount,
                     UnitMeasure = product.UnitMeasure?.Name ?? "dona",
                     UnitPrice = item.UnitPrice,
-                    Amount = item.Amount
+                    Amount = item.Amount,
+                    BaseAmount = sale.TotalAmount == 0 ? item.Amount : item.Amount * (sale.BaseAmount / sale.TotalAmount),
+                    CurrencyCode = sale.CurrencyCode
                 });
             }
         }
+
+        await LoadReturnsAsync();
+
         ApplyFilters();
+    }
+
+    private async Task LoadReturnsAsync()
+    {
+        var request = new FilteringRequest
+        {
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["customer"] = ["include"],
+                ["currency"] = ["include"],
+                ["returnItems"] = ["include:productType.product.unitMeasure"]
+            },
+            Descending = true,
+            SortBy = "date"
+        };
+
+        var response = await client.Returns.Filter(request).Handle(l => IsLoading = l);
+        if (!response.IsSuccess || response.Data is null) return;
+
+        foreach (var ret in response.Data)
+        {
+            if (ret.ReturnItems == null) continue;
+            foreach (var item in ret.ReturnItems)
+            {
+                var product = item.ProductType?.Product;
+                if (product == null) continue;
+                allItems.Add(new SaleHistoryItemViewModel
+                {
+                    Date = ret.Date.ToLocalTime(),
+                    Customer = ret.Customer?.Name ?? "-",
+                    ProductionOrigin = product.ProductionOrigin,
+                    Code = product.Code ?? "-",
+                    ProductName = product.Name ?? "-",
+                    Type = item.ProductType?.Type ?? "-",
+                    BundleCount = -item.BundleCount,
+                    BundleItemCount = item.ProductType?.BundleItemCount ?? 0,
+                    TotalCount = -item.TotalCount,
+                    UnitMeasure = product.UnitMeasure?.Name ?? "dona",
+                    UnitPrice = item.UnitPrice,
+                    Amount = -item.Amount,
+                    BaseAmount = ret.TotalAmount == 0 ? -item.Amount : -(item.Amount * (ret.BaseAmount / ret.TotalAmount)),
+                    CurrencyCode = ret.CurrencyCode,
+                    IsReturn = true
+                });
+            }
+        }
+    }
+
+    private void RebuildCustomers(IEnumerable<Forex.ClientService.Models.Responses.SaleResponse> sales)
+    {
+        var ids = sales.Where(s => s.Customer != null).Select(s => s.Customer.Id).ToHashSet();
+        var keepId = SelectedCustomer?.Id;
+        _suppress = true;
+        AvailableCustomers = [.. commonData.AvailableCustomers.Where(c => ids.Contains(c.Id)).OrderBy(c => c.Name)];
+        SelectedCustomer = keepId is null ? null : AvailableCustomers.FirstOrDefault(c => c.Id == keepId);
+        _suppress = false;
     }
 
     [RelayCommand]
     private void ClearFilter()
     {
+        _suppress = true;
         SelectedCustomer = null;
         SelectedProduct = null;
         SelectedCode = null;
         BeginDate = DateTime.Today;
         EndDate = DateTime.Today;
+        _suppress = false;
+        _ = LoadAsync();
     }
 
     [RelayCommand]
@@ -126,14 +204,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         [RelayCommand]
     private void Preview()
     {
-        if (!FilteredItems.Any())
-        {
-            InfoMessage = "Ko'rsatish uchun ma'lumot yo'q.";
-            return;
-        }
-
         var doc = CreateFixedDocument();
-        var viewer = new DocumentViewer { Document = doc, Margin = new Thickness(20) };
+        var viewer = new DocumentViewer { Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfaceMuted"), Document = doc, Margin = new Thickness(20) };
         var toolbar = new StackPanel { 
             Orientation = Orientation.Horizontal, 
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -274,7 +346,7 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             Title = $"Savdo tarixi * {BeginDate:dd.MM.yyyy} - {EndDate:dd.MM.yyyy}",
             Width = 1000,
             Height = 800,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen, Background = (System.Windows.Media.Brush)System.Windows.Application.Current.TryFindResource("SurfacePage"),
             Content = layout,
             Owner = Application.Current.MainWindow,
             ShowInTaskbar = false
@@ -298,12 +370,6 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
     [RelayCommand]
     private async Task ExportToExcel()
     {
-        if (!FilteredItems.Any())
-        {
-            MessageBox.Show("Excelga eksport qilish uchun ma'lumot yo'q.", "Eslatma", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel fayllari (*.xlsx)|*.xlsx",
@@ -350,8 +416,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
                 row++;
             }
 
-            var totalAmount = FilteredItems.Sum(x => x.Amount);
-            ws.Cell(row, 1).Value = "JAMI:";
+            var totalAmount = FilteredItems.Sum(x => x.BaseAmount);
+            ws.Cell(row, 1).Value = "JAMI (so'm):";
             ws.Cell(row, 1).Style.Font.SetBold();
             ws.Cell(row, 11).Value = totalAmount;
             ws.Cell(row, 11).Style.Font.SetBold().NumberFormat.Format = "#,##0.00";
@@ -375,7 +441,40 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
         if (SelectedCode != null)
             result = result.Where(x => x.Code == SelectedCode.Code);
         FilteredItems = new ObservableCollection<SaleHistoryItemViewModel>(result);
-        TotalSalesAmount = FilteredItems.Sum(x => x.Amount);
+        SetSource(FilteredItems);
+        SummaryQty = FilteredItems.Sum(x => x.TotalCount);
+        TotalSalesAmount = FilteredItems.Sum(x => x.BaseAmount);
+
+        var byDay = FilteredItems.GroupBy(x => x.Date.Date).OrderBy(g => g.Key).ToList();
+        static double ValOf(SaleHistoryItemViewModel x) => (double)(x.BaseAmount != 0 ? x.BaseAmount : x.Amount);
+        List<double> SeriesFor(ProductionOrigin? o) =>
+            [.. byDay.Select(g => g.Where(x => o == null || x.ProductionOrigin == o).Sum(ValOf))];
+
+        var seriesList = new List<ChartSeries>
+        {
+            new() { Name = "Tayyor", Color = Color.FromRgb(0x1B, 0x5E, 0x20), Values = SeriesFor(ProductionOrigin.Tayyor) },
+            new() { Name = "Aralash", Color = Color.FromRgb(0x6A, 0x1B, 0x9A), Values = SeriesFor(ProductionOrigin.Aralash) },
+            new() { Name = "Eva", Color = Color.FromRgb(0xD8, 0x1B, 0x60), Values = SeriesFor(ProductionOrigin.Eva) },
+            new() { Name = "Umumiy", Color = Color.FromRgb(0x9A, 0xA4, 0xB2), Values = SeriesFor(null), Dim = true }
+        };
+
+        if (FilteredItems.Any(x => x.IsReturn))
+        {
+            var returnVals = byDay
+                .Select(g => g.Where(x => x.IsReturn).Sum(x => Math.Abs((double)(x.BaseAmount != 0 ? x.BaseAmount : x.Amount))))
+                .ToList();
+            seriesList.Add(new() { Name = "Qaytarilgan", Color = Color.FromRgb(0xC6, 0x28, 0x28), Values = returnVals });
+        }
+
+        SalesChart = new ChartData
+        {
+            Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
+            Series = seriesList
+        };
+        TotalsSummary = string.Join("    ", FilteredItems
+            .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode!)
+            .OrderBy(g => g.Key)
+            .Select(g => $"{g.Key}: {g.Sum(x => x.Amount):N2}"));
     }
 
     private FixedDocument CreateFixedDocument()
@@ -457,8 +556,8 @@ public partial class SalesHistoryReportViewModel : ViewModelBase
             {
                 var totalBundleCount = allItemsList.Sum(x => x.BundleCount);
                 var totalTotalCount = allItemsList.Sum(x => x.TotalCount);
-                var totalAmount = allItemsList.Sum(x => x.Amount);
-                AddRow(table, true, "JAMI:", "", "", "", "",
+                var totalAmount = allItemsList.Sum(x => x.BaseAmount);
+                AddRow(table, true, "JAMI (so'm):", "", "", "", "",
                     totalBundleCount.ToString("N0"), "",
                     totalTotalCount.ToString("N0"), "", "",
                     totalAmount.ToString("N2"));
