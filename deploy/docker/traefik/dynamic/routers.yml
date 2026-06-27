@@ -1,0 +1,53 @@
+# ============================================================
+# Traefik dinamik konfiguratsiya — router va servislar (file-provider)
+# ============================================================
+# Bitta domen ostida uchta yo'l:
+#   Host(domain)                         → API (forex_backend:8080)
+#   Host(domain) && PathPrefix(/pgadmin) → pgAdmin (forex_pgadmin:80)
+#   Host(domain) && PathPrefix(/<bucket>)→ MinIO rasm fayllar (forex_minio:9000)
+#
+# MUHIM: file-provider .env'dagi ${DOMAIN} ni o'qiy olmaydi — quyidagi
+# `forex.example.com` larni o'z domeningizga, `forex-storage` ni bucket nomingizga
+# qo'lda almashtiring. Servis manzillari = compose'dagi container_name lar.
+
+http:
+  routers:
+    api:
+      rule: "Host(`forex.example.com`)"
+      entryPoints: ["websecure"]
+      service: api
+      priority: 1
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "forex.example.com"
+
+    pgadmin:
+      rule: "Host(`forex.example.com`) && PathPrefix(`/pgadmin`)"
+      entryPoints: ["websecure"]
+      service: pgadmin
+      priority: 10
+      tls:
+        certResolver: letsencrypt
+
+    minio:
+      rule: "Host(`forex.example.com`) && PathPrefix(`/forex-storage`)"
+      entryPoints: ["websecure"]
+      service: minio
+      priority: 10
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://forex_backend:8080"
+    pgadmin:
+      loadBalancer:
+        servers:
+          - url: "http://forex_pgadmin:80"
+    minio:
+      loadBalancer:
+        servers:
+          - url: "http://forex_minio:9000"

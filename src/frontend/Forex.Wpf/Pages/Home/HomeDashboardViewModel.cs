@@ -73,8 +73,18 @@ public partial class HomeDashboardViewModel : ObservableObject
             var payments = (txResponse.IsSuccess ? txResponse.Data : null) ?? [];
             static double Pay(TransactionResponse t) => t.IsIncome ? (double)(t.Amount * (t.ExchangeRate == 0 ? 1 : t.ExchangeRate)) : 0;
 
+            // Mahsulot qaytarishlar — qizil chiziq uchun
+            var retRequest = new FilteringRequest
+            {
+                Filters = new() { ["date"] = [$">={begin:o}", $"<{today.AddDays(1):o}"] }
+            };
+            var retResponse = await client.Returns.Filter(retRequest).Handle();
+            var returns = (retResponse.IsSuccess ? retResponse.Data : null) ?? [];
+            static double Ret(ReturnResponse r) => (double)(r.BaseAmount != 0 ? r.BaseAmount : r.TotalAmount);
+
             var salesColor = Color.FromRgb(0x3B, 0x5B, 0xDB);
             var payColor = Color.FromRgb(0x1B, 0x7A, 0x3E);
+            var retColor = Color.FromRgb(0xC6, 0x28, 0x28);
 
             if (hourly)
             {
@@ -85,14 +95,20 @@ public partial class HomeDashboardViewModel : ObservableObject
                 var payVals = hours.Select(h => payments
                     .Where(t => t.Date.ToLocalTime() >= today.AddHours(h) && t.Date.ToLocalTime() < today.AddHours(h + 1))
                     .Sum(Pay)).ToList();
+                var retVals = hours.Select(h => returns
+                    .Where(r => r.Date.ToLocalTime() >= today.AddHours(h) && r.Date.ToLocalTime() < today.AddHours(h + 1))
+                    .Sum(Ret)).ToList();
+                var hourSeries = new List<ChartSeries>
+                {
+                    new() { Name = "Savdo", Color = salesColor, Values = salesVals },
+                    new() { Name = "To'lovlar", Color = payColor, Values = payVals }
+                };
+                if (returns.Sum(Ret) > 0)
+                    hourSeries.Add(new() { Name = "Qaytarish", Color = retColor, Values = retVals });
                 SalesTrend = new ChartData
                 {
                     Labels = [.. hours.Select(h => $"{h:00}:00")],
-                    Series =
-                    [
-                        new ChartSeries { Name = "Savdo", Color = salesColor, Values = salesVals },
-                        new ChartSeries { Name = "To'lovlar", Color = payColor, Values = payVals }
-                    ]
+                    Series = hourSeries
                 };
             }
             else
@@ -101,14 +117,18 @@ public partial class HomeDashboardViewModel : ObservableObject
                 var dayList = Enumerable.Range(0, days).Select(i => begin.AddDays(i)).Where(d => d <= today).ToList();
                 var salesVals = dayList.Select(d => sales.Where(s => s.Date.ToLocalTime().Date == d).Sum(Base)).ToList();
                 var payVals = dayList.Select(d => payments.Where(t => t.Date.ToLocalTime().Date == d).Sum(Pay)).ToList();
+                var retVals = dayList.Select(d => returns.Where(r => r.Date.ToLocalTime().Date == d).Sum(Ret)).ToList();
+                var daySeries = new List<ChartSeries>
+                {
+                    new() { Name = "Savdo", Color = salesColor, Values = salesVals },
+                    new() { Name = "To'lovlar", Color = payColor, Values = payVals }
+                };
+                if (returns.Sum(Ret) > 0)
+                    daySeries.Add(new() { Name = "Qaytarish", Color = retColor, Values = retVals });
                 SalesTrend = new ChartData
                 {
                     Labels = [.. dayList.Select(d => d.ToString("dd.MM"))],
-                    Series =
-                    [
-                        new ChartSeries { Name = "Savdo", Color = salesColor, Values = salesVals },
-                        new ChartSeries { Name = "To'lovlar", Color = payColor, Values = payVals }
-                    ]
+                    Series = daySeries
                 };
             }
 

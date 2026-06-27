@@ -1,0 +1,26 @@
+# Haqiqiy HTTPS sertifikati (production) uchun — cert-manager + Let's Encrypt (Cloudflare DNS-01).
+# Avval cert-manager o'rnatilgan bo'lishi kerak:
+#   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+#
+# So'ng Cloudflare token'ni secret qiling (yoki forex-secrets dagi CF_DNS_API_TOKEN dan foydalaning):
+#   kubectl -n cert-manager create secret generic cloudflare-token \
+#     --from-literal=api-token=SIZNING_TOKEN
+#
+# Keyin shu faylni qo'llang:  kubectl apply -f issuer.example.yaml
+# (ingress.yaml dagi cert-manager.io/cluster-issuer: letsencrypt-cloudflare shunga ishora qiladi.)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cloudflare
+spec:
+  acme:
+    email: siz@example.com                 # <-- o'z emailingiz
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-cloudflare-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-token
+              key: api-token

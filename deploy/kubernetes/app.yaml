@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: forex
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: forex-app }
+  template:
+    metadata:
+      labels: { app: forex-app }
+    spec:
+      containers:
+        - name: app
+          image: muqimjon/forex:3.0.0     # ARM klaster (mas. Apple Silicon): arm64v3.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            # --- $(VAR) kengaytirish uchun avval asosiy o'zgaruvchilar ---
+            - name: POSTGRES_USER
+              valueFrom: { configMapKeyRef: { name: forex-config, key: POSTGRES_USER } }
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: forex-config, key: POSTGRES_DB } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: POSTGRES_PASSWORD } }
+            - name: DOMAIN
+              valueFrom: { configMapKeyRef: { name: forex-config, key: DOMAIN } }
+            # --- ilova sozlamalari ---
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ConnectionStrings__DefaultConnection
+              value: "Host=postgres;Port=5432;Username=$(POSTGRES_USER);Password=$(POSTGRES_PASSWORD);Database=$(POSTGRES_DB);"
+            - name: Jwt__Key
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: JWT_SECRET_KEY } }
+            - name: Jwt__Issuer
+              valueFrom: { configMapKeyRef: { name: forex-config, key: JWT_ISSUER } }
+            - name: Jwt__Audience
+              valueFrom: { configMapKeyRef: { name: forex-config, key: JWT_AUDIENCE } }
+            - name: Minio__Endpoint
+              value: "minio:9000"
+            # Rasm URL'lari domen orqali (o'qish ham, presigned yuklash ham)
+            - name: Minio__PublicEndpoint
+              value: "https://$(DOMAIN)"
+            - name: Minio__PublicPort
+              value: "443"
+            - name: Minio__AccessKey
+              valueFrom: { configMapKeyRef: { name: forex-config, key: MINIO_ROOT_USER } }
+            - name: Minio__SecretKey
+              valueFrom: { secretKeyRef: { name: forex-secrets, key: MINIO_ROOT_PASSWORD } }
+            - name: Minio__UseSsl
+              value: "true"
+            - name: Minio__BucketName
+              valueFrom: { configMapKeyRef: { name: forex-config, key: MINIO_BUCKET_NAME } }
+            - name: Minio__EnablePublicRead
+              value: "true"
+            - name: Minio__Prefix
+              value: "uploads"
+            - name: FileUpload__MaxFileSizeMB
+              valueFrom: { configMapKeyRef: { name: forex-config, key: MAX_FILE_SIZE_MB } }
+          readinessProbe:
+            tcpSocket: { port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: forex
+spec:
+  selector: { app: forex-app }
+  ports:
+    - port: 8080
+      targetPort: 8080

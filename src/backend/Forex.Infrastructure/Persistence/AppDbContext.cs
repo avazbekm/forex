@@ -22,6 +22,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ProductResidue> ResidueShops { get; set; }
     public DbSet<Sale> Sales { get; set; }
     public DbSet<SaleItem> SaleItems { get; set; }
+    public DbSet<Return> Returns { get; set; }
+    public DbSet<ReturnItem> ReturnItems { get; set; }
     public DbSet<SemiProduct> SemiProducts { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
@@ -134,6 +136,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne(s => s.Currency)
             .WithMany()
             .HasForeignKey(s => s.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Return>()
+            .HasOne(r => r.Currency)
+            .WithMany()
+            .HasForeignKey(r => r.CurrencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Return>()
+            .HasOne(r => r.Customer)
+            .WithMany()
+            .HasForeignKey(r => r.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Return>()
+            .HasOne(r => r.OperationRecord)
+            .WithOne(o => o.Return)
+            .HasForeignKey<Return>(r => r.OperationRecordId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Ignore<System.Transactions.Transaction>();

@@ -17,6 +17,7 @@ public class OperationRecord : Auditable
     public Currency Currency { get; set; } = default!;
 
     public Sale? Sale { get; set; }
+    public Return? Return { get; set; }
     public Transaction? Transaction { get; set; }
     public long? SupplyId { get; set; }
     public Supply? Supply { get; set; }

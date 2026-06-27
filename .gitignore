@@ -422,16 +422,29 @@ FodyWeavers.xsd
 /src/frontend/Forex.Wpf/appsettings.Development.json
 /src/backend/Forex.WebApi/.config
 
-# Environment variables
-# Note: .env is tracked for localhost testing convenience
-# For production, edit .env with your values
-# **/.env  # Uncomment this in production fork
-!.env
+# Environment variables (maxfiy parol/kalitlar — commit qilinmaydi)
+.env
+deploy/docker/.env
 !**/.env.example
+
+# Kubernetes maxfiy fayllari (real secret — commit qilinmaydi)
+deploy/kubernetes/secret.yaml
+!deploy/kubernetes/secret.example.yaml
 
 # Docker volumes and data
 **/docker-data/
 **/servers.json
+!**/servers.json.example
+
+# Traefik / TLS sertifikatlar va ACME maxfiy fayllari (commit qilinmaydi)
+deploy/docker/traefik/certs/*.crt
+deploy/docker/traefik/certs/*.key
+deploy/docker/traefik/certs/*.pem
+deploy/docker/traefik/acme.json
+
+# rclone konfiguratsiyasi (bulut kalitlari bor — commit qilinmaydi)
+deploy/docker/rclone.conf
+!deploy/docker/rclone.conf.example
 
 **/DevKeyService.Secrets.cs
 /src/frontend/Forex.Wpf/appsettings.Production.json

@@ -1,6 +1,18 @@
+# ============================================================
+# Forex — MINIMAL stack (postgres + minio + app)
+# ============================================================
+# Eng sodda ishga tushirish: HTTPS yo'q, pgAdmin yo'q, backup yo'q.
+# Lokal sinov yoki sodda ichki server uchun.
+#
+#   cp .env.example .env        # qiymatlarni to'ldiring
+#   docker compose up -d
+#
+# To'liq variant (pgAdmin + backup + traefik/HTTPS): docker-compose.full.yml
+# Qo'llanma: README.md
+
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18.1-trixie
     container_name: forex_postgres
     restart: always
     environment:
@@ -10,28 +22,12 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./docker-data/pgdata:/var/lib/postgresql/data
+      - ./docker-data/pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - forex_network
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: forex_pgadmin
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-    ports:
-      - "8080:80"
-    depends_on:
-      - postgres
-    volumes:
-      - ./servers.json:/pgadmin4/servers.json
     networks:
       - forex_network
 

@@ -95,7 +95,7 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
 
             RebuildCustomers(response.Data);
 
-            var tempList = new List<CustomerSaleViewModel>();
+            var byCustomer = new Dictionary<long, CustomerSaleViewModel>();
 
             foreach (var group in response.Data
                 .Where(s => s.Customer != null)
@@ -136,10 +136,12 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
                     }
                 }
 
-                tempList.Add(vm);
+                byCustomer[customer.Id] = vm;
             }
 
-            allRows = tempList;
+            await SubtractReturnsAsync(byCustomer);
+
+            allRows = [.. byCustomer.Values];
             ApplySort();
         }
         catch (Exception ex)
@@ -148,6 +150,63 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
             allRows = [];
             SetSource(allRows);
             UpdateSummary();
+        }
+    }
+
+    private async Task SubtractReturnsAsync(Dictionary<long, CustomerSaleViewModel> byCustomer)
+    {
+        var request = new FilteringRequest
+        {
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["customer"] = ["include"],
+                ["returnItems"] = ["include:productType.product"]
+            }
+        };
+
+        var response = await _client.Returns.Filter(request).Handle(l => IsLoading = l);
+        if (!response.IsSuccess || response.Data == null) return;
+
+        foreach (var group in response.Data
+            .Where(r => r.Customer != null)
+            .GroupBy(r => r.Customer.Id))
+        {
+            var customer = group.First().Customer;
+
+            if (SelectedCustomer != null && SelectedCustomer.Id != customer.Id)
+                continue;
+
+            if (!byCustomer.TryGetValue(customer.Id, out var vm))
+            {
+                vm = new CustomerSaleViewModel { CustomerName = customer.Name ?? "Nomsiz mijoz" };
+                byCustomer[customer.Id] = vm;
+            }
+
+            foreach (var ret in group)
+            {
+                if (ret.ReturnItems == null) continue;
+
+                if (!string.IsNullOrEmpty(ret.CurrencyCode))
+                    vm.CurrencyCode = ret.CurrencyCode;
+
+                foreach (var item in ret.ReturnItems)
+                {
+                    if (item?.ProductType?.Product == null) continue;
+
+                    var origin = item.ProductType.Product.ProductionOrigin;
+                    int count = item.TotalCount;
+                    vm.TotalAmount -= item.Amount;
+
+                    switch (origin)
+                    {
+                        case ProductionOrigin.Tayyor: vm.ReadyCount -= count; break;
+                        case ProductionOrigin.Aralash: vm.MixedCount -= count; break;
+                        case ProductionOrigin.Eva: vm.EvaCount -= count; break;
+                        default: vm.ReadyCount -= count; break;
+                    }
+                }
+            }
         }
     }
 
@@ -193,7 +252,12 @@ public partial class CustomerSalesRatingViewModel : PagedReportViewModel<Custome
     protected override void OnPageApplied()
     {
         RatingChart = new ObservableCollection<ChartPoint>(PagedItems
-            .Select(r => new ChartPoint { Label = r.CustomerName, Value = Metric(r) }));
+            .Select(r => new ChartPoint
+            {
+                Label = r.CustomerName,
+                Value = Metric(r),
+                Color = Metric(r) < 0 ? Color.FromRgb(0xC6, 0x28, 0x28) : null
+            }));
     }
 
     [RelayCommand]

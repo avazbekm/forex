@@ -338,6 +338,22 @@
                 </Button>
 
                 <Button
+                    x:Name="btnReturn"
+                    Height="120"
+                    MinWidth="220"
+                    Margin="10"
+                    md:ButtonAssist.CornerRadius="10"
+                    md:ElevationAssist.Elevation="Dp24"
+                    Background="#FFEF6C00"
+                    Click="BtnReturn_Click"
+                    FontSize="24"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource MainMenuTextColor}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
+                    ↩️ Qaytarish
+                </Button>
+
+                <Button
                     x:Name="btnCash"
                     Height="120"
                     MinWidth="220"

@@ -122,7 +122,57 @@ public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHist
                 });
             }
         }
+
+        await LoadReturnsAsync();
+
         ApplyFilters();
+    }
+
+    private async Task LoadReturnsAsync()
+    {
+        var request = new FilteringRequest
+        {
+            Filters = new()
+            {
+                ["date"] = [$">={BeginDate:o}", $"<{EndDate.AddDays(1):o}"],
+                ["customer"] = ["include"],
+                ["currency"] = ["include"],
+                ["returnItems"] = ["include:productType.product.unitMeasure"]
+            },
+            Descending = true,
+            SortBy = "date"
+        };
+
+        var response = await client.Returns.Filter(request).Handle(l => IsLoading = l);
+        if (!response.IsSuccess || response.Data is null) return;
+
+        foreach (var ret in response.Data)
+        {
+            if (ret.ReturnItems == null) continue;
+            foreach (var item in ret.ReturnItems)
+            {
+                var product = item.ProductType?.Product;
+                if (product == null) continue;
+                allItems.Add(new SaleHistoryItemViewModel
+                {
+                    Date = ret.Date.ToLocalTime(),
+                    Customer = ret.Customer?.Name ?? "-",
+                    ProductionOrigin = product.ProductionOrigin,
+                    Code = product.Code ?? "-",
+                    ProductName = product.Name ?? "-",
+                    Type = item.ProductType?.Type ?? "-",
+                    BundleCount = -item.BundleCount,
+                    BundleItemCount = item.ProductType?.BundleItemCount ?? 0,
+                    TotalCount = -item.TotalCount,
+                    UnitMeasure = product.UnitMeasure?.Name ?? "dona",
+                    UnitPrice = item.UnitPrice,
+                    Amount = -item.Amount,
+                    BaseAmount = ret.TotalAmount == 0 ? -item.Amount : -(item.Amount * (ret.BaseAmount / ret.TotalAmount)),
+                    CurrencyCode = ret.CurrencyCode,
+                    IsReturn = true
+                });
+            }
+        }
     }
 
     private void RebuildCustomers(IEnumerable<Forex.ClientService.Models.Responses.SaleResponse> sales)
@@ -400,16 +450,26 @@ public partial class SalesHistoryReportViewModel : PagedReportViewModel<SaleHist
         List<double> SeriesFor(ProductionOrigin? o) =>
             [.. byDay.Select(g => g.Where(x => o == null || x.ProductionOrigin == o).Sum(ValOf))];
 
+        var seriesList = new List<ChartSeries>
+        {
+            new() { Name = "Tayyor", Color = Color.FromRgb(0x1B, 0x5E, 0x20), Values = SeriesFor(ProductionOrigin.Tayyor) },
+            new() { Name = "Aralash", Color = Color.FromRgb(0x6A, 0x1B, 0x9A), Values = SeriesFor(ProductionOrigin.Aralash) },
+            new() { Name = "Eva", Color = Color.FromRgb(0xD8, 0x1B, 0x60), Values = SeriesFor(ProductionOrigin.Eva) },
+            new() { Name = "Umumiy", Color = Color.FromRgb(0x9A, 0xA4, 0xB2), Values = SeriesFor(null), Dim = true }
+        };
+
+        if (FilteredItems.Any(x => x.IsReturn))
+        {
+            var returnVals = byDay
+                .Select(g => g.Where(x => x.IsReturn).Sum(x => Math.Abs((double)(x.BaseAmount != 0 ? x.BaseAmount : x.Amount))))
+                .ToList();
+            seriesList.Add(new() { Name = "Qaytarilgan", Color = Color.FromRgb(0xC6, 0x28, 0x28), Values = returnVals });
+        }
+
         SalesChart = new ChartData
         {
             Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
-            Series =
-            [
-                new ChartSeries { Name = "Tayyor", Color = Color.FromRgb(0x1B, 0x5E, 0x20), Values = SeriesFor(ProductionOrigin.Tayyor) },
-                new ChartSeries { Name = "Aralash", Color = Color.FromRgb(0x6A, 0x1B, 0x9A), Values = SeriesFor(ProductionOrigin.Aralash) },
-                new ChartSeries { Name = "Eva", Color = Color.FromRgb(0xD8, 0x1B, 0x60), Values = SeriesFor(ProductionOrigin.Eva) },
-                new ChartSeries { Name = "Umumiy", Color = Color.FromRgb(0x9A, 0xA4, 0xB2), Values = SeriesFor(null), Dim = true }
-            ]
+            Series = seriesList
         };
         TotalsSummary = string.Join("    ", FilteredItems
             .GroupBy(x => string.IsNullOrWhiteSpace(x.CurrencyCode) ? "—" : x.CurrencyCode!)

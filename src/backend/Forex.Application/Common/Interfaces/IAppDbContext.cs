@@ -22,6 +22,8 @@ public interface IAppDbContext
     DbSet<UnitMeasure> UnitMeasures { get; }
     DbSet<Sale> Sales { get; }
     DbSet<SaleItem> SaleItems { get; }
+    DbSet<Return> Returns { get; set; }
+    DbSet<ReturnItem> ReturnItems { get; set; }
     DbSet<SemiProduct> SemiProducts { get; }
     DbSet<Shop> Shops { get; }
     DbSet<Transaction> Transactions { get; }

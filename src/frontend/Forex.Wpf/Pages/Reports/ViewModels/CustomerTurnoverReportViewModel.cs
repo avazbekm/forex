@@ -166,6 +166,10 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
                 credit = amount > 0 ? amount : 0;
                 debit = amount < 0 ? Math.Abs(amount) : 0;
             }
+            else if (op.Type == ClientService.Enums.OperationType.Return)
+            {
+                credit = Math.Abs(amount);
+            }
 
             Operations.Add(new TurnoversViewModel
             {
@@ -181,15 +185,34 @@ public partial class CustomerTurnoverReportViewModel : PagedReportViewModel<Turn
         SummaryCredit = Operations.Sum(x => x.Credit);
         SetSource(Operations);
 
-        var byDay = Operations.GroupBy(o => o.Date.Date).OrderBy(g => g.Key).ToList();
+        var byDay = data.OperationRecords
+            .GroupBy(o => o.Date.ToLocalTime().Date)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        static double AbsAmt(decimal a) => (double)Math.Abs(a);
+
+        var paymentVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Transaction && o.Transaction?.IsIncome == true).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var saleVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Sale).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var returnVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Return).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var supplyVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Supply).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+        var outflowVals = byDay.Select(g => g.Where(o => o.Type == ClientService.Enums.OperationType.Transaction && o.Transaction?.IsIncome == false).Sum(o => AbsAmt(o.SettlementAmount))).ToList();
+
+        var series = new List<ChartSeries>
+        {
+            new() { Name = "To'lov", Color = Color.FromRgb(0x1B, 0x7A, 0x3E), Values = paymentVals },
+            new() { Name = "Savdo", Color = Color.FromRgb(0x3B, 0x5B, 0xDB), Values = saleVals },
+            new() { Name = "Qaytarish", Color = Color.FromRgb(0xC6, 0x28, 0x28), Values = returnVals }
+        };
+        if (supplyVals.Any(v => v > 0))
+            series.Add(new() { Name = "Ta'minot", Color = Color.FromRgb(0x7C, 0x3A, 0xED), Values = supplyVals });
+        if (outflowVals.Any(v => v > 0))
+            series.Add(new() { Name = "Chiqim", Color = Color.FromRgb(0xD9, 0x77, 0x06), Values = outflowVals });
+
         TurnoverChart = new ChartData
         {
             Labels = [.. byDay.Select(g => g.Key.ToString("dd.MM"))],
-            Series =
-            [
-                new ChartSeries { Name = "Kirim", Color = Color.FromRgb(0x1B, 0x7A, 0x3E), Values = [.. byDay.Select(g => (double)g.Sum(o => o.Credit))] },
-                new ChartSeries { Name = "Chiqim", Color = Color.FromRgb(0xC6, 0x28, 0x28), Values = [.. byDay.Select(g => (double)g.Sum(o => o.Debit))] }
-            ]
+            Series = series
         };
     }
 

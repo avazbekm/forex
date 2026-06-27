@@ -14,46 +14,24 @@ Business Management System
 
 ## 🚀 Quick Start
 
-### Test Locally (Zero Configuration!)
+Deploy fayllari **`deploy/`** da: `docker/` (Docker Compose) va `kubernetes/` (k8s).
 
-The repository includes working `.env` file - just run:
-
-```bash
-# 1. Build the image with your Docker Hub username
-docker build -t muqimjon/forex:latest -f src/backend/Forex.WebApi/Dockerfile .
-
-# 2. Start all services
-docker-compose up -d
-
-# Access immediately:
-# API Docs: http://localhost:5001/scalar/v1
-# MinIO Console: http://localhost:9001 (minioadmin/minioadmin)
-# PgAdmin: http://localhost:8080 (admin@gmail.com/admin_password)
-```
-
-### Production Deployment (Pre-built Image)
-
-For production server, you don't need the source code - just the image:
+**Docker Compose** (`deploy/docker/`) — ikki variant:
 
 ```bash
-# On server, prepare environment:
-nano .env  # Edit values:
-# DOCKER_IMAGE=muqimjon/forex (or your-username/forex)
-# MINIO_PUBLIC_ENDPOINT=http://YOUR_SERVER_IP:9000
-# POSTGRES_PASSWORD=strong_password
-# JWT_SECRET_KEY=long_random_key
+cd deploy/docker
+cp .env.example .env                 # parol, domen, versiya (DOCKER_TAG)
 
-# Pull image from Docker Hub (if pushed):
-docker-compose pull
+# Minimal (postgres + minio + app):
+docker compose up -d
 
-# Or load from tar file:
-docker load -i forex-latest.tar
-
-# Start services
-docker-compose up -d
+# To'liq (+ pgadmin + backup + traefik/HTTPS, bitta domen):
+docker compose -f docker-compose.full.yml up -d
 ```
 
-📖 See [DOCKER.md](DOCKER.md) for detailed deployment guide.
+**Kubernetes** (`deploy/kubernetes/`) — minikube yoki haqiqiy klaster.
+
+📖 Qo'llanmalar: [deploy/docker/README.md](deploy/docker/README.md) · [deploy/docker/HTTPS.md](deploy/docker/HTTPS.md) · [deploy/kubernetes/README.md](deploy/kubernetes/README.md)
 
 ### Development Setup (Visual Studio)
 
@@ -111,7 +89,7 @@ POSTGRES_PASSWORD=strong_password_here
 JWT_SECRET_KEY=long_random_secret_key
 ```
 
-See [.env.example](.env.example) for all available options.
+See [deploy/docker/.env.example](deploy/docker/.env.example) for all available options.
 
 ## 🌐 API Access
 
@@ -122,10 +100,16 @@ See [.env.example](.env.example) for all available options.
 
 ```
 forex/
-├── docker-compose.yml          # Docker services
-├── .env                        # Environment (gitignored)
-├── .env.example                # Config template
-├── DOCKER.md                   # Deployment guide
+├── deploy/
+│   ├── docker/                 # Docker Compose bilan deploy
+│   │   ├── docker-compose.yml      #   minimal: postgres + minio + app
+│   │   ├── docker-compose.full.yml #   + pgadmin + backup + traefik (HTTPS)
+│   │   ├── .env / .env.example     #   sozlamalar
+│   │   ├── traefik/                #   reverse proxy + TLS
+│   │   └── README.md / HTTPS.md    #   qo'llanmalar
+│   └── kubernetes/             # Kubernetes (minikube / klaster) manifestlari
+│       ├── *.yaml              #   namespace, postgres, minio, app, pgadmin, ingress...
+│       └── README.md
 ├── src/
 │   ├── backend/
 │   │   ├── Forex.Domain/
@@ -136,9 +120,7 @@ forex/
 │   └── frontend/
 │       ├── Forex.ClientService/
 │       └── Forex.Wpf/
-└── docker-data/                # Volumes (gitignored)
-    ├── pgdata/
-    └── minio/
+└── README.md
 ```
 
 ## 📝 Technologies
@@ -153,6 +135,7 @@ forex/
 
 ## 📚 Documentation
 
-- [DOCKER.md](DOCKER.md) - Deployment & troubleshooting
-- [.env.example](.env.example) - Configuration reference
+- [deploy/docker/README.md](deploy/docker/README.md) - Deployment & troubleshooting
+- [deploy/docker/HTTPS.md](deploy/docker/HTTPS.md) - HTTPS (Traefik, Cloudflare)
+- [deploy/docker/.env.example](deploy/docker/.env.example) - Configuration reference
 - API documentation available at `/scalar/v1` when running

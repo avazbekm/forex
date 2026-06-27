@@ -20,4 +20,5 @@ public class SaleHistoryItemViewModel
     public decimal Amount { get; set; }
     public decimal BaseAmount { get; set; }
     public string? CurrencyCode { get; set; }
+    public bool IsReturn { get; set; }
 }

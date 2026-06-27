@@ -13,6 +13,7 @@ public class ForexClient(
     IApiProducts products,
     IApiProductEntries productEntries,
     IApiSales sales,
+    IApiReturns returns,
     IApiTransactions transactions,
     IApiOperationRecord operationRecord,
     IApiShops shops,
@@ -31,6 +32,7 @@ public class ForexClient(
     public IApiProductTypes ProductTypes { get; } = productType;
     public IApiProductEntries ProductEntries { get; } = productEntries;
     public IApiSales Sales { get; } = sales;
+    public IApiReturns Returns { get; } = returns;
     public IApiTransactions Transactions { get; set; } = transactions;
     public IApiShops Shops { get; set; } = shops;
     public IApiProductResidues ProductResidues { get; set; } = productResidues;

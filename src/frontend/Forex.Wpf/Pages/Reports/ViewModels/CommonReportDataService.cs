@@ -20,11 +20,12 @@ public partial class CommonReportDataService : ViewModelBase
     public ObservableCollection<ProductViewModel> AvailableProducts { get; } = [];
     public ObservableCollection<CurrencyResponse> Currencies { get; } = [];
 
+    private bool _isRefreshing;
+
     public CommonReportDataService(ForexClient client, IMapper mapper)
     {
         _client = client;
         _mapper = mapper;
-        _ = LoadAsync(); // Bir marta yuklanadi, keyin cache
     }
 
     public decimal BaseRate(string? code)
@@ -35,13 +36,22 @@ public partial class CommonReportDataService : ViewModelBase
         return currency.IsDefault || currency.ExchangeRate == 0 ? 1 : currency.ExchangeRate;
     }
 
-    private async Task LoadAsync()
+    public async Task RefreshAsync()
     {
-        await Task.WhenAll(
-            LoadCustomersAsync(),
-            LoadProductsAsync(),
-            LoadCurrenciesAsync()
-        );
+        if (_isRefreshing) return;
+        _isRefreshing = true;
+        try
+        {
+            await Task.WhenAll(
+                LoadCustomersAsync(),
+                LoadProductsAsync(),
+                LoadCurrenciesAsync()
+            );
+        }
+        finally
+        {
+            _isRefreshing = false;
+        }
     }
 
     private async Task LoadCurrenciesAsync()

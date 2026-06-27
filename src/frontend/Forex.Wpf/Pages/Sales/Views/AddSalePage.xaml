@@ -111,13 +111,11 @@
 					<RowDefinition Height="*" />
 					<RowDefinition Height="*" />
 					<RowDefinition Height="*" />
-					<RowDefinition Height="*" />
 				</Grid.RowDefinitions>
 
 				<Label Grid.Row="0" VerticalAlignment="Center" Content="Sana:" FontSize="14" />
 				<Label Grid.Row="1" VerticalAlignment="Center" Content="Mijoz:" FontSize="14" />
-				<Label Grid.Row="2" VerticalAlignment="Center" Content="Summa:" FontSize="14" />
-				<Label Grid.Row="3" VerticalAlignment="Center" Content="Izox:" FontSize="14" />
+				<Label Grid.Row="2" VerticalAlignment="Center" Content="Izox:" FontSize="14" />
 
 				<Grid Grid.Row="0" Grid.Column="1">
 					<controls:UserCalendar
@@ -133,8 +131,15 @@
 				</Grid>
 
 				<Grid Grid.Row="1" Grid.Column="1">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="150" />
+					</Grid.ColumnDefinitions>
+
 					<controls:FloatingImageComboBox
 						x:Name="cbxCustomerName"
+						Grid.Column="0"
 						HorizontalAlignment="Stretch"
 						VerticalAlignment="Stretch"
 						IsEditable="True"
@@ -146,62 +151,35 @@
 						SelectedItem="{Binding Customer}"
 						ShowImage="False"
 						Text="{Binding CustomerInput, Mode=TwoWay}" />
+
+					<Label
+						Grid.Column="1"
+						Margin="12,0,6,0"
+						VerticalAlignment="Center"
+						Content="Jami summa:"
+						FontSize="14" />
+
+					<Border
+						Grid.Column="2"
+						Margin="0,2"
+						BorderBrush="{DynamicResource PrimaryTextColor}"
+						BorderThickness="1"
+						CornerRadius="4">
+						<TextBox
+							x:Name="tbxTotalSum"
+							Padding="3,0"
+							HorizontalAlignment="Stretch"
+							VerticalAlignment="Stretch"
+							BorderThickness="0"
+							FontSize="14"
+							IsReadOnly="True"
+							IsTabStop="False"
+							Text="{Binding TotalAmount, StringFormat={}{0:N2}}"
+							TextAlignment="Right" />
+					</Border>
 				</Grid>
 
 				<Grid Grid.Row="2" Grid.Column="1">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="90" />
-						<ColumnDefinition Width="*" />
-					</Grid.ColumnDefinitions>
-
-					<Border
-                        Grid.Column="0"
-                        Margin="0,2,10,2"
-                        BorderBrush="{DynamicResource PrimaryTextColor}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-						<TextBox
-                            x:Name="tbxTotalSum"
-                            Padding="3,0"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            BorderThickness="0"
-                            FontSize="14"
-                            IsReadOnly="True"
-                            IsTabStop="False"
-                            Text="{Binding TotalAmount, StringFormat={}{0:N2}}"
-                            TextAlignment="Right" />
-					</Border>
-
-					<Label
-                        Grid.Column="1"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Content="To'lashga:"
-                        FontSize="14" />
-
-					<Border
-                        Grid.Column="2"
-                        Margin="0,2,0,2"
-                        BorderBrush="{DynamicResource PrimaryTextColor}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-						<TextBox
-                            x:Name="tbxFinalAmount"
-                            Padding="3,0"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            BorderThickness="0"
-                            FontSize="14"
-                            IsReadOnly="True"
-                            IsTabStop="False"
-                            Text="{Binding FinalAmount, StringFormat={}{0:N2}}"
-                            TextAlignment="Right" />
-					</Border>
-				</Grid>
-
-				<Grid Grid.Row="3" Grid.Column="1">
 					<Border
                         Margin="0,2"
                         BorderBrush="{DynamicResource PrimaryTextColor}"
@@ -626,6 +604,7 @@
 
 		<StackPanel
             Grid.Column="1"
+            Margin="16,0,0,0"
             VerticalAlignment="Center"
             Orientation="Horizontal">
 

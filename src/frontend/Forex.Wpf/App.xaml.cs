@@ -13,20 +13,21 @@ public partial class App : Application
     public App()
     {
         AppHost = Host.CreateDefaultBuilder()
-            .ConfigureAppConfiguration((context, config) =>
+            .ConfigureAppConfiguration((_, config) =>
             {
-                var env = context.HostingEnvironment;
-
                 config.SetBasePath(Directory.GetCurrentDirectory());
 
-                // appsettings.json - optional (faqat development uchun)
+                // appsettings.Production.json - exe ichiga embedded (default ApiBaseUrl).
+                // Eng past ustuvorlik: quyidagi loose fayllar (dev) buni ustidan yozadi.
+                var prodStream = typeof(App).Assembly
+                    .GetManifestResourceStream("Forex.Wpf.appsettings.Production.json");
+                if (prodStream is not null)
+                    config.AddJsonStream(prodStream);
+
+                // appsettings.json / appsettings.Development.json - faqat development uchun
+                // (publish'ga kirmaydi; lokal ishga tushirishda default'ni ustidan yozadi)
                 config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-                // appsettings.Development.json - optional (faqat local dev uchun)
                 config.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
-
-                // appsettings.{Environment}.json - optional (production uchun)
-                config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>
             {
