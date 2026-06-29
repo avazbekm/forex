@@ -24,7 +24,7 @@ public class ForexMinioClientFactory(IOptions<MinioStorageOptions> options)
             .WithEndpoint(uri.Authority)
             .WithCredentials(_options.AccessKey, _options.SecretKey);
 
-        if (_options.UseSsl || uri.Scheme == Uri.UriSchemeHttps)
+        if (uri.Scheme == Uri.UriSchemeHttps)
             builder.WithSSL();
 
         return builder.Build();
