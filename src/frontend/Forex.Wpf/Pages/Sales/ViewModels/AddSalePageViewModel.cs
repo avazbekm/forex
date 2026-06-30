@@ -1374,7 +1374,7 @@ public partial class AddSalePageViewModel : ViewModelBase
         else
         {
             // To'lov qilinmagan bo'lsa ham qator turadi: 0.
-            panel.Children.Add(DocSummaryRow("To'langan", $"0 {code}", muted, muted, false));
+            panel.Children.Add(DocSummaryRow("Topshirilgan pul:", $"0 {code}", muted, muted, false));
         }
 
         panel.Children.Add(new Border { Height = 1, Background = line, Margin = new Thickness(0, 8, 0, 8) });
