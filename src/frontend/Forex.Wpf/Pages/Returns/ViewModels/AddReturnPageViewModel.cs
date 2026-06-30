@@ -82,6 +82,9 @@ public partial class AddReturnPageViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<SaleItemViewModel> saleItems = [];
     [ObservableProperty] private SaleItemViewModel? selectedSaleItem = default;
 
+    [ObservableProperty] private ObservableCollection<string> returnUnits = ["Qop", "Pachka", "Dona"];
+    [ObservableProperty] private string selectedReturnUnit = "Qop";
+
     [ObservableProperty] private UserViewModel? customer;
     [ObservableProperty] private string customerInput = string.Empty;
     [ObservableProperty] private ObservableCollection<UserViewModel> availableCustomers = [];
@@ -520,7 +523,37 @@ public partial class AddReturnPageViewModel : ViewModelBase
     // ─────────────────────────────────────────────
 
     [RelayCommand]
-    private async Task Add()
+    private void ScanReturn(string? code)
+    {
+        if (Customer is null)
+        {
+            WarningMessage = "Avval mijozni tanlang (narx mijoz valyutasida kiritiladi).";
+            return;
+        }
+
+        var match = BarcodeResolver.Resolve(AvailableProducts, code);
+        if (match is null)
+        {
+            WarningMessage = $"Shtrix-kod topilmadi: {code}";
+            return;
+        }
+
+        var isQop = match.Unit == BarcodeUnit.Qop;
+        var pairs = isQop
+            ? match.ProductType.BundleItemCount ?? 0
+            : match.ProductType.PachkaItemCount ?? 0;
+
+        if (pairs <= 0)
+        {
+            WarningMessage = "Razmer uchun qadoqdagi soni belgilanmagan.";
+            return;
+        }
+
+        AddReturnLine(match.Product, match.ProductType, pairs, isQop ? pairs : 0, null);
+    }
+
+    [RelayCommand]
+    private void Add()
     {
         if (Customer is null)
         {
@@ -535,60 +568,61 @@ public partial class AddReturnPageViewModel : ViewModelBase
         }
 
         if (CurrentSaleItem.Product is null ||
-            CurrentSaleItem.BundleCount == null ||
             CurrentSaleItem.ProductType is null ||
-            CurrentSaleItem.UnitPrice is null)
+            CurrentSaleItem.UnitPrice is null ||
+            CurrentSaleItem.BundleCount is not > 0)
         {
             WarningMessage = "Mahsulot tanlanmagan yoki miqdor noto'g'ri!";
             return;
         }
 
-        bool isDuplicate = false;
-        if (!IsEditingItem)
+        var quantity = CurrentSaleItem.BundleCount.Value;
+        var isQop = SelectedReturnUnit == "Qop";
+        var pairsPerUnit = SelectedReturnUnit switch
         {
-            isDuplicate = CurrentSaleItem.ProductType.Id > 0
-               ? SaleItems.Any(s => s.ProductType?.Id == CurrentSaleItem.ProductType.Id)
-               : SaleItems.Any(s => s.ProductType?.Type == CurrentSaleItem.ProductType.Type
-                                 && s.Product?.Id == CurrentSaleItem.Product?.Id);
-        }
+            "Pachka" => CurrentSaleItem.ProductType.PachkaItemCount ?? 0,
+            "Dona" => 1,
+            _ => CurrentSaleItem.ProductType.BundleItemCount ?? 0
+        };
 
-        if (isDuplicate)
+        if (pairsPerUnit <= 0)
         {
-            WarningMessage = "Bu turdagi mahsulot allaqachon ro'yxatda bor!";
+            WarningMessage = "Razmer uchun qadoqdagi soni belgilanmagan.";
             return;
         }
 
-        SaleItemViewModel item = new()
+        var totalPairs = quantity * pairsPerUnit;
+        AddReturnLine(CurrentSaleItem.Product, CurrentSaleItem.ProductType, totalPairs, isQop ? totalPairs : 0, CurrentSaleItem.UnitPrice);
+
+        IsEditingItem = false;
+        OriginalItemIndex = -1;
+        _editingItemSnapshot = null;
+        ClearCurrentSaleItem();
+    }
+
+    private void AddReturnLine(ProductViewModel product, ProductTypeViewModel type, int totalPairs, int restockPairs, decimal? unitPrice)
+    {
+        if (totalPairs <= 0) return;
+
+        var existing = SaleItems.FirstOrDefault(s => s.ProductType?.Id == type.Id);
+        if (existing is not null)
         {
-            Product = CurrentSaleItem.Product,
-            ProductType = CurrentSaleItem.ProductType,
-            BundleCount = CurrentSaleItem.BundleCount,
-            BundleItemCount = CurrentSaleItem.BundleItemCount,
-            UnitPrice = CurrentSaleItem.UnitPrice,
-            Amount = CurrentSaleItem.Amount,
-            TotalCount = CurrentSaleItem.TotalCount,
-        };
-
-        item.ProductType.AvailableCount -= (item.TotalCount ?? 0);
-        item.PropertyChanged += SaleItemPropertyChanged;
-
-        if (IsEditingItem)
-        {
-            if (OriginalItemIndex >= 0 && OriginalItemIndex <= SaleItems.Count)
-                SaleItems.Insert(OriginalItemIndex, item);
-            else
-                SaleItems.Add(item);
-
-            IsEditingItem = false;
-            OriginalItemIndex = -1;
-            _editingItemSnapshot = null;
+            existing.TotalCount = (existing.TotalCount ?? 0) + totalPairs;
+            existing.RestockCount = (existing.RestockCount ?? 0) + restockPairs;
         }
         else
         {
+            var item = new SaleItemViewModel { Product = product, ProductType = type };
+
+            var price = unitPrice ?? ConvertSomToCustomer(type.UnitPrice);
+            if (price is not null) item.UnitPrice = price;
+
+            item.TotalCount = totalPairs;
+            item.RestockCount = restockPairs;
+            item.PropertyChanged += SaleItemPropertyChanged;
             SaleItems.Add(item);
         }
 
-        ClearCurrentSaleItem();
         RecalculateTotals();
     }
 
@@ -626,9 +660,10 @@ public partial class AddReturnPageViewModel : ViewModelBase
             OriginalItemIndex = SaleItems.IndexOf(SelectedSaleItem);
             IsEditingItem = true;
 
+            SelectedReturnUnit = "Dona";
             CurrentSaleItem.Product = SelectedSaleItem.Product;
             CurrentSaleItem.ProductType = SelectedSaleItem.ProductType;
-            CurrentSaleItem.BundleCount = SelectedSaleItem.BundleCount;
+            CurrentSaleItem.BundleCount = SelectedSaleItem.TotalCount;
             CurrentSaleItem.UnitPrice = SelectedSaleItem.UnitPrice;
             CurrentSaleItem.Amount = SelectedSaleItem.Amount;
             CurrentSaleItem.TotalCount = SelectedSaleItem.TotalCount;
@@ -752,7 +787,9 @@ public partial class AddReturnPageViewModel : ViewModelBase
             ReturnItems = [.. SaleItems.Select(item => new ReturnItemRequest
         {
             ProductTypeId = item.ProductType!.Id,
-            BundleCount = (int)item.BundleCount!,
+            BundleCount = item.BundleCount ?? 0,
+            TotalCount = item.TotalCount ?? 0,
+            RestockCount = item.RestockCount ?? 0,
             UnitPrice = (decimal)item.UnitPrice!,
             Amount = (decimal)item.Amount!
         })]

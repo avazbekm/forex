@@ -118,19 +118,20 @@ public class CreateReturnCommandHandler(
     {
         var items = new List<ReturnItem>();
 
-        foreach (var cmd in commands.Where(c => c.BundleCount > 0))
+        foreach (var cmd in commands.Where(c => c.TotalCount > 0 || c.BundleCount > 0))
         {
             var residue = residues.FirstOrDefault(r => r.ProductTypeId == cmd.ProductTypeId)
                 ?? throw new NotFoundException(nameof(ProductResidue), nameof(cmd.ProductTypeId), cmd.ProductTypeId);
 
             var bundleItemCount = residue.ProductType.BundleItemCount;
-            var totalCount = cmd.BundleCount * bundleItemCount;
+            var totalCount = cmd.TotalCount > 0 ? cmd.TotalCount : cmd.BundleCount * bundleItemCount;
 
             items.Add(new ReturnItem
             {
                 BundleCount = cmd.BundleCount,
                 BundleItemCount = bundleItemCount,
                 TotalCount = totalCount,
+                RestockCount = cmd.RestockCount,
                 UnitPrice = cmd.UnitPrice,
                 Amount = cmd.Amount,
                 ProductTypeId = cmd.ProductTypeId,
@@ -145,8 +146,9 @@ public class CreateReturnCommandHandler(
     {
         foreach (var item in items)
         {
+            if (item.RestockCount <= 0) continue;
             var residue = residues.First(r => r.ProductTypeId == item.ProductTypeId);
-            residue.Count += item.TotalCount;
+            residue.Count += item.RestockCount;
         }
     }
 }

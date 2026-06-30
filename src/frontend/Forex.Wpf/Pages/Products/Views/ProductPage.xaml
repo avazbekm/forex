@@ -65,6 +65,13 @@
                     </StackPanel>
                 </StackPanel>
 
+                <controls:FloatingInput
+                    x:Name="tbxScan"
+                    Width="280"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Label="Skaner — shtrix-kod (qop)" />
+
                 <Button
                     x:Name="btnBack"
                     Height="38"

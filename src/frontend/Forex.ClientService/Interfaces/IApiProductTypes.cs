@@ -13,6 +13,12 @@ public interface IApiProductTypes
     [Post("/api/product-types/filter")]
     Task<Response<List<ProductTypeResponse>>> Filter(FilteringRequest request);
 
+    [Get("/api/product-types/by-barcode/{code}")]
+    Task<Response<ProductTypeResponse?>> GetByBarcode(string code);
+
+    [Post("/api/product-types/generate-barcodes")]
+    Task<Response<int>> GenerateBarcodes();
+
     [Post("/api/product-types")]
     Task<Response<long>> Create([Body] ProductTypeRequest request);
 

@@ -79,7 +79,7 @@
                                 Visibility="{Binding ShowImage, ElementName=Root, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Image Stretch="UniformToFill">
                                     <Image.Source>
-                                        <MultiBinding Converter="{StaticResource UniversalImageResolver}">
+                                        <MultiBinding Converter="{StaticResource ImageResolver}">
                                             <Binding Path="." />
                                             <Binding ElementName="Root" Path="ImageMemberPath" />
                                         </MultiBinding>
@@ -90,7 +90,7 @@
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock FontSize="13" FontWeight="Bold">
                                     <TextBlock.Text>
-                                        <MultiBinding Converter="{StaticResource UniversalImageResolver}">
+                                        <MultiBinding Converter="{StaticResource ImageResolver}">
                                             <Binding Path="." />
                                             <Binding ElementName="Root" Path="PrimaryTextMemberPath" />
                                         </MultiBinding>
@@ -101,7 +101,7 @@
                                     FontSize="11"
                                     Foreground="{DynamicResource InkMuted}">
                                     <TextBlock.Text>
-                                        <MultiBinding Converter="{StaticResource UniversalImageResolver}">
+                                        <MultiBinding Converter="{StaticResource ImageResolver}">
                                             <Binding Path="." />
                                             <Binding ElementName="Root" Path="SecondaryTextMemberPath" />
                                         </MultiBinding>

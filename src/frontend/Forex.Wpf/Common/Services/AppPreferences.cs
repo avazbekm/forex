@@ -19,6 +19,7 @@ public partial class AppPreferences : ObservableObject
     [ObservableProperty] private bool showTopCustomers = true;
     [ObservableProperty] private bool showTopProducts = true;
     [ObservableProperty] private bool darkTheme;
+    [ObservableProperty] private string labelPrinter = string.Empty;
 
     public bool AnyDashboardVisible =>
         ShowDashboardStats || ShowSalesTrend || ShowTopCustomers || ShowTopProducts;
@@ -34,7 +35,9 @@ public partial class AppPreferences : ObservableObject
         Save();
     }
 
-    private sealed record Dto(bool ShowDashboardStats, bool ShowSalesTrend, bool ShowTopCustomers, bool ShowTopProducts, bool DarkTheme);
+    partial void OnLabelPrinterChanged(string value) => Save();
+
+    private sealed record Dto(bool ShowDashboardStats, bool ShowSalesTrend, bool ShowTopCustomers, bool ShowTopProducts, bool DarkTheme, string LabelPrinter);
 
     private static AppPreferences Load()
     {
@@ -51,6 +54,7 @@ public partial class AppPreferences : ObservableObject
                     prefs.ShowTopCustomers = dto.ShowTopCustomers;
                     prefs.ShowTopProducts = dto.ShowTopProducts;
                     prefs.DarkTheme = dto.DarkTheme;
+                    prefs.LabelPrinter = dto.LabelPrinter ?? string.Empty;
                 }
             }
         }
@@ -67,7 +71,7 @@ public partial class AppPreferences : ObservableObject
         try
         {
             Directory.CreateDirectory(Dir);
-            var dto = new Dto(ShowDashboardStats, ShowSalesTrend, ShowTopCustomers, ShowTopProducts, DarkTheme);
+            var dto = new Dto(ShowDashboardStats, ShowSalesTrend, ShowTopCustomers, ShowTopProducts, DarkTheme, LabelPrinter);
             File.WriteAllText(FilePath, JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch

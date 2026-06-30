@@ -386,6 +386,22 @@
                 </Button>
 
                 <Button
+                    x:Name="btnBarcode"
+                    Height="120"
+                    MinWidth="220"
+                    Margin="10"
+                    md:ButtonAssist.CornerRadius="10"
+                    md:ElevationAssist.Elevation="Dp24"
+                    Background="#FF00838F"
+                    Click="BtnBarcode_Click"
+                    FontSize="24"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource MainMenuTextColor}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
+                    🏷 Barkod
+                </Button>
+
+                <Button
                     x:Name="btnSupply"
                     Height="120"
                     MinWidth="220"

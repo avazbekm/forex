@@ -55,9 +55,32 @@ public partial class AddReturnPage : Page
         SetupCustomerComboBox();
         SetupProductComboBox();
         SetupProductTypeComboBox();
+        SetupScanBox();
 
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
+    }
+
+    private void SetupScanBox()
+    {
+        var box = tbxScan.input;
+        if (box is null) return;
+
+        box.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Enter) return;
+            e.Handled = true;
+
+            var code = box.Text?.Trim();
+            box.Clear();
+
+            if (!string.IsNullOrWhiteSpace(code))
+                vm.ScanReturnCommand.Execute(code);
+
+            box.Focus();
+        };
+
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, () => box.Focus());
     }
 
     // ─────────────────────────────────────────────
@@ -493,15 +516,17 @@ public partial class AddReturnPage : Page
             date.input,
             cbxCustomerName.InternalComboBox,
             tbxNote,
+            tbxScan.input,
             cbxProduct.combo,
             cbxProductType.combo,
+            cbxReturnUnit.combo,
             tbxBundle.input,
             tbxUnitPrice.input,
             btnAdd,
             btnSubmit
         ]);
 
-        FocusNavigator.SetFocusRedirect(btnAdd, cbxProduct.combo);
+        FocusNavigator.SetFocusRedirect(btnAdd, tbxScan.input);
     }
 
     private void RegisterGlobalShortcuts()

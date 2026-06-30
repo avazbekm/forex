@@ -101,6 +101,10 @@
                 <TabItem Header="Ko'rinish">
                     <controls:AppearanceSettingsControl />
                 </TabItem>
+
+                <TabItem Header="Printer">
+                    <controls:PrinterSettingsControl />
+                </TabItem>
             </TabControl>
         </md:Card>
     </Grid>

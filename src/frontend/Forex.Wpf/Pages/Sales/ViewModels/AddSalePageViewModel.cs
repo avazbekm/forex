@@ -535,6 +535,58 @@ public partial class AddSalePageViewModel : ViewModelBase
     // ─────────────────────────────────────────────
 
     [RelayCommand]
+    private void ScanToCart(string? code)
+    {
+        if (Customer is null)
+        {
+            WarningMessage = "Avval mijozni tanlang (narx mijoz valyutasida kiritiladi).";
+            return;
+        }
+
+        var match = BarcodeResolver.Resolve(AvailableProducts, code);
+        if (match is null)
+        {
+            WarningMessage = $"Shtrix-kod topilmadi: {code}";
+            return;
+        }
+
+        if (match.Unit == BarcodeUnit.Pachka)
+        {
+            WarningMessage = "Bu pachka barkodi. Savdo faqat qop bilan amalga oshiriladi.";
+            return;
+        }
+
+        var pairsPerQop = match.ProductType.BundleItemCount ?? 0;
+
+        var existing = SaleItems.FirstOrDefault(s => s.ProductType?.Id == match.ProductType.Id);
+        if (existing is not null)
+        {
+            existing.BundleCount = (existing.BundleCount ?? 0) + 1;
+        }
+        else
+        {
+            var item = new SaleItemViewModel
+            {
+                Product = match.Product,
+                ProductType = match.ProductType,
+                BundleCount = 1
+            };
+
+            var converted = ConvertSomToCustomer(match.ProductType.UnitPrice);
+            if (converted is not null) item.UnitPrice = converted;
+
+            item.PropertyChanged += SaleItemPropertyChanged;
+            SaleItems.Add(item);
+        }
+
+        match.ProductType.AvailableCount -= pairsPerQop;
+        if (match.ProductType.AvailableCount < 0)
+            WarningMessage = "Diqqat: omborda qoldiq yetarli emas.";
+
+        RecalculateTotals();
+    }
+
+    [RelayCommand]
     private async Task Add()
     {
         if (Customer is null)

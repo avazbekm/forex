@@ -292,21 +292,26 @@
 
 		<Grid Grid.Row="2" Margin="0,15,0,0">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="0.7*" MaxWidth="95" />
-				<ColumnDefinition Width="1.1*" MinWidth="90" />
-				<ColumnDefinition Width="0.9*" />
-				<ColumnDefinition Width="0.7*" />
-				<ColumnDefinition Width="0.7*" />
-				<ColumnDefinition Width="0.9*" />
-				<ColumnDefinition Width="0.7*" />
-				<ColumnDefinition Width="0.9*" />
+				<ColumnDefinition Width="*" MinWidth="90" />
+				<ColumnDefinition Width="1.2*" MinWidth="110" />
+				<ColumnDefinition Width="*" MinWidth="70" />
+				<ColumnDefinition Width="*" MinWidth="70" />
+				<ColumnDefinition Width="*" MinWidth="60" />
+				<ColumnDefinition Width="*" MinWidth="75" />
+				<ColumnDefinition Width="*" MinWidth="70" />
+				<ColumnDefinition Width="*" MinWidth="90" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
 
+			<controls:FloatingInput
+                x:Name="tbxScan"
+                Grid.Column="0"
+                Margin="2,0"
+                Label="Skaner (qop/pachka)" />
+
 			<controls:FloatingImageComboBox
                 x:Name="cbxProduct"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
+                Grid.Column="1"
                 Margin="2,0"
                 ImageHeight="50"
                 ImageMemberPath="ImagePath"
@@ -331,20 +336,20 @@
                 Label="Razmer"
                 SelectedItem="{Binding CurrentSaleItem.ProductType, UpdateSourceTrigger=PropertyChanged}" />
 
-			<controls:FloatingInput
-                x:Name="tbxBundleItemCount"
+			<controls:FloatingComboBox
+                x:Name="cbxReturnUnit"
                 Grid.Column="3"
                 Margin="2,0"
-                IsEnabled="False"
-                Focusable="False"
-                Label="Qopda"
-                Text="{Binding CurrentSaleItem.BundleItemCount, StringFormat={}{0:N0}, UpdateSourceTrigger=PropertyChanged}" />
+                IsTextSearchEnabled="False"
+                ItemsSource="{Binding ReturnUnits}"
+                Label="Birlik"
+                SelectedItem="{Binding SelectedReturnUnit, UpdateSourceTrigger=PropertyChanged}" />
 
 			<controls:FloatingInput
                 x:Name="tbxBundle"
                 Grid.Column="4"
                 Margin="2,0"
-                Label="Qop soni"
+                Label="Miqdor"
                 Text="{Binding CurrentSaleItem.BundleCount, UpdateSourceTrigger=PropertyChanged}" />
 
 			<controls:FloatingInput

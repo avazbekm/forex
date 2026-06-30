@@ -88,6 +88,7 @@ public class CreateProductCommandHandler(
                 {
                     Type = typeCmd.Type,
                     BundleItemCount = typeCmd.BundleItemCount,
+                    PachkaItemCount = typeCmd.PachkaItemCount,
                     UnitPrice = typeCmd.UnitPrice,
                     Product = product,
                     Currency = defaultCurrency,
@@ -97,6 +98,11 @@ public class CreateProductCommandHandler(
                 context.ProductTypes.Add(productType);
                 product.ProductTypes.Add(productType);
             }
+
+            await context.SaveAsync(ct);
+
+            foreach (var productType in product.ProductTypes)
+                BarcodeGenerator.EnsureBarcodes(productType);
 
             await context.CommitTransactionAsync(ct);
             return product.Id;
