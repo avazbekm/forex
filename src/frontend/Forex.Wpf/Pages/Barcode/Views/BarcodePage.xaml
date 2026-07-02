@@ -1,0 +1,687 @@
+<Page
+    x:Class="Forex.Wpf.Pages.Barcode.Views.BarcodePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Forex.Wpf.Resources.UserControls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Title="BarcodePage"
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    Background="{DynamicResource PrimaryBackground}"
+    TextElement.Foreground="{DynamicResource InkPrimary}"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
+            <Setter Property="Margin" Value="0,18,0,8" />
+        </Style>
+
+        <Style x:Key="ChipString" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="chip"
+                            Padding="14,6"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="16">
+                            <TextBlock x:Name="txt" FontSize="13" Foreground="{DynamicResource InkSecondary}" Text="{Binding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource OnAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ChipSize" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="chip"
+                            MinWidth="46"
+                            Padding="14,8"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                            <TextBlock
+                                x:Name="txt"
+                                HorizontalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource InkSecondary}"
+                                Text="{Binding Type}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource OnAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ChipSegment" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="chip"
+                            Padding="0,11"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderBrush="{DynamicResource HairlineBorder}"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                            <TextBlock
+                                x:Name="txt"
+                                HorizontalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource InkSecondary}"
+                                Text="{Binding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource OnAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="36" Height="36" Background="{DynamicResource AccentSoft}" CornerRadius="10">
+                    <md:PackIcon
+                        Width="20" Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource Accent}"
+                        Kind="BarcodeScan" />
+                </Border>
+                <TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource InkPrimary}"
+                    Text="Barkod yorliqlarini chop etish" />
+            </StackPanel>
+
+            <Button
+                x:Name="btnBack"
+                Height="34"
+                Padding="14,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                md:ButtonAssist.CornerRadius="9"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
+                BorderThickness="1"
+                Click="BtnBack_Click"
+                Foreground="{DynamicResource InkSecondary}"
+                ToolTip="Orqaga">
+                <StackPanel Orientation="Horizontal">
+                    <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="ArrowLeft" />
+                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Orqaga" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+
+            <!--  LEFT: toolbar + product gallery  -->
+            <Border
+                Grid.Column="0"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
+                BorderThickness="1"
+                CornerRadius="14">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="320" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <controls:FloatingInput
+                            x:Name="tbxSearch"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            Width="320"
+                            Label="Qidirish yoki skan qiling"
+                            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+
+                        <ListBox
+                            Grid.Column="1"
+                            Margin="14,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemContainerStyle="{StaticResource ChipString}"
+                            ItemsSource="{Binding OriginOptions}"
+                            Padding="0"
+                            SelectedItem="{Binding SelectedOrigin}">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                        </ListBox>
+
+                        <TextBlock
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            Foreground="{DynamicResource InkMuted}"
+                            Text="{Binding ResultCount, StringFormat={}{0} ta mahsulot}" />
+                    </Grid>
+
+                    <ListBox
+                        x:Name="productList"
+                        Grid.Row="1"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemsSource="{Binding DisplayProducts}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        SelectedItem="{Binding SelectedProduct}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Margin" Value="5" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border
+                                                x:Name="bd"
+                                                Width="150"
+                                                Background="{DynamicResource SurfaceMuted}"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="2"
+                                                CornerRadius="10">
+                                                <StackPanel Margin="8">
+                                                    <Border
+                                                        Height="110"
+                                                        Background="{DynamicResource PrimaryBackground}"
+                                                        CornerRadius="8">
+                                                        <Image Source="{Binding DisplayImagePath, Converter={StaticResource ImageResolver}}" Stretch="UniformToFill" />
+                                                    </Border>
+                                                    <TextBlock
+                                                        Margin="0,8,0,0"
+                                                        FontSize="13"
+                                                        FontWeight="Bold"
+                                                        Text="{Binding Code}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource InkMuted}"
+                                                        Text="{Binding Name}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}" />
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource InkMuted}"
+                            Text="Sahifada:" />
+                        <ComboBox
+                            Width="68"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            ItemsSource="{Binding PageSizeOptions}"
+                            SelectedItem="{Binding SelectedPageSize}"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}" />
+
+                        <Button
+                            Width="36" Height="32"
+                            Margin="0,0,4,0"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource InkSecondary}"
+                            MinWidth="0"
+                            Padding="0"
+                            Command="{Binding FirstPageCommand}"
+                            IsEnabled="{Binding CanPrev}">
+                            <md:PackIcon Width="18" Height="18" Foreground="{DynamicResource InkSecondary}" Kind="ChevronDoubleLeft" />
+                        </Button>
+                        <Button
+                            Width="36" Height="32"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource InkSecondary}"
+                            MinWidth="0"
+                            Padding="0"
+                            Command="{Binding PrevPageCommand}"
+                            IsEnabled="{Binding CanPrev}">
+                            <md:PackIcon Width="18" Height="18" Foreground="{DynamicResource InkSecondary}" Kind="ChevronLeft" />
+                        </Button>
+                        <TextBlock
+                            Margin="14,0"
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource InkSecondary}"
+                            Text="{Binding PageInfo}" />
+                        <Button
+                            Width="36" Height="32"
+                            Margin="0,0,4,0"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource InkSecondary}"
+                            MinWidth="0"
+                            Padding="0"
+                            Command="{Binding NextPageCommand}"
+                            IsEnabled="{Binding CanNext}">
+                            <md:PackIcon Width="18" Height="18" Foreground="{DynamicResource InkSecondary}" Kind="ChevronRight" />
+                        </Button>
+                        <Button
+                            Width="36" Height="32"
+                            md:ButtonAssist.CornerRadius="8"
+                            Background="{DynamicResource SurfaceMuted}"
+                            BorderThickness="0"
+                            Foreground="{DynamicResource InkSecondary}"
+                            MinWidth="0"
+                            Padding="0"
+                            Command="{Binding LastPageCommand}"
+                            IsEnabled="{Binding CanNext}">
+                            <md:PackIcon Width="18" Height="18" Foreground="{DynamicResource InkSecondary}" Kind="ChevronDoubleRight" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!--  RIGHT: contextual selection panel  -->
+            <Border
+                Grid.Column="2"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
+                BorderThickness="1"
+                CornerRadius="14">
+                <Grid>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DetailProduct}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <md:PackIcon
+                            Width="48" Height="48"
+                            HorizontalAlignment="Center"
+                            Foreground="{DynamicResource BorderStrong}"
+                            Kind="BarcodeScan" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Center"
+                            FontSize="14"
+                            Foreground="{DynamicResource InkMuted}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Text="Mahsulotni tanlang yoki skan qiling" />
+                    </StackPanel>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer.Style>
+                            <Style TargetType="ScrollViewer">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DetailProduct}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ScrollViewer.Style>
+                        <StackPanel Margin="20">
+                            <Border
+                                Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"
+                                Background="{DynamicResource SurfaceMuted}"
+                                CornerRadius="10">
+                                <Image Source="{Binding DetailProduct.DisplayImagePath, Converter={StaticResource ImageResolver}}" Stretch="Uniform" />
+                            </Border>
+
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                FontSize="18"
+                                FontWeight="Bold"
+                                Text="{Binding DetailProduct.Code}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource InkMuted}"
+                                Text="{Binding DetailProduct.Name}"
+                                TextWrapping="Wrap" />
+
+                            <TextBlock Style="{StaticResource SectionLabel}" Text="RAZMER" />
+                            <ListBox
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource ChipSize}"
+                                ItemsSource="{Binding DetailProduct.ProductTypes}"
+                                Padding="0"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                SelectedItem="{Binding SelectedType}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+
+                            <TextBlock Style="{StaticResource SectionLabel}" Text="BARKOD TURI" />
+                            <ListBox
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource ChipSegment}"
+                                ItemsSource="{Binding Units}"
+                                Padding="0"
+                                SelectedItem="{Binding SelectedUnit}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+
+                            <TextBlock Style="{StaticResource SectionLabel}" Text="NUSXA SONI" />
+                            <Border
+                                Height="44"
+                                BorderBrush="{DynamicResource HairlineBorder}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="46" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button
+                                        Grid.Column="0"
+                                        MinWidth="0"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{Binding DecrementCopiesCommand}"
+                                        Content="−"
+                                        FontSize="20"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource InkSecondary}" />
+                                    <TextBox
+                                        x:Name="copiesBoxSide"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        Text="{Binding Copies, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        MinWidth="0"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{Binding IncrementCopiesCommand}"
+                                        Content="+"
+                                        FontSize="20"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource InkSecondary}" />
+                                </Grid>
+                            </Border>
+
+                            <Button
+                                Height="48"
+                                Margin="0,22,0,0"
+                                md:ButtonAssist.CornerRadius="9"
+                                md:ElevationAssist.Elevation="Dp2"
+                                Background="{DynamicResource Accent}"
+                                BorderThickness="0"
+                                Command="{Binding ShowCommand}"
+                                Foreground="{DynamicResource OnAccent}">
+                                <StackPanel Orientation="Horizontal">
+                                    <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Kind="Check" />
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="Tasdiqlash" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  MODAL  -->
+        <Grid
+            Grid.RowSpan="2"
+            Background="{DynamicResource Scrim}"
+            IsHitTestVisible="{Binding IsPopupOpen}"
+            PreviewMouseDown="ClosePopup_MouseDown"
+            Visibility="{Binding IsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border
+                MaxWidth="900"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource SurfaceCard}"
+                CornerRadius="12"
+                Padding="30">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="340" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock
+                            Margin="0,0,0,4"
+                            FontSize="26"
+                            FontWeight="Bold"
+                            Text="{Binding Title}"
+                            TextWrapping="Wrap" />
+                        <StackPanel Margin="0,0,0,16" Orientation="Horizontal">
+                            <Border Padding="10,3" Background="{DynamicResource AccentSoft}" CornerRadius="8">
+                                <TextBlock FontSize="18" FontWeight="Bold" Foreground="{DynamicResource Accent}" Text="{Binding Size}" />
+                            </Border>
+                            <Border Margin="8,0,0,0" Padding="10,3" Background="{DynamicResource SuccessSoft}" CornerRadius="8">
+                                <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Success}" Text="{Binding UnitLabel}" />
+                            </Border>
+                            <TextBlock
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Foreground="{DynamicResource InkSecondary}"
+                                Text="{Binding Pairs, StringFormat={}{0} juft}" />
+                        </StackPanel>
+
+                        <Border
+                            Padding="12,10"
+                            HorizontalAlignment="Left"
+                            Background="{DynamicResource SurfaceCard}"
+                            BorderBrush="{DynamicResource HairlineBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <StackPanel>
+                                <Image
+                                    Width="300"
+                                    Height="80"
+                                    Source="{Binding BarcodeImage}"
+                                    Stretch="Fill" />
+                                <TextBlock
+                                    Margin="0,4,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="14"
+                                    Foreground="{DynamicResource InkPrimary}"
+                                    Text="{Binding Barcode}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Margin="0,22,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Grid.Column="0"
+                                Height="44"
+                                BorderBrush="{DynamicResource HairlineBorder}"
+                                BorderThickness="1"
+                                CornerRadius="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="46" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="46" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button
+                                        Grid.Column="0"
+                                        MinWidth="0"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{Binding DecrementCopiesCommand}"
+                                        Content="−"
+                                        FontSize="20"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource InkSecondary}" />
+                                    <TextBox
+                                        x:Name="copiesBox"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        Text="{Binding Copies, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        MinWidth="0"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{Binding IncrementCopiesCommand}"
+                                        Content="+"
+                                        FontSize="20"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource InkSecondary}" />
+                                </Grid>
+                            </Border>
+
+                            <Button
+                                x:Name="btnPrint"
+                                Grid.Column="1"
+                                Height="44"
+                                Margin="12,0,0,0"
+                                md:ButtonAssist.CornerRadius="9"
+                                md:ElevationAssist.Elevation="Dp2"
+                                Background="{DynamicResource SuccessStrong}"
+                                BorderThickness="0"
+                                Command="{Binding PrintCommand}"
+                                Foreground="{DynamicResource OnAccent}">
+                                <StackPanel Orientation="Horizontal">
+                                    <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Kind="Printer" />
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="Chop etish (Enter)" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <Border
+                        Grid.Column="2"
+                        Width="300" Height="300"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource SurfaceMuted}"
+                        CornerRadius="8">
+                        <Image Source="{Binding ImagePath, Converter={StaticResource ImageResolver}}" Stretch="Uniform" />
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

@@ -64,30 +64,51 @@
     <SolidColorBrush x:Key="SuccessButtonForeground" Color="White" />
     <SolidColorBrush x:Key="SuccessButtonBorder" Color="#2DAA39" />
 
-    <!--  MaterialDesign rang override'lari — MD kontrollar (TextBox, ComboBox, DataGrid, Calendar) tungi rejimga o'tishi uchun  -->
-    <SolidColorBrush x:Key="MaterialDesignPaper" Color="#262C3A" />
-    <SolidColorBrush x:Key="MaterialDesignBackground" Color="#1B2029" />
-    <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#262C3A" />
-    <SolidColorBrush x:Key="MaterialDesignToolBackground" Color="#222836" />
-    <SolidColorBrush x:Key="MaterialDesignToolForeground" Color="#E6E9EF" />
-    <SolidColorBrush x:Key="MaterialDesignBody" Color="#E6E9EF" />
-    <SolidColorBrush x:Key="MaterialDesignBodyLight" Color="#AEB6C5" />
-    <SolidColorBrush x:Key="MaterialDesignColumnHeader" Color="#AEB6C5" />
-    <SolidColorBrush x:Key="MaterialDesignTextBoxBorder" Color="#4A5468" />
-    <SolidColorBrush x:Key="MaterialDesignTextAreaBorder" Color="#4A5468" />
-    <SolidColorBrush x:Key="MaterialDesignTextAreaInactiveBorder" Color="#3A4254" />
-    <SolidColorBrush x:Key="MaterialDesignDivider" Color="#343C4D" />
-    <SolidColorBrush x:Key="MaterialDesignSelection" Color="#3349557A" />
-    <SolidColorBrush x:Key="MaterialDesignFlatButtonClick" Color="#33FFFFFF" />
-    <SolidColorBrush x:Key="MaterialDesignFlatButtonRipple" Color="#55FFFFFF" />
-    <SolidColorBrush x:Key="MaterialDesignToolTipBackground" Color="#2E3647" />
-    <SolidColorBrush x:Key="MaterialDesignCheckBoxOff" Color="#8B93A3" />
-    <SolidColorBrush x:Key="MaterialDesignCheckBoxDisabled" Color="#4A5468" />
-    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxBackground" Color="#2E3647" />
-    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxHoverBackground" Color="#343C4D" />
-    <SolidColorBrush x:Key="MaterialDesignTextFieldBoxDisabledBackground" Color="#222836" />
-    <SolidColorBrush x:Key="MaterialDesignDataGridRowHoverBackground" Color="#2E3647" />
-    <SolidColorBrush x:Key="MaterialDesignChipBackground" Color="#2E3647" />
-    <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#1B2029" />
+    <!--  ========================================================================
+          Page semantic tokens — LightTheme.xaml ko'zgusi (tungi qiymatlar).
+          Aksent va status ranglari to'q fonda yaxshi ko'rinishi uchun yorqinroq,
+          yumshoq fon ranglari esa to'q-tonli.
+          ========================================================================  -->
+
+    <Color x:Key="AccentColorValue">#7E9BF5</Color>
+    <Color x:Key="SuccessColorValue">#46CF73</Color>
+    <Color x:Key="WarningColorValue">#E6B45C</Color>
+    <Color x:Key="DangerColorValue">#FF6B63</Color>
+    <Color x:Key="TealColorValue">#2DD4BF</Color>
+    <Color x:Key="IconVioletColorValue">#A98BE8</Color>
+    <Color x:Key="OnAccentColorValue">#FFFFFF</Color>
+    <Color x:Key="ScrimColorValue">#AA000000</Color>
+
+    <!--  Accent  -->
+    <SolidColorBrush x:Key="Accent" Color="#7E9BF5" />
+    <SolidColorBrush x:Key="AccentSoft" Color="#2C3654" />
+    <SolidColorBrush x:Key="OnAccent" Color="#FFFFFF" />
+
+    <!--  Success  -->
+    <SolidColorBrush x:Key="Success" Color="#46CF73" />
+    <SolidColorBrush x:Key="SuccessStrong" Color="#2DAA39" />
+    <SolidColorBrush x:Key="SuccessSoft" Color="#1E3A2A" />
+    <SolidColorBrush x:Key="SuccessMuted" Color="#8FBFA2" />
+
+    <!--  Warning  -->
+    <SolidColorBrush x:Key="Warning" Color="#E6B45C" />
+    <SolidColorBrush x:Key="WarningSoft" Color="#3A3122" />
+
+    <!--  Danger  -->
+    <SolidColorBrush x:Key="Danger" Color="#FF6B63" />
+    <SolidColorBrush x:Key="DangerSoft" Color="#3A2526" />
+
+    <!--  Teal / Info  -->
+    <SolidColorBrush x:Key="Teal" Color="#2DD4BF" />
+    <SolidColorBrush x:Key="TealSoft" Color="#163A35" />
+
+    <!--  Dekorativ ikona ranglari  -->
+    <SolidColorBrush x:Key="IconViolet" Color="#A98BE8" />
+    <SolidColorBrush x:Key="IconPink" Color="#E68AB8" />
+    <SolidColorBrush x:Key="IconPinkSoft" Color="#3A2630" />
+
+    <!--  Kuchli chegara va modal qoplama  -->
+    <SolidColorBrush x:Key="BorderStrong" Color="#455065" />
+    <SolidColorBrush x:Key="Scrim" Color="#AA000000" />
 
 </ResourceDictionary>

@@ -42,6 +42,27 @@ public partial class ProductPage : Page
         RegisterFocusNavigation();
         RegisterGlobalShortcuts();
         SetupFilterProductComboBox();
+        SetupScanBox();
+    }
+
+    private void SetupScanBox()
+    {
+        var box = tbxScan.input;
+        if (box is null) return;
+
+        box.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Enter) return;
+            e.Handled = true;
+
+            var code = box.Text?.Trim();
+            box.Clear();
+
+            if (!string.IsNullOrWhiteSpace(code))
+                vm.ScanFillCommand.Execute(code);
+
+            FocusNavigator.FocusElement(tbxBundle.input);
+        };
     }
 
     private void SetupFilterProductComboBox()

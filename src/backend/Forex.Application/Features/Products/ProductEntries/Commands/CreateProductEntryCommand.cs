@@ -15,6 +15,7 @@ public class CreateProductEntryCommand : IRequest<long>
     public DateTime Date { get; set; }
     public int Count { get; set; }
     public int BundleItemCount { get; set; }
+    public int PachkaItemCount { get; set; }
     public decimal PreparationCostPerUnit { get; set; }
     public decimal UnitPrice { get; set; }
     public ProductionOrigin ProductionOrigin { get; set; }
@@ -54,6 +55,8 @@ public class CreateProductEntryCommandHandler(
             var productType = await GetOrCreateProductTypeAsync(request, product, defaultCurrency, cancellationToken);
 
             productType.BundleItemCount = request.BundleItemCount;
+            if (request.PachkaItemCount > 0)
+                productType.PachkaItemCount = request.PachkaItemCount;
             productType.UnitPrice = request.UnitPrice;
 
             product.ProductionOrigin = request.ProductionOrigin;
@@ -61,6 +64,9 @@ public class CreateProductEntryCommandHandler(
             var residue = await UpdateProductResidueAsync(productType, request.Count, shop, cancellationToken);
 
             var entry = SaveProductEntry(request, productType, shop, residue, defaultCurrency);
+
+            await context.SaveAsync(cancellationToken);
+            BarcodeGenerator.EnsureBarcodes(productType);
 
             await context.CommitTransactionAsync(cancellationToken);
             return entry.Id;
@@ -156,12 +162,9 @@ public class CreateProductEntryCommandHandler(
                 throw new AppException("Yangi mahsulot yaratish uchun Kod va Nom majburiy!");
             }
 
-            var imagePath = item.Product.ImagePath;
-            if (!string.IsNullOrWhiteSpace(imagePath) && imagePath.Contains("/temp/"))
-            {
-                var newKey = await fileStorage.MoveFileAsync(imagePath, "products", ct);
-                if (newKey != null) imagePath = newKey;
-            }
+            var imagePath = fileStorage.IsTempKey(item.Product.ImagePath)
+                ? await fileStorage.MoveFileAsync(item.Product.ImagePath!, "products", ct)
+                : null;
 
             product = new Product
             {

@@ -66,7 +66,7 @@ public partial class SettingsPage : Page
             targetElement: this,
             key: Key.F5,
             targetAction: () => tabControl.SelectedIndex = 4,
-            tooltipText: "Ko'rinish sozlamalari (F5)"
+            tooltipText: "Dastur sozlamalari (F5)"
         );
     }
 

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:uc="clr-namespace:Forex.Wpf.Resources.UserControls"
              mc:Ignorable="d"
              d:DesignHeight="500" d:DesignWidth="800">
 
@@ -32,15 +33,14 @@
             Margin="24"
             HorizontalAlignment="Center">
 
-            <!--  Theme (vaqtincha yopilgan — keyinroq to'g'irlanadi)  -->
-            <TextBlock Style="{StaticResource SectionTitle}" Text="MAVZU" Visibility="Collapsed" />
+            <!--  Theme  -->
+            <TextBlock Margin="0,0,0,8" Style="{StaticResource SectionTitle}" Text="MAVZU" />
             <Border
                 Padding="18,14"
                 Background="{DynamicResource SurfaceCard}"
                 BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
-                CornerRadius="12"
-                Visibility="Collapsed">
+                CornerRadius="12">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -70,6 +70,40 @@
                 </Grid>
             </Border>
 
+            <!--  Printer  -->
+            <TextBlock Margin="0,18,0,8" Style="{StaticResource SectionTitle}" Text="YORLIQ PRINTERI" />
+            <Border
+                Padding="18,16"
+                Background="{DynamicResource SurfaceCard}"
+                BorderBrush="{DynamicResource HairlineBorder}"
+                BorderThickness="1"
+                CornerRadius="12">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Border
+                            Width="40" Height="40"
+                            Background="{DynamicResource SurfaceChip}"
+                            CornerRadius="10">
+                            <md:PackIcon
+                                Width="22" Height="22"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource Accent}"
+                                Kind="Printer" />
+                        </Border>
+                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource RowTitle}" Text="Yorliq printeri" />
+                            <TextBlock Style="{StaticResource RowDesc}" Text="Barkod yorliqlari shu printerga chiqariladi (60×40 mm)" />
+                        </StackPanel>
+                    </StackPanel>
+                    <uc:FloatingComboBox
+                        x:Name="printerCombo"
+                        Margin="0,18,0,4"
+                        Label="Printer tanlang"
+                        SelectedItem="{Binding LabelPrinter, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
             <!--  Dashboard components  -->
             <TextBlock Margin="0,0,0,8" Style="{StaticResource SectionTitle}" Text="BOSH SAHIFA KOMPONENTLARI" />
             <Border
@@ -85,7 +119,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="#3949AB" Kind="CardsOutline" />
+                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="{DynamicResource Accent}" Kind="CardsOutline" />
                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource RowTitle}" Text="Statistik kartalar" />
                             <TextBlock Style="{StaticResource RowDesc}" Text="Bugungi/haftalik savdo, juftlar soni" />
@@ -100,7 +134,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="#3B5BDB" Kind="ChartLine" />
+                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="{DynamicResource Accent}" Kind="ChartLine" />
                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource RowTitle}" Text="Savdo dinamikasi" />
                             <TextBlock Style="{StaticResource RowDesc}" Text="So'nggi 7 kunlik chiziqli grafik" />
@@ -115,7 +149,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="#673AB7" Kind="AccountStar" />
+                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="{DynamicResource IconViolet}" Kind="AccountStar" />
                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource RowTitle}" Text="Top mijozlar" />
                             <TextBlock Style="{StaticResource RowDesc}" Text="Eng faol mijozlar diagrammasi" />
@@ -130,7 +164,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="#15803D" Kind="ShoeSneaker" />
+                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="{DynamicResource Success}" Kind="ShoeSneaker" />
                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource RowTitle}" Text="Top mahsulotlar" />
                             <TextBlock Style="{StaticResource RowDesc}" Text="Eng ko'p sotilgan mahsulotlar" />

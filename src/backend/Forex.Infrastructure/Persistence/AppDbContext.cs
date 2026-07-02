@@ -162,6 +162,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(t => t.SaleId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<ProductType>()
+            .HasIndex(p => p.QopBarcode)
+            .IsUnique()
+            .HasFilter("\"QopBarcode\" IS NOT NULL AND \"QopBarcode\" <> ''");
+
+        modelBuilder.Entity<ProductType>()
+            .HasIndex(p => p.PachkaBarcode)
+            .IsUnique()
+            .HasFilter("\"PachkaBarcode\" IS NOT NULL AND \"PachkaBarcode\" <> ''");
+
         modelBuilder.Ignore<System.Transactions.Transaction>();
     }
 }

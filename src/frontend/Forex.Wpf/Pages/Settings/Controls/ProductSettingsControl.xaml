@@ -92,7 +92,7 @@
                                         CornerRadius="4"
                                         Margin="0 0 12 0">
 									<Border.Background>
-										<ImageBrush ImageSource="{Binding DisplayImagePath, Converter={StaticResource UniversalImageResolver}}"
+										<ImageBrush ImageSource="{Binding DisplayImagePath, Converter={StaticResource ImageResolver}}"
                                            Stretch="UniformToFill"/>
 									</Border.Background>
                                 </Border>
@@ -131,12 +131,12 @@
 						<StackPanel Orientation="Horizontal" Margin="0 0 0 20">
 							<Border Width="140" Height="140" CornerRadius="8" Margin="0 0 16 0">
 								<Border.Background>
-									<ImageBrush ImageSource="{Binding SelectedProduct.DisplayImagePath, Converter={StaticResource UniversalImageResolver}}" Stretch="UniformToFill"/>
+									<ImageBrush ImageSource="{Binding SelectedProduct.DisplayImagePath, Converter={StaticResource ImageResolver}}" Stretch="UniformToFill"/>
 								</Border.Background>
 							</Border>
 							<StackPanel VerticalAlignment="Center">
 								<Button Content="📷 Rasm Yuklash" Command="{Binding UploadImageCommand}" Style="{StaticResource MaterialDesignRaisedButton}" md:ButtonAssist.CornerRadius="4" Height="32" Margin="0 0 0 10"/>
-								<Button Content="🗑 Rasmni O'chirish" Command="{Binding DeleteImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" Height="32" Foreground="#D32F2F" BorderBrush="#D32F2F"/>
+								<Button Content="🗑 Rasmni O'chirish" Command="{Binding DeleteImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" Height="32" Foreground="{DynamicResource Danger}" BorderBrush="{DynamicResource Danger}"/>
 							</StackPanel>
 						</StackPanel>
 
@@ -158,7 +158,10 @@
 						</Grid>
 
 						<TextBlock Text="Mahsulot Turlari (Razmerlar)" Style="{StaticResource SectionHeaderStyle}"/>
-						<Button Content="➕ Yangi Tur (Razmer) qo'shish" Command="{Binding AddProductTypeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" HorizontalAlignment="Left" Height="36" Padding="16 0" Margin="0 0 0 12"/>
+						<StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+							<Button Content="➕ Yangi Tur (Razmer) qo'shish" Command="{Binding AddProductTypeCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" HorizontalAlignment="Left" Height="36" Padding="16 0"/>
+							<Button Content="🏷 Barcha barkodlarni yaratish" Command="{Binding GenerateAllBarcodesCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" HorizontalAlignment="Left" Height="36" Padding="16 0" Margin="8 0 0 0"/>
+						</StackPanel>
 
 						<DataGrid ItemsSource="{Binding SelectedProduct.ProductTypes}" VerticalContentAlignment="Center" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource HairlineBorder}" MaxHeight="250" Margin="0 0 0 20">
 							<DataGrid.Columns>
@@ -175,12 +178,33 @@
 										</DataTemplate>
 									</DataGridTemplateColumn.CellTemplate>
 								</DataGridTemplateColumn>
+								<DataGridTemplateColumn Header="Pachkada (juft)" Width="*">
+									<DataGridTemplateColumn.CellTemplate>
+										<DataTemplate>
+											<TextBox Text="{Binding PachkaItemCount, UpdateSourceTrigger=PropertyChanged}"
+											         BorderThickness="0"
+											         Background="Transparent"
+											         VerticalContentAlignment="Center"
+											         Padding="12,0"/>
+										</DataTemplate>
+									</DataGridTemplateColumn.CellTemplate>
+								</DataGridTemplateColumn>
 								<DataGridTextColumn Header="Narxi" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+								<DataGridTextColumn Header="Qop barkodi" Binding="{Binding QopBarcode}" IsReadOnly="True" Width="1.3*"/>
+								<DataGridTemplateColumn Width="65">
+									<DataGridTemplateColumn.CellTemplate>
+										<DataTemplate>
+											<Button Command="{Binding DataContext.PrintLabelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Yorliq chop etish" Width="32" Height="32">
+												<fa:IconImage Icon="Print" Width="14" Foreground="{DynamicResource Accent}"/>
+											</Button>
+										</DataTemplate>
+									</DataGridTemplateColumn.CellTemplate>
+								</DataGridTemplateColumn>
 								<DataGridTemplateColumn Width="65">
 									<DataGridTemplateColumn.CellTemplate>
 										<DataTemplate>
 											<Button Command="{Binding DataContext.DeleteProductTypeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="O'chirish" Width="32" Height="32">
-												<fa:IconImage Icon="Trash" Width="14" Foreground="#D32F2F"/>
+												<fa:IconImage Icon="Trash" Width="14" Foreground="{DynamicResource Danger}"/>
 											</Button>
 										</DataTemplate>
 									</DataGridTemplateColumn.CellTemplate>
@@ -202,7 +226,7 @@
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 md:ButtonAssist.CornerRadius="4"
                                 Height="40" Padding="20 0"
-                                Foreground="#D32F2F" BorderBrush="#D32F2F"/>
+                                Foreground="{DynamicResource Danger}" BorderBrush="{DynamicResource Danger}"/>
 					</StackPanel>
 				</Border>
 			</Grid>

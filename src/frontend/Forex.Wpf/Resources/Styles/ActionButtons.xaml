@@ -28,21 +28,21 @@
     </Style>
 
     <Style x:Key="EditActionButton" TargetType="Button" BasedOn="{StaticResource GridActionButton}">
-        <Setter Property="Background" Value="#FEF3E2" />
-        <Setter Property="Foreground" Value="#D97706" />
+        <Setter Property="Background" Value="{DynamicResource WarningSoft}" />
+        <Setter Property="Foreground" Value="{DynamicResource Warning}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#FBE2BC" />
+                <Setter Property="Background" Value="{DynamicResource WarningSoft}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="DeleteActionButton" TargetType="Button" BasedOn="{StaticResource GridActionButton}">
-        <Setter Property="Background" Value="#FEECEC" />
-        <Setter Property="Foreground" Value="#DC2626" />
+        <Setter Property="Background" Value="{DynamicResource DangerSoft}" />
+        <Setter Property="Foreground" Value="{DynamicResource Danger}" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#FBD0D0" />
+                <Setter Property="Background" Value="{DynamicResource DangerSoft}" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -53,7 +53,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="#7A8699" />
+        <Setter Property="Foreground" Value="{DynamicResource InkMuted}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">

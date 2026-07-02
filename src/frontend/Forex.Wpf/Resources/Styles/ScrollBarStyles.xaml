@@ -28,7 +28,7 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Border
-                                                Background="#888"
+                                                Background="{DynamicResource InkSecondary}"
                                                 CornerRadius="3"
                                                 Opacity="0.6" />
                                         </ControlTemplate>

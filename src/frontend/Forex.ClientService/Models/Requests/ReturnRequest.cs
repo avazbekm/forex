@@ -13,6 +13,8 @@ public sealed record ReturnRequest
 public sealed record ReturnItemRequest
 {
     public int BundleCount { get; set; }
+    public int TotalCount { get; set; }
+    public int RestockCount { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal Amount { get; set; }
 

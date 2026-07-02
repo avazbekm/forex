@@ -41,12 +41,9 @@ public class CreateProductCommandHandler(
         try
         {
             // Image: temp dan asosiy joyga ko'chirish
-            var imagePath = request.ImagePath;
-            if (!string.IsNullOrWhiteSpace(imagePath) && imagePath.Contains("/temp/"))
-            {
-                var newKey = await fileStorage.MoveFileAsync(imagePath, "products", ct);
-                if (newKey != null) imagePath = newKey;
-            }
+            var imagePath = fileStorage.IsTempKey(request.ImagePath)
+                ? await fileStorage.MoveFileAsync(request.ImagePath!, "products", ct)
+                : null;
 
             var unitMeasure = await context.UnitMeasures
                 .FirstOrDefaultAsync(u => u.Id == request.UnitMeasureId, ct)
@@ -88,6 +85,7 @@ public class CreateProductCommandHandler(
                 {
                     Type = typeCmd.Type,
                     BundleItemCount = typeCmd.BundleItemCount,
+                    PachkaItemCount = typeCmd.PachkaItemCount,
                     UnitPrice = typeCmd.UnitPrice,
                     Product = product,
                     Currency = defaultCurrency,
@@ -97,6 +95,11 @@ public class CreateProductCommandHandler(
                 context.ProductTypes.Add(productType);
                 product.ProductTypes.Add(productType);
             }
+
+            await context.SaveAsync(ct);
+
+            foreach (var productType in product.ProductTypes)
+                BarcodeGenerator.EnsureBarcodes(productType);
 
             await context.CommitTransactionAsync(ct);
             return product.Id;

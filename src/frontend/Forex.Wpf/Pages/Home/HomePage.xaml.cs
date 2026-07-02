@@ -4,6 +4,7 @@ using Forex.ClientService;
 using Forex.ClientService.Services;
 using Forex.Wpf.Common.Services;
 using Forex.Wpf.Pages.Auth;
+using Forex.Wpf.Pages.Barcode.Views;
 using Forex.Wpf.Pages.Products;
 using Forex.Wpf.Pages.Reports;
 using Forex.Wpf.Pages.Returns.Views;
@@ -114,6 +115,9 @@ public partial class HomePage : Page
 
     private void BtnProduct_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new ProductPage());
+
+    private void BtnBarcode_Click(object sender, RoutedEventArgs e)
+        => Main.NavigateTo(new BarcodePage());
 
     private void BtnCash_Click(object sender, RoutedEventArgs e)
         => Main.NavigateTo(new TransactionPage());

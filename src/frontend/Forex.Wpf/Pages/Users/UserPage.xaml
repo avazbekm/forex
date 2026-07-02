@@ -16,7 +16,7 @@
             <Setter Property="Margin" Value="0,2" />
             <Setter Property="Padding" Value="12,10" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="#475467" />
+            <Setter Property="Foreground" Value="{DynamicResource InkSecondary}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -29,11 +29,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#EEF2FF" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#3B5BDB" />
-                                <Setter Property="Foreground" Value="White" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter Property="Foreground" Value="{DynamicResource OnAccent}" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -57,14 +57,14 @@
                     <Border
                         Width="42"
                         Height="42"
-                        Background="#E8EDFB"
+                        Background="{DynamicResource AccentSoft}"
                         CornerRadius="11">
                         <md:PackIcon
                             Width="24"
                             Height="24"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#3B5BDB"
+                            Foreground="{DynamicResource Accent}"
                             Kind="AccountGroup" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -234,7 +234,7 @@
                             BorderThickness="0"
                             DataObject.Pasting="NumericTextBox_Pasting"
                             FontSize="16"
-                            Foreground="Red"
+                            Foreground="{DynamicResource Danger}"
                             PreviewTextInput="NumericTextBox_PreviewTextInput"
                             TextChanged="TbDebt_TextChanged" />
                     </Border>
@@ -256,7 +256,7 @@
                             BorderThickness="0"
                             DataObject.Pasting="NumericTextBox_Pasting"
                             FontSize="16"
-                            Foreground="Green"
+                            Foreground="{DynamicResource Success}"
                             PreviewTextInput="NumericTextBox_PreviewTextInput"
                             TextChanged="TbAccount_TextChanged" />
                     </Border>
@@ -316,11 +316,11 @@
                         Margin="3,0,0,2"
                         Padding="14,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#16A34A"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Content="💾 Saqlash"
                         FontWeight="Bold"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         ToolTip="Saqlash"
                         Visibility="Collapsed" />
 
@@ -331,11 +331,11 @@
                         Margin="3,0,0,2"
                         Padding="14,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#3B5BDB"
+                        Background="{DynamicResource Accent}"
                         BorderThickness="0"
                         Content="🔄 Yangilash"
                         FontWeight="Bold"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         ToolTip="Yangilash"
                         Visibility="Collapsed" />
 
@@ -346,12 +346,12 @@
                         Margin="3,0,0,2"
                         Padding="14,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#FF5252"
+                        Background="{DynamicResource Danger}"
                         BorderThickness="0"
                         Click="BtnCancel_Click"
                         Content="❌ Bekor qilish"
                         FontWeight="Bold"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         ToolTip="Bekor qilish"
                         Visibility="Collapsed" />
                 </WrapPanel>
@@ -456,10 +456,10 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             md:ButtonAssist.CornerRadius="9"
-                            Background="#3B5BDB"
+                            Background="{DynamicResource Accent}"
                             BorderThickness="0"
                             Click="BtnAddUser_Click"
-                            Foreground="White"
+                            Foreground="{DynamicResource OnAccent}"
                             ToolTip="Yangi foydalanuvchi qo'shish">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon

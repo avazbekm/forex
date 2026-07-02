@@ -40,7 +40,7 @@
             </EventTrigger>
         </Grid.Triggers>
 
-        <Border Background="#AA000000">
+        <Border Background="{DynamicResource Scrim}">
             <Border.Effect>
                 <BlurEffect Radius="5" />
             </Border.Effect>
@@ -52,7 +52,7 @@
             Padding="20"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Background="#CC2D2D44"
+            Background="{DynamicResource Scrim}"
             BorderBrush="#44FFFFFF"
             BorderThickness="1"
             CornerRadius="12"
@@ -96,18 +96,18 @@
                     x:Name="btnLogin"
                     Padding="4"
                     md:ButtonAssist.CornerRadius="6"
-                    Background="#4C8EF7"
+                    Background="{DynamicResource Accent}"
                     BorderThickness="0"
                     Click="BtnLogin_Click"
                     Content="🔐 Login"
                     FontWeight="Bold"
-                    Foreground="White"
+                    Foreground="{DynamicResource OnAccent}"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}" />
 
                 <TextBlock
                     x:Name="lblError"
                     Margin="0,10,0,0"
-                    Foreground="Crimson"
+                    Foreground="{DynamicResource Danger}"
                     TextWrapping="Wrap"
                     Visibility="Collapsed" />
             </StackPanel>

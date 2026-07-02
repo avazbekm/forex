@@ -13,7 +13,7 @@
     <UserControl.Resources>
         <Style TargetType="CheckBox" x:Key="PersistentCheckBoxStyle">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="#B7C0CE" />
+            <Setter Property="BorderBrush" Value="{DynamicResource InkFaint}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
@@ -26,7 +26,7 @@
                                     VerticalAlignment="Center" HorizontalAlignment="Center" />
                             <Path x:Name="CheckMark"
                                   Data="M0,4 L2,6 L6,0"
-                                  Stroke="#3B5BDB"
+                                  Stroke="{DynamicResource Accent}"
                                   StrokeThickness="2"
                                   Visibility="Collapsed"
                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -46,20 +46,20 @@
                     <ControlTemplate TargetType="RadioButton">
                         <Grid>
                             <Ellipse x:Name="Outer" Width="18" Height="18"
-                                     Stroke="#B7C0CE" StrokeThickness="1.5" Fill="Transparent"
+                                     Stroke="{DynamicResource InkFaint}" StrokeThickness="1.5" Fill="Transparent"
                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            <Ellipse x:Name="Inner" Width="9" Height="9" Fill="#3B5BDB"
+                            <Ellipse x:Name="Inner" Width="9" Height="9" Fill="{DynamicResource Accent}"
                                      Visibility="Collapsed"
                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Inner" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="Outer" Property="Stroke" Value="#3B5BDB" />
+                                <Setter TargetName="Outer" Property="Stroke" Value="{DynamicResource Accent}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Outer" Property="Stroke" Value="#E0E4EB" />
-                                <Setter TargetName="Inner" Property="Fill" Value="#C7CFDD" />
+                                <Setter TargetName="Outer" Property="Stroke" Value="{DynamicResource BorderStrong}" />
+                                <Setter TargetName="Inner" Property="Fill" Value="{DynamicResource BorderStrong}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -157,7 +157,7 @@
                                 <fa:IconImage Icon="GripVertical"
                                               Width="15" Height="15"
                                               Cursor="SizeAll"
-                                              Foreground="#B7C0CE"
+                                              Foreground="{DynamicResource InkFaint}"
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Left"
                                               Margin="2"
@@ -197,9 +197,9 @@
                                         Padding="10,0"
                                         HorizontalAlignment="Center"
                                         md:ButtonAssist.CornerRadius="8"
-                                        Background="#FEECEC"
+                                        Background="{DynamicResource DangerSoft}"
                                         BorderThickness="0"
-                                        Foreground="#DC2626"
+                                        Foreground="{DynamicResource Danger}"
                                         Command="{Binding DataContext.RemoveCurrencyCommand, ElementName=RootControl}"
                                         CommandParameter="{Binding}"
                                         ToolTip="Valyutani o'chirish">
@@ -223,8 +223,8 @@
             <Button Command="{Binding AddCurrencyCommand}"
                     Height="38" Padding="18,0"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="#3B5BDB" BorderThickness="0"
-                    Foreground="White" FontWeight="SemiBold">
+                    Background="{DynamicResource Accent}" BorderThickness="0"
+                    Foreground="{DynamicResource OnAccent}" FontWeight="SemiBold">
                 <StackPanel Orientation="Horizontal">
                     <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Plus" />
                     <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Valyuta qo'shish" />
@@ -234,8 +234,8 @@
             <Button Command="{Binding SaveCurrenciesCommand}"
                     Height="38" Padding="22,0" Margin="12,0,0,0"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="#15803D" BorderThickness="0"
-                    Foreground="White" FontWeight="SemiBold">
+                    Background="{DynamicResource SuccessStrong}" BorderThickness="0"
+                    Foreground="{DynamicResource OnAccent}" FontWeight="SemiBold">
                 <StackPanel Orientation="Horizontal">
                     <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ContentSave" />
                     <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Saqlash" />

@@ -63,14 +63,14 @@
                     <Border
                         Width="42"
                         Height="42"
-                        Background="#E8EDFB"
+                        Background="{DynamicResource AccentSoft}"
                         CornerRadius="11">
                         <md:PackIcon
                             Width="24"
                             Height="24"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#3B5BDB"
+                            Foreground="{DynamicResource Accent}"
                             Kind="TruckFast" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -198,10 +198,10 @@
                         HorizontalAlignment="Left"
                         md:ButtonAssist.CornerRadius="9"
                         md:ElevationAssist.Elevation="Dp2"
-                        Background="#16A34A"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Command="{Binding SubmitCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon
@@ -326,10 +326,10 @@
                                 Margin="0,18,0,0"
                                 Padding="14,0"
                                 md:ButtonAssist.CornerRadius="9"
-                                Background="#15803D"
+                                Background="{DynamicResource SuccessStrong}"
                                 BorderThickness="0"
                                 Command="{Binding ExportToExcelCommand}"
-                                Foreground="White">
+                                Foreground="{DynamicResource OnAccent}">
                                 <StackPanel Orientation="Horizontal">
                                     <md:PackIcon
                                         Width="16"
@@ -446,76 +446,76 @@
 
                         <Border
                             Grid.Column="0"
-                            Background="#EEF2FF"
+                            Background="{DynamicResource AccentSoft}"
                             Style="{StaticResource StatCard}">
                             <StackPanel>
                                 <TextBlock
                                     FontSize="12"
                                     FontWeight="Medium"
-                                    Foreground="#6470B0"
+                                    Foreground="{DynamicResource InkSecondary}"
                                     Text="Yozuvlar" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="22"
                                     FontWeight="Bold"
-                                    Foreground="#3949AB"
+                                    Foreground="{DynamicResource Accent}"
                                     Text="{Binding FilteredCount}" />
                             </StackPanel>
                         </Border>
 
                         <Border
                             Grid.Column="1"
-                            Background="#E6FBF6"
+                            Background="{DynamicResource TealSoft}"
                             Style="{StaticResource StatCard}">
                             <StackPanel>
                                 <TextBlock
                                     FontSize="12"
                                     FontWeight="Medium"
-                                    Foreground="#0F9488"
+                                    Foreground="{DynamicResource Teal}"
                                     Text="Ta'minotchi" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="22"
                                     FontWeight="Bold"
-                                    Foreground="#0D8276"
+                                    Foreground="{DynamicResource Teal}"
                                     Text="{Binding FilteredSupplierAmount, StringFormat={}{0:N0}}" />
                             </StackPanel>
                         </Border>
 
                         <Border
                             Grid.Column="2"
-                            Background="#FFF6E6"
+                            Background="{DynamicResource WarningSoft}"
                             Style="{StaticResource StatCard}">
                             <StackPanel>
                                 <TextBlock
                                     FontSize="12"
                                     FontWeight="Medium"
-                                    Foreground="#B7791F"
+                                    Foreground="{DynamicResource Warning}"
                                     Text="Vositachi" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="22"
                                     FontWeight="Bold"
-                                    Foreground="#A66A12"
+                                    Foreground="{DynamicResource Warning}"
                                     Text="{Binding FilteredConsolidatorAmount, StringFormat={}{0:N0}}" />
                             </StackPanel>
                         </Border>
 
                         <Border
                             Grid.Column="3"
-                            Background="#E9F8EE"
+                            Background="{DynamicResource SuccessSoft}"
                             Style="{StaticResource StatCard}">
                             <StackPanel>
                                 <TextBlock
                                     FontSize="12"
                                     FontWeight="Medium"
-                                    Foreground="#2E8B57"
+                                    Foreground="{DynamicResource Success}"
                                     Text="Jami" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="22"
                                     FontWeight="Bold"
-                                    Foreground="#1B7A3E"
+                                    Foreground="{DynamicResource Success}"
                                     Text="{Binding FilteredTotalAmount, StringFormat={}{0:N0}}" />
                             </StackPanel>
                         </Border>

@@ -64,10 +64,10 @@
                         Height="34"
                         Padding="14,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#673AB7"
+                        Background="{DynamicResource IconViolet}"
                         BorderThickness="0"
                         Command="{Binding LoadCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         ToolTip="Yuklash">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Refresh" />
@@ -132,10 +132,10 @@
                         Margin="5,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#1976D2"
+                        Background="{DynamicResource Accent}"
                         BorderThickness="0"
                         Command="{Binding PreviewCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Ko'rish">
                         <md:PackIcon Width="18" Height="18" Kind="Eye" />
@@ -146,10 +146,10 @@
                         Margin="5,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#00897B"
+                        Background="{DynamicResource Teal}"
                         BorderThickness="0"
                         Command="{Binding PrintCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Pechat">
                         <md:PackIcon Width="18" Height="18" Kind="Printer" />
@@ -160,10 +160,10 @@
                         Margin="5,0,0,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#15803D"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Command="{Binding ExportToExcelCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Excel">
                         <md:PackIcon Width="18" Height="18" Kind="FileExcel" />
@@ -268,7 +268,7 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right" />
-                            <Setter Property="Foreground" Value="#2E7D32" />
+                            <Setter Property="Foreground" Value="{DynamicResource Success}" />
                             <Setter Property="FontWeight" Value="Bold" />
                             <Setter Property="Padding" Value="0,0,12,0" />
                             <Setter Property="VerticalAlignment" Value="Center" />
@@ -283,7 +283,7 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right" />
-                            <Setter Property="Foreground" Value="#D32F2F" />
+                            <Setter Property="Foreground" Value="{DynamicResource Danger}" />
                             <Setter Property="FontWeight" Value="Bold" />
                             <Setter Property="Padding" Value="0,0,12,0" />
                             <Setter Property="VerticalAlignment" Value="Center" />
@@ -339,7 +339,7 @@
                             Width="11"
                             Height="11"
                             VerticalAlignment="Center"
-                            Fill="#D32F2F" />
+                            Fill="{DynamicResource Danger}" />
                         <TextBlock
                             Margin="6,0,16,0"
                             VerticalAlignment="Center"
@@ -350,7 +350,7 @@
                             Width="11"
                             Height="11"
                             VerticalAlignment="Center"
-                            Fill="#2E7D32" />
+                            Fill="{DynamicResource Success}" />
                         <TextBlock
                             Margin="6,0,0,0"
                             VerticalAlignment="Center"
@@ -378,7 +378,7 @@
                     VerticalScrollBarVisibility="Auto">
                     <charts:BarChart
                         VerticalAlignment="Top"
-                        Accent="#2E7D32"
+                        Accent="{DynamicResource SuccessColorValue}"
                         MaxValue="{Binding ChartMax}"
                         Points="{Binding DebtorChart}"
                         RowHeight="34" />
@@ -406,24 +406,24 @@
                     Margin="0,0,12,0"
                     Rows="1">
                     <controls:StatCard
-                        Accent="#3949AB"
-                        CardBackground="#EEF2FF"
+                        Accent="{DynamicResource Accent}"
+                        CardBackground="{DynamicResource AccentSoft}"
                         Title="Yozuvlar"
-                        TitleBrush="#6470B0"
+                        TitleBrush="{DynamicResource InkSecondary}"
                         Value="{Binding TotalCount}" />
                     <controls:StatCard
-                        Accent="#1B7A3E"
+                        Accent="{DynamicResource Success}"
                         Caption="{Binding DebtorBreakdown}"
-                        CardBackground="#E9F8EE"
+                        CardBackground="{DynamicResource SuccessSoft}"
                         Title="Debitor (so'm)"
-                        TitleBrush="#2E8B57"
+                        TitleBrush="{DynamicResource Success}"
                         Value="{Binding SummaryDebtor, StringFormat=N0}" />
                     <controls:StatCard
-                        Accent="#C0392B"
+                        Accent="{DynamicResource Danger}"
                         Caption="{Binding CreditorBreakdown}"
-                        CardBackground="#FDECEA"
+                        CardBackground="{DynamicResource DangerSoft}"
                         Title="Kreditor (so'm)"
-                        TitleBrush="#C0564B"
+                        TitleBrush="{DynamicResource Danger}"
                         Value="{Binding SummaryCreditor, StringFormat=N0}" />
                 </UniformGrid>
 
