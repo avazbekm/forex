@@ -253,6 +253,43 @@ public partial class ProductSettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task GenerateAllBarcodes()
+    {
+        var response = await client.ProductTypes.GenerateBarcodes().Handle(l => IsLoading = l);
+        if (response.IsSuccess)
+        {
+            await LoadProductsAsync();
+            SuccessMessage = $"{response.Data} ta razmerga barkod yaratildi.";
+        }
+        else
+            ErrorMessage = response.Message ?? "Barkod yaratishda xatolik!";
+    }
+
+    [RelayCommand]
+    private void PrintLabels(ProductTypeViewModel? type)
+    {
+        if (type is null || SelectedProduct is null) return;
+
+        if (string.IsNullOrWhiteSpace(type.QopBarcode))
+        {
+            WarningMessage = "Avval 'Barkod yaratish' tugmasini bosing.";
+            return;
+        }
+
+        var title = $"{SelectedProduct.Code} {SelectedProduct.Name}".Trim();
+
+        var labels = new List<LabelItem>
+        {
+            new(title, type.Type, "QOP", type.BundleItemCount ?? 0, type.QopBarcode)
+        };
+
+        if (!string.IsNullOrWhiteSpace(type.PachkaBarcode) && type.PachkaItemCount is > 0)
+            labels.Add(new(title, type.Type, "PACHKA", type.PachkaItemCount ?? 0, type.PachkaBarcode));
+
+        LabelPrintService.ShowPreview(labels, AppPreferences.Instance.LabelPrinter);
+    }
+
+    [RelayCommand]
     private async Task UploadImage()
     {
         if (SelectedProduct is null) return;

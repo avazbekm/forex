@@ -12,6 +12,7 @@ public partial class SaleItemViewModel : ViewModelBase
     [ObservableProperty] private int? bundleCount;
     [ObservableProperty] private int? bundleItemCount;
     [ObservableProperty] private int? totalCount;
+    [ObservableProperty] private int? restockCount;
     [ObservableProperty] private decimal? unitPrice;
     [ObservableProperty] private decimal? costtPrice;
     [ObservableProperty] private decimal? benifit;

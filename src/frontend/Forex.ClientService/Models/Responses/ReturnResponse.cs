@@ -27,6 +27,7 @@ public sealed record ReturnItemResponse
     public int BundleCount { get; set; }
     public int BundleItemCount { get; set; }
     public int TotalCount { get; set; }
+    public int RestockCount { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal Amount { get; set; }
 

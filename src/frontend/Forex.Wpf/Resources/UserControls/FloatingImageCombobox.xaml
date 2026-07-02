@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
     Height="30"
     d:DesignHeight="32"
@@ -32,6 +33,8 @@
                 VerticalAlignment="Center"
                 Background="Transparent"
                 BorderThickness="0"
+                Foreground="{DynamicResource PrimaryTextColor}"
+                md:TextFieldAssist.DecorationVisibility="Collapsed"
                 FontSize="14"
                 GotFocus="ComboBox_GotFocus"
                 IsEditable="{Binding IsEditable, ElementName=Root}"
@@ -79,7 +82,7 @@
                                 Visibility="{Binding ShowImage, ElementName=Root, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Image Stretch="UniformToFill">
                                     <Image.Source>
-                                        <MultiBinding Converter="{StaticResource UniversalImageResolver}">
+                                        <MultiBinding Converter="{StaticResource ImageResolver}">
                                             <Binding Path="." />
                                             <Binding ElementName="Root" Path="ImageMemberPath" />
                                         </MultiBinding>
@@ -90,7 +93,7 @@
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock FontSize="13" FontWeight="Bold">
                                     <TextBlock.Text>
-                                        <MultiBinding Converter="{StaticResource UniversalImageResolver}">
+                                        <MultiBinding Converter="{StaticResource ImageResolver}">
                                             <Binding Path="." />
                                             <Binding ElementName="Root" Path="PrimaryTextMemberPath" />
                                         </MultiBinding>
@@ -101,7 +104,7 @@
                                     FontSize="11"
                                     Foreground="{DynamicResource InkMuted}">
                                     <TextBlock.Text>
-                                        <MultiBinding Converter="{StaticResource UniversalImageResolver}">
+                                        <MultiBinding Converter="{StaticResource ImageResolver}">
                                             <Binding Path="." />
                                             <Binding ElementName="Root" Path="SecondaryTextMemberPath" />
                                         </MultiBinding>

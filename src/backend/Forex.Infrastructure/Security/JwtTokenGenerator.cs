@@ -42,7 +42,7 @@ public class JwtTokenGenerator(IConfiguration config) : IJwtTokenGenerator
             issuer: config["Jwt:Issuer"],
             audience: config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
+            expires: DateTime.UtcNow.AddHours(12),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

@@ -424,8 +424,21 @@ public partial class ProductPageViewModel : ViewModelBase
         {
             CurrentProduct = existing;
             IsNewProductMode = false;
+            return;
         }
-        else if (Confirm($"'{newValue}' yangi mahsulot sifatida qo'shilsinmi?"))
+
+        var byBarcode = BarcodeResolver.Resolve(AvailableProducts, newValue);
+        if (byBarcode is not null)
+        {
+            IsNewProductMode = false;
+            CurrentProduct = byBarcode.Product;
+            byBarcode.Product.SelectedType = byBarcode.ProductType;
+            ProductType = byBarcode.ProductType.Type;
+            ProductCode = byBarcode.Product.Code;
+            return;
+        }
+
+        if (Confirm($"'{newValue}' yangi mahsulot sifatida qo'shilsinmi?"))
         {
             CurrentProduct = new ProductViewModel { Code = newValue };
             IsNewProductMode = true;
@@ -462,6 +475,23 @@ public partial class ProductPageViewModel : ViewModelBase
     #endregion
 
     #region Commands
+
+    [RelayCommand]
+    private void ScanFill(string? code)
+    {
+        var match = BarcodeResolver.Resolve(AvailableProducts, code);
+        if (match is null)
+        {
+            WarningMessage = $"Shtrix-kod topilmadi: {code}";
+            return;
+        }
+
+        IsNewProductMode = false;
+        CurrentProduct = match.Product;
+        match.Product.SelectedType = match.ProductType;
+        ProductType = match.ProductType.Type;
+        ProductCode = match.Product.Code ?? string.Empty;
+    }
 
     [RelayCommand]
     private async Task Save()

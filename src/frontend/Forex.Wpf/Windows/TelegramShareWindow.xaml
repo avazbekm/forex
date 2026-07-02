@@ -8,7 +8,7 @@
         WindowStyle="ToolWindow" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource SurfaceCard}">
-    <Grid Margin="20">
+    <Grid Margin="20" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -31,8 +31,8 @@
 
         <Button Grid.Row="2" Command="{Binding ShareCommand}" 
                 HorizontalAlignment="Center"
-                Background="#0088cc" BorderThickness="0"
-                Foreground="White" FontWeight="Bold"
+                Background="{DynamicResource Accent}" BorderThickness="0"
+                Foreground="{DynamicResource OnAccent}" FontWeight="Bold"
                 Padding="20,10" Margin="0,10,0,0"
                 MinWidth="140" Height="40">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

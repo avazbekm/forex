@@ -24,14 +24,14 @@
                     <Border
                         Width="38"
                         Height="38"
-                        Background="#E8EDFB"
+                        Background="{DynamicResource AccentSoft}"
                         CornerRadius="10">
                         <md:PackIcon
                             Width="22"
                             Height="22"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#3B5BDB"
+                            Foreground="{DynamicResource Accent}"
                             Kind="Server" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -97,10 +97,10 @@
                         Margin="10,0,0,0"
                         Padding="18,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#15803D"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Command="{Binding SaveCommand}"
-                        Foreground="White">
+                        Foreground="{DynamicResource OnAccent}">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="ContentSave" />
                             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Saqlash" />
@@ -111,7 +111,7 @@
                 <TextBlock
                     Margin="2,14,0,0"
                     FontSize="13"
-                    Foreground="#667085"
+                    Foreground="{DynamicResource InkSecondary}"
                     Text="{Binding StatusText}"
                     TextWrapping="Wrap" />
             </StackPanel>

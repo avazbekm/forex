@@ -20,7 +20,7 @@
     <conv:IsNotNewRowConverter x:Key="IsNotNewRowConverter" />
     <conv:ArrayMultiValueConverter x:Key="ArrayMultiValueConverter" />
     <conv:IndexConverter x:Key="IndexConverter" />
-    <conv:UniversalImageResolver x:Key="UniversalImageResolver" />
+    <conv:ImageResolver x:Key="ImageResolver" />
     <conv:EqualityConverter x:Key="EqualityConverter" />
 
 </ResourceDictionary>

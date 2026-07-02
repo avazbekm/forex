@@ -11,7 +11,7 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Background" Value="{DynamicResource SurfaceChip}" />
-            <Setter Property="Foreground" Value="#475467" />
+            <Setter Property="Foreground" Value="{DynamicResource InkSecondary}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -24,7 +24,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E4E9F2" />
+                    <Setter Property="Background" Value="{DynamicResource HairlineBorder}" />
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Opacity" Value="0.35" />

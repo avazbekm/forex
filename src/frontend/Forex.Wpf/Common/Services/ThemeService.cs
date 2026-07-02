@@ -1,5 +1,6 @@
 namespace Forex.Wpf.Common.Services;
 
+using MaterialDesignThemes.Wpf;
 using System.Windows;
 
 public static class ThemeService
@@ -11,9 +12,13 @@ public static class ThemeService
 
         try
         {
+            var paletteHelper = new PaletteHelper();
+            var theme = paletteHelper.GetTheme();
+            theme.SetBaseTheme(dark ? BaseTheme.Dark : BaseTheme.Light);
+            paletteHelper.SetTheme(theme);
+
             var dicts = app.Resources.MergedDictionaries;
 
-            // Eski custom mavzuni olib tashlaymiz
             for (int i = dicts.Count - 1; i >= 0; i--)
             {
                 var src = dicts[i].Source?.OriginalString ?? string.Empty;
@@ -21,8 +26,6 @@ public static class ThemeService
                     dicts.RemoveAt(i);
             }
 
-            // Custom mavzuni ENG OXIRIGA qo'shamiz — shunda u MaterialDesign
-            // ranglarini (MaterialDesignPaper, MaterialDesignBody, ...) override qiladi.
             var uri = new Uri(dark ? "/Resources/Themes/DarkTheme.xaml" : "/Resources/Themes/LightTheme.xaml", UriKind.Relative);
             dicts.Add(new ResourceDictionary { Source = uri });
         }

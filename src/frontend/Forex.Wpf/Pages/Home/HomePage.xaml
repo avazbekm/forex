@@ -14,7 +14,7 @@
     d:DesignWidth="810"
     mc:Ignorable="d">
 
-    <Grid Background="{DynamicResource PrimaryBackground}">
+    <Grid Background="{DynamicResource PrimaryBackground}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <!--  Main Content  -->
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel x:Name="mainContent">
@@ -25,7 +25,7 @@
                 Margin="10"
                 Padding="15,0"
                 md:ElevationAssist.Elevation="Dp8"
-                Background="#FF4FC3F7"
+                Background="{DynamicResource Accent}"
                 CornerRadius="12">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -71,7 +71,7 @@
                                     Height="24"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="White"
+                                    Foreground="{DynamicResource OnAccent}"
                                     Kind="Bell" />
                                 <!--  Badge for notification count  -->
                                 <Border
@@ -80,7 +80,7 @@
                                     Height="18"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Top"
-                                    Background="#FFE53935"
+                                    Background="{DynamicResource Danger}"
                                     CornerRadius="9"
                                     Visibility="Collapsed">
                                     <TextBlock
@@ -89,7 +89,7 @@
                                         VerticalAlignment="Center"
                                         FontSize="10"
                                         FontWeight="Bold"
-                                        Foreground="White"
+                                        Foreground="{DynamicResource OnAccent}"
                                         Text="3" />
                                 </Border>
                             </Grid>
@@ -110,7 +110,7 @@
                                 <Ellipse
                                     Width="35"
                                     Height="35"
-                                    Stroke="White"
+                                    Stroke="{DynamicResource OnAccent}"
                                     StrokeThickness="2">
                                     <Ellipse.Fill>
                                         <ImageBrush
@@ -126,7 +126,7 @@
                                     VerticalAlignment="Center"
                                     FontSize="15"
                                     FontWeight="SemiBold"
-                                    Foreground="White"
+                                    Foreground="{DynamicResource OnAccent}"
                                     Text="{Binding FullName}" />
 
                                 <!--  Dropdown Icon  -->
@@ -135,7 +135,7 @@
                                     Width="20"
                                     Height="20"
                                     VerticalAlignment="Center"
-                                    Foreground="White"
+                                    Foreground="{DynamicResource OnAccent}"
                                     Kind="ChevronDown">
                                     <md:PackIcon.RenderTransform>
                                         <RotateTransform x:Name="dropdownRotation" Angle="0" CenterX="10" CenterY="10" />
@@ -160,7 +160,7 @@
                     Margin="10"
                     md:ElevationAssist.Elevation="Dp16"
                     Background="{DynamicResource SurfaceCard}"
-                    BorderBrush="#FFE0E0E0"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     CornerRadius="10">
                     <StackPanel Margin="0,8">
@@ -169,7 +169,7 @@
                             <Border
                                 Width="45"
                                 Height="45"
-                                BorderBrush="#FF4FC3F7"
+                                BorderBrush="{DynamicResource Accent}"
                                 BorderThickness="2"
                                 CornerRadius="22.5">
                                 <Border.Background>
@@ -190,7 +190,7 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <Separator Margin="8,0" Background="#FFE0E0E0" />
+                        <Separator Margin="8,0" Background="{DynamicResource HairlineBorder}" />
 
                         <!--  Menu Items  -->
                         <Button
@@ -206,7 +206,7 @@
                                 <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#FFF5F5F5" />
+                                            <Setter Property="Background" Value="{DynamicResource SurfaceMuted}" />
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -216,7 +216,7 @@
                                     Width="20"
                                     Height="20"
                                     VerticalAlignment="Center"
-                                    Foreground="#FF4FC3F7"
+                                    Foreground="{DynamicResource Accent}"
                                     Kind="AccountEdit" />
                                 <TextBlock
                                     Margin="12,0,0,0"
@@ -240,7 +240,7 @@
                                 <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#FFF5F5F5" />
+                                            <Setter Property="Background" Value="{DynamicResource SurfaceMuted}" />
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -261,7 +261,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Separator Margin="8,4" Background="#FFE0E0E0" />
+                        <Separator Margin="8,4" Background="{DynamicResource HairlineBorder}" />
 
                         <Button
                             x:Name="btnLogoutMenu"
@@ -276,7 +276,7 @@
                                 <Style BasedOn="{StaticResource MaterialDesignFlatButton}" TargetType="Button">
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#FFFFE5E5" />
+                                            <Setter Property="Background" Value="{DynamicResource DangerSoft}" />
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -286,13 +286,13 @@
                                     Width="20"
                                     Height="20"
                                     VerticalAlignment="Center"
-                                    Foreground="#FFD32F2F"
+                                    Foreground="{DynamicResource Danger}"
                                     Kind="Logout" />
                                 <TextBlock
                                     Margin="12,0,0,0"
                                     VerticalAlignment="Center"
                                     FontSize="14"
-                                    Foreground="#FFD32F2F"
+                                    Foreground="{DynamicResource Danger}"
                                     Text="Chiqish" />
                             </StackPanel>
                         </Button>
@@ -312,10 +312,10 @@
                     Padding="12"
                     md:ElevationAssist.Elevation="Dp8"
                     Background="{DynamicResource SurfaceCard}"
-                    BorderBrush="#FFE0E0E0"
+                    BorderBrush="{DynamicResource HairlineBorder}"
                     BorderThickness="1"
                     CornerRadius="8">
-                    <TextBlock Foreground="#FFD32F2F" Text="Qarz to'lash muddati o'tgan mijozlar bor!" />
+                    <TextBlock Foreground="{DynamicResource Danger}" Text="Qarz to'lash muddati o'tgan mijozlar bor!" />
                 </Border>
             </Popup>
 
@@ -328,7 +328,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FF00C9A7"
+                    Background="{DynamicResource Teal}"
                     Click="BtnSale_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -344,7 +344,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FFEF6C00"
+                    Background="{DynamicResource Warning}"
                     Click="BtnReturn_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -360,7 +360,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FF005F73"
+                    Background="{DynamicResource Teal}"
                     Click="BtnCash_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -376,7 +376,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FF2E7D32"
+                    Background="{DynamicResource Success}"
                     Click="BtnProduct_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -386,13 +386,29 @@
                 </Button>
 
                 <Button
+                    x:Name="btnBarcode"
+                    Height="120"
+                    MinWidth="220"
+                    Margin="10"
+                    md:ButtonAssist.CornerRadius="10"
+                    md:ElevationAssist.Elevation="Dp24"
+                    Background="{DynamicResource Teal}"
+                    Click="BtnBarcode_Click"
+                    FontSize="24"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource MainMenuTextColor}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}">
+                    🏷 Barkod
+                </Button>
+
+                <Button
                     x:Name="btnSupply"
                     Height="120"
                     MinWidth="220"
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FF8E24AA"
+                    Background="{DynamicResource IconViolet}"
                     Click="BtnSupply_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -408,7 +424,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FF1565C0"
+                    Background="{DynamicResource Accent}"
                     Click="BtnUser_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -424,7 +440,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FF4527A0"
+                    Background="{DynamicResource IconViolet}"
                     Click="btnReports_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -440,7 +456,7 @@
                     Margin="10"
                     md:ButtonAssist.CornerRadius="10"
                     md:ElevationAssist.Elevation="Dp24"
-                    Background="#FFC62828"
+                    Background="{DynamicResource Danger}"
                     Click="BtnSettings_Click"
                     FontSize="24"
                     FontWeight="Medium"
@@ -458,7 +474,7 @@
                     Margin="0,0,0,14"
                     Visibility="{Binding AnyDashboardVisible, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
-                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="#3B5BDB" Kind="ViewDashboardOutline" />
+                        <md:PackIcon Width="22" Height="22" VerticalAlignment="Center" Foreground="{DynamicResource Accent}" Kind="ViewDashboardOutline" />
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource InkPrimary}" Text="Boshqaruv paneli" />
                         <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource InkFaint}" Text="{Binding PeriodLabel}" />
                     </StackPanel>
@@ -487,10 +503,10 @@
                     Margin="0,0,0,14"
                     Rows="1"
                     Visibility="{Binding ShowDashboardStats, Source={x:Static svc:AppPreferences.Instance}, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <controls:StatCard Accent="#1B7A3E" CardBackground="#E9F8EE" Title="Savdo (so'm)" TitleBrush="#2E8B57" Value="{Binding RangeSales, StringFormat=N0}" />
-                    <controls:StatCard Accent="#3949AB" CardBackground="#EEF2FF" Title="Savdolar" TitleBrush="#6470B0" Value="{Binding RangeCount}" />
-                    <controls:StatCard Accent="#A66A12" CardBackground="#FFF6E6" Title="Sotilgan juft" TitleBrush="#B7791F" Value="{Binding RangePairs, StringFormat=N0}" />
-                    <controls:StatCard Accent="#B43E7C" CardBackground="#FDECF3" Title="O'rtacha savdo (so'm)" TitleBrush="#C0568A" Value="{Binding AvgSale, StringFormat=N0}" />
+                    <controls:StatCard Accent="{DynamicResource Success}" CardBackground="{DynamicResource SuccessSoft}" Title="Savdo (so'm)" TitleBrush="{DynamicResource Success}" Value="{Binding RangeSales, StringFormat=N0}" />
+                    <controls:StatCard Accent="{DynamicResource Accent}" CardBackground="{DynamicResource AccentSoft}" Title="Savdolar" TitleBrush="{DynamicResource InkSecondary}" Value="{Binding RangeCount}" />
+                    <controls:StatCard Accent="{DynamicResource Warning}" CardBackground="{DynamicResource WarningSoft}" Title="Sotilgan juft" TitleBrush="{DynamicResource Warning}" Value="{Binding RangePairs, StringFormat=N0}" />
+                    <controls:StatCard Accent="{DynamicResource IconPink}" CardBackground="{DynamicResource IconPinkSoft}" Title="O'rtacha savdo (so'm)" TitleBrush="{DynamicResource IconPink}" Value="{Binding AvgSale, StringFormat=N0}" />
                 </UniformGrid>
 
                 <Border
@@ -508,7 +524,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="#3B5BDB" Kind="ChartLine" />
+                            <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="{DynamicResource Accent}" Kind="ChartLine" />
                             <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource InkPrimary}" Text="Savdo va to'lovlar dinamikasi (so'm)" />
                         </StackPanel>
                         <charts:LineChart Grid.Row="1" Margin="0,10,0,0" Data="{Binding SalesTrend}" />
@@ -537,10 +553,10 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal">
-                                <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="#673AB7" Kind="AccountStar" />
+                                <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="{DynamicResource IconViolet}" Kind="AccountStar" />
                                 <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource InkPrimary}" Text="Top mijozlar (so'm)" />
                             </StackPanel>
-                            <charts:BarChart Grid.Row="1" Margin="0,10,0,0" Accent="#673AB7" Points="{Binding TopCustomers}" />
+                            <charts:BarChart Grid.Row="1" Margin="0,10,0,0" Accent="{DynamicResource IconVioletColorValue}" Points="{Binding TopCustomers}" />
                         </Grid>
                     </Border>
 
@@ -559,10 +575,10 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal">
-                                <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="#15803D" Kind="ShoeSneaker" />
+                                <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="{DynamicResource Success}" Kind="ShoeSneaker" />
                                 <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource InkPrimary}" Text="Top mahsulotlar (juft)" />
                             </StackPanel>
-                            <charts:BarChart Grid.Row="1" Margin="0,10,0,0" Accent="#15803D" Points="{Binding TopProducts}" />
+                            <charts:BarChart Grid.Row="1" Margin="0,10,0,0" Accent="{DynamicResource SuccessColorValue}" Points="{Binding TopProducts}" />
                         </Grid>
                     </Border>
                 </Grid>
@@ -573,7 +589,7 @@
         <!--  Profile Edit Modal Overlay  -->
         <Grid
             x:Name="profileEditOverlay"
-            Background="#CC000000"
+            Background="{DynamicResource Scrim}"
             Visibility="Collapsed">
             <Border
                 Width="580"
@@ -621,7 +637,7 @@
                                         md:ElevationAssist.Elevation="Dp8"
                                         Cursor="Hand"
                                         MouseLeftButtonDown="Avatar_Click"
-                                        Stroke="#FF4FC3F7"
+                                        Stroke="{DynamicResource Accent}"
                                         StrokeThickness="3">
                                         <Ellipse.Fill>
                                             <ImageBrush
@@ -722,7 +738,7 @@
                                         Label="Manzil"
                                         Text="{Binding Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                    <Separator Margin="0,10,0,15" Background="#FFE0E0E0" />
+                                    <Separator Margin="0,10,0,15" Background="{DynamicResource HairlineBorder}" />
 
                                     <!--  Password Section  -->
                                     <TextBlock
@@ -768,11 +784,11 @@
                             Margin="0,0,10,0"
                             Padding="12,0"
                             md:ButtonAssist.CornerRadius="8"
-                            Background="#FF4CAF50"
+                            Background="{DynamicResource SuccessStrong}"
                             Click="BtnSaveProfile_Click"
                             FontSize="15"
                             FontWeight="SemiBold"
-                            Foreground="White">
+                            Foreground="{DynamicResource OnAccent}">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon
                                     Width="20"
@@ -788,11 +804,11 @@
                             Width="140"
                             Padding="12,0"
                             md:ButtonAssist.CornerRadius="8"
-                            Background="#FF757575"
+                            Background="{DynamicResource SecondaryButtonBackground}"
                             Click="BtnCloseModal_Click"
                             FontSize="15"
                             FontWeight="SemiBold"
-                            Foreground="White">
+                            Foreground="{DynamicResource SecondaryButtonForeground}">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon
                                     Width="20"

@@ -20,9 +20,9 @@
 
         <!--  Header  -->
         <StackPanel Grid.Row="0" Margin="2,0,2,16" Orientation="Horizontal">
-            <Border Width="44" Height="44" Background="#E8EDFB" CornerRadius="12">
+            <Border Width="44" Height="44" Background="{DynamicResource AccentSoft}" CornerRadius="12">
                 <md:PackIcon Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                             Foreground="#3B5BDB" Kind="CashMultiple" />
+                             Foreground="{DynamicResource Accent}" Kind="CashMultiple" />
             </Border>
             <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
                 <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource InkPrimary}"
@@ -70,7 +70,7 @@
 
                 <Button Grid.Column="5" Height="30" Margin="8,0,0,0" Padding="18,0" VerticalAlignment="Bottom"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#16A34A" BorderThickness="0" Foreground="White" Cursor="Hand"
+                        Background="{DynamicResource SuccessStrong}" BorderThickness="0" Foreground="{DynamicResource OnAccent}" Cursor="Hand"
                         Command="{Binding AddOrUpdateCommand}">
                     <StackPanel Orientation="Horizontal">
                         <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Plus" />
@@ -118,19 +118,19 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="CheckBox">
                                     <Border x:Name="box" Width="21" Height="21" CornerRadius="5"
-                                            Background="White" BorderBrush="#374151" BorderThickness="2">
+                                            Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource InkPrimary}" BorderThickness="2">
                                         <md:PackIcon x:Name="tick" Width="15" Height="15" Kind="Check"
-                                                     Foreground="White" Visibility="Collapsed"
+                                                     Foreground="{DynamicResource OnAccent}" Visibility="Collapsed"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsChecked" Value="True">
-                                            <Setter TargetName="box" Property="Background" Value="#16A34A" />
-                                            <Setter TargetName="box" Property="BorderBrush" Value="#16A34A" />
+                                            <Setter TargetName="box" Property="Background" Value="{DynamicResource SuccessStrong}" />
+                                            <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource SuccessStrong}" />
                                             <Setter TargetName="tick" Property="Visibility" Value="Visible" />
                                         </Trigger>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="box" Property="BorderBrush" Value="#16A34A" />
+                                            <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource SuccessStrong}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -213,7 +213,7 @@
                 <Button Height="38" Padding="18,0" Margin="0,0,10,0"
                         md:ButtonAssist.CornerRadius="9"
                         Background="{DynamicResource SurfaceCard}" BorderThickness="1"
-                        BorderBrush="#E11D48" Foreground="#E11D48"
+                        BorderBrush="{DynamicResource Danger}" Foreground="{DynamicResource Danger}"
                         Cursor="Hand" Command="{Binding CancelCommand}">
                     <StackPanel Orientation="Horizontal">
                         <md:PackIcon Width="17" Height="17" VerticalAlignment="Center" Kind="Close" />
@@ -222,7 +222,7 @@
                 </Button>
                 <Button Height="38" Padding="26,0"
                         md:ButtonAssist.CornerRadius="9" md:ElevationAssist.Elevation="Dp2"
-                        Background="#16A34A" BorderThickness="0" Foreground="White"
+                        Background="{DynamicResource SuccessStrong}" BorderThickness="0" Foreground="{DynamicResource OnAccent}"
                         Cursor="Hand" Command="{Binding SaveCommand}">
                     <StackPanel Orientation="Horizontal">
                         <md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Check" />

@@ -16,7 +16,7 @@
     Background="{DynamicResource PrimaryBackground}"
     mc:Ignorable="d">
 
-    <Grid Margin="20">
+    <Grid Margin="20" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -49,7 +49,7 @@
                             Width="120"
                             Height="120"
                             CornerRadius="60"
-                            BorderBrush="#FF4FC3F7"
+                            BorderBrush="{DynamicResource Accent}"
                             BorderThickness="3"
                             HorizontalAlignment="Center"
                             md:ElevationAssist.Elevation="Dp8"
@@ -77,7 +77,7 @@
 
                                 <!-- Semi-transparent dark overlay -->
                                 <Border
-                                    Background="#99000000"
+                                    Background="{DynamicResource Scrim}"
                                     CornerRadius="60"
                                     VerticalAlignment="Bottom"
                                     Height="60">
@@ -87,13 +87,13 @@
                                         <md:PackIcon 
                                             Kind="Camera" 
                                             Width="24" 
-                                            Height="24" 
-                                            Foreground="White" 
+                                            Height="24"
+                                            Foreground="{DynamicResource OnAccent}"
                                             HorizontalAlignment="Center"/>
                                         <TextBlock 
                                             Text="Rasm yuklash" 
-                                            FontSize="11" 
-                                            Foreground="White" 
+                                            FontSize="11"
+                                            Foreground="{DynamicResource OnAccent}"
                                             HorizontalAlignment="Center"
                                             Margin="0,4,0,0"/>
                                     </StackPanel>
@@ -146,7 +146,7 @@
                             Label="Manzil"
                             Text="{Binding Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                        <Separator Margin="0,10,0,15" Background="#FFE0E0E0" />
+                        <Separator Margin="0,10,0,15" Background="{DynamicResource HairlineBorder}" />
 
                         <!-- Password Section -->
                         <TextBlock
@@ -186,8 +186,8 @@
                 Padding="12,8"
                 Margin="0,0,10,0"
                 md:ButtonAssist.CornerRadius="6"
-                Background="#FF4CAF50"
-                Foreground="White"
+                Background="{DynamicResource SuccessStrong}"
+                Foreground="{DynamicResource OnAccent}"
                 FontSize="14"
                 FontWeight="SemiBold"
                 Click="BtnSave_Click">
@@ -202,8 +202,8 @@
                 Width="120"
                 Padding="12,8"
                 md:ButtonAssist.CornerRadius="6"
-                Background="#FF757575"
-                Foreground="White"
+                Background="{DynamicResource InkSecondary}"
+                Foreground="{DynamicResource OnAccent}"
                 FontSize="14"
                 FontWeight="SemiBold"
                 Click="BtnClose_Click">

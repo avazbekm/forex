@@ -52,7 +52,7 @@
     <Ellipse
         Width="40"
         Height="40"
-        Stroke="Gray"
+        Stroke="{DynamicResource InkMuted}"
         StrokeDashArray="2 6"
         StrokeStartLineCap="Round"
         StrokeThickness="4">

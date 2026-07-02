@@ -6,7 +6,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-public class UniversalImageResolver : IValueConverter, IMultiValueConverter
+public class ImageResolver : IValueConverter, IMultiValueConverter
 {
     private const string MinioEndpoint = "http://localhost:9000";
     private const string MinioBucket = "forex-storage";
