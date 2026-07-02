@@ -42,9 +42,10 @@ public class UpdateUserCommandHandler(
             .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(User));
 
-        Console.WriteLine($"UpdateUser: UserId={request.Id}, Name={request.Name}, Username={request.Username}");
-
         bool isAdmin = currentUser.Username == "admin";
+
+        if (!isAdmin && currentUser.UserId != request.Id)
+            throw new ForbiddenException("Sizda bu foydalanuvchini o'zgartirish huquqi yo'q!");
 
         if (!string.IsNullOrWhiteSpace(request.Username) && !isAdmin)
             throw new AppException($"Sizda {request.Username}ni o'zgartirish huquqi yo'q!");
@@ -80,9 +81,9 @@ public class UpdateUserCommandHandler(
         var newImagePath = request.TempImagePath;
         string? imagePathToDelete = null;
 
-        if (!string.IsNullOrWhiteSpace(newImagePath) && newImagePath.Contains("/temp/"))
+        if (fileStorage.IsTempKey(newImagePath))
         {
-            var movedKey = await fileStorage.MoveFileAsync(newImagePath, "users", cancellationToken);
+            var movedKey = await fileStorage.MoveFileAsync(newImagePath!, "users", cancellationToken);
             user.ProfileImageUrl = movedKey ?? newImagePath;
             imagePathToDelete = oldImagePath;
         }

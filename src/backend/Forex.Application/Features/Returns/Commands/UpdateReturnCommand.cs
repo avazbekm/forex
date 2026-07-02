@@ -137,7 +137,7 @@ public class UpdateReturnCommandHandler(
             text.AppendLine($"Qaytarildi — Kodi: {productType.Product.Code} ({productType.Type}), Soni: {item.TotalCount}, Narxi: {item.UnitPrice}, Jami: {item.Amount} {currencyCode}");
         }
 
-        return text.ToString();
+        return text.ToString().TrimEnd();
     }
 
     private async Task<List<ProductResidue>> LoadProductResiduesAsync(List<long> productTypeIds, CancellationToken ct)
@@ -154,10 +154,8 @@ public class UpdateReturnCommandHandler(
 
         foreach (var cmd in commands.Where(c => c.TotalCount > 0 || c.BundleCount > 0))
         {
-            var residue = residues.FirstOrDefault(r => r.ProductTypeId == cmd.ProductTypeId)
-                ?? throw new NotFoundException(nameof(ProductResidue), nameof(cmd.ProductTypeId), cmd.ProductTypeId);
-
-            var bundleItemCount = residue.ProductType.BundleItemCount;
+            var residue = residues.FirstOrDefault(r => r.ProductTypeId == cmd.ProductTypeId);
+            var bundleItemCount = residue?.ProductType.BundleItemCount ?? 0;
             var totalCount = cmd.TotalCount > 0 ? cmd.TotalCount : cmd.BundleCount * bundleItemCount;
 
             items.Add(new ReturnItem
@@ -165,7 +163,7 @@ public class UpdateReturnCommandHandler(
                 BundleCount = cmd.BundleCount,
                 BundleItemCount = bundleItemCount,
                 TotalCount = totalCount,
-                RestockCount = cmd.RestockCount,
+                RestockCount = Math.Clamp(cmd.RestockCount, 0, totalCount),
                 UnitPrice = cmd.UnitPrice,
                 Amount = cmd.Amount,
                 ProductTypeId = cmd.ProductTypeId,
@@ -181,7 +179,8 @@ public class UpdateReturnCommandHandler(
         foreach (var item in returnItems)
         {
             if (item.RestockCount <= 0) continue;
-            var residue = residues.First(r => r.ProductTypeId == item.ProductTypeId);
+            var residue = residues.FirstOrDefault(r => r.ProductTypeId == item.ProductTypeId);
+            if (residue is null) continue;
             residue.Count += item.RestockCount;
         }
     }
@@ -191,9 +190,8 @@ public class UpdateReturnCommandHandler(
         foreach (var item in returnItems)
         {
             if (item.RestockCount <= 0) continue;
-            var residue = residues.FirstOrDefault(r => r.ProductTypeId == item.ProductTypeId)
-                ?? throw new NotFoundException(nameof(ProductResidue), nameof(item.ProductTypeId), item.ProductTypeId);
-
+            var residue = residues.FirstOrDefault(r => r.ProductTypeId == item.ProductTypeId);
+            if (residue is null) continue;
             residue.Count -= item.RestockCount;
         }
     }

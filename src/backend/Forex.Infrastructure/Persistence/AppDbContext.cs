@@ -165,12 +165,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<ProductType>()
             .HasIndex(p => p.QopBarcode)
             .IsUnique()
-            .HasFilter("\"QopBarcode\" IS NOT NULL");
+            .HasFilter("\"QopBarcode\" IS NOT NULL AND \"QopBarcode\" <> ''");
 
         modelBuilder.Entity<ProductType>()
             .HasIndex(p => p.PachkaBarcode)
             .IsUnique()
-            .HasFilter("\"PachkaBarcode\" IS NOT NULL");
+            .HasFilter("\"PachkaBarcode\" IS NOT NULL AND \"PachkaBarcode\" <> ''");
 
         modelBuilder.Ignore<System.Transactions.Transaction>();
     }

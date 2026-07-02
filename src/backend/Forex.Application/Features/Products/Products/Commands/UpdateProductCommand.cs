@@ -67,10 +67,10 @@ public class UpdateProductCommandHandler(
             var newImagePath = request.ImagePath;
             string? imagePathToDelete = null; // O'chiriladigan rasm yo'lini saqlaymiz
 
-            if (!string.IsNullOrWhiteSpace(newImagePath) && newImagePath.Contains("/temp/"))
+            if (fileStorage.IsTempKey(newImagePath))
             {
                 // Yangi rasm yuklangan: temp dan ko'chirish
-                var movedKey = await fileStorage.MoveFileAsync(newImagePath, "products", ct);
+                var movedKey = await fileStorage.MoveFileAsync(newImagePath!, "products", ct);
                 product.ImagePath = movedKey ?? newImagePath;
 
                 // Eski rasmni KEYINROQ o'chirish uchun saqlab qo'yamiz

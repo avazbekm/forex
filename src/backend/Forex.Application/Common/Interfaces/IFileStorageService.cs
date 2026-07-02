@@ -29,6 +29,8 @@ public interface IFileStorageService
         CancellationToken cancellationToken = default);
 
     string GetFullUrl(string? objectKey);
+
+    bool IsTempKey(string? objectKey);
 }
 
 public sealed record PresignedUploadResult

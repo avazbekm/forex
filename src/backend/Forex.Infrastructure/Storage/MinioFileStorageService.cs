@@ -97,6 +97,9 @@ public sealed class MinioFileStorageService : IFileStorageService
         string destinationFolder,
         CancellationToken cancellationToken = default)
     {
+        if (!IsTempKey(sourceKey))
+            return null;
+
         try
         {
             var destinationKey = sourceKey.Replace("/temp/", "/");
@@ -208,6 +211,11 @@ public sealed class MinioFileStorageService : IFileStorageService
 
         return $"{prefix}/{timestamp}/{uniqueId}{extension}";
     }
+
+    public bool IsTempKey(string? objectKey)
+        => !string.IsNullOrWhiteSpace(objectKey)
+           && objectKey.StartsWith(_options.Prefix, StringComparison.Ordinal)
+           && objectKey.Contains("/temp/", StringComparison.Ordinal);
 
     public string GetFullUrl(string? objectKey)
     {

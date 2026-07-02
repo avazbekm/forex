@@ -162,12 +162,9 @@ public class CreateProductEntryCommandHandler(
                 throw new AppException("Yangi mahsulot yaratish uchun Kod va Nom majburiy!");
             }
 
-            var imagePath = item.Product.ImagePath;
-            if (!string.IsNullOrWhiteSpace(imagePath) && imagePath.Contains("/temp/"))
-            {
-                var newKey = await fileStorage.MoveFileAsync(imagePath, "products", ct);
-                if (newKey != null) imagePath = newKey;
-            }
+            var imagePath = fileStorage.IsTempKey(item.Product.ImagePath)
+                ? await fileStorage.MoveFileAsync(item.Product.ImagePath!, "products", ct)
+                : null;
 
             product = new Product
             {
