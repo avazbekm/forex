@@ -84,10 +84,10 @@
                         Height="34"
                         Padding="14,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#673AB7"
+                        Background="{DynamicResource IconViolet}"
                         BorderThickness="0"
                         Command="{Binding LoadDataCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         ToolTip="Yuklash">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Refresh" />
@@ -150,10 +150,10 @@
                         Margin="5,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#1976D2"
+                        Background="{DynamicResource Accent}"
                         BorderThickness="0"
                         Command="{Binding PreviewCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Ko'rish">
                         <md:PackIcon Width="18" Height="18" Kind="Eye" />
@@ -163,10 +163,10 @@
                         Margin="5,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#00897B"
+                        Background="{DynamicResource Teal}"
                         BorderThickness="0"
                         Command="{Binding PrintCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Pechat">
                         <md:PackIcon Width="18" Height="18" Kind="Printer" />
@@ -176,10 +176,10 @@
                         Margin="5,0,0,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#15803D"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Command="{Binding ExportToExcelCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Excel">
                         <md:PackIcon Width="18" Height="18" Kind="FileExcel" />
@@ -305,7 +305,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center" />
                             <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Foreground" Value="#1565C0" />
+                            <Setter Property="Foreground" Value="{DynamicResource Accent}" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
@@ -334,7 +334,7 @@
                         Width="20"
                         Height="20"
                         VerticalAlignment="Center"
-                        Foreground="#0F9488"
+                        Foreground="{DynamicResource Teal}"
                         Kind="ChartLine" />
                     <TextBlock
                         Margin="8,0,0,0"
@@ -371,22 +371,22 @@
                     Margin="0,0,12,0"
                     Rows="1">
                     <controls:StatCard
-                        Accent="#1B7A3E"
-                        CardBackground="#E9F8EE"
+                        Accent="{DynamicResource Success}"
+                        CardBackground="{DynamicResource SuccessSoft}"
                         Title="Tayyor"
-                        TitleBrush="#2E8B57"
+                        TitleBrush="{DynamicResource Success}"
                         Value="{Binding TayyorAmount, StringFormat=N0}" />
                     <controls:StatCard
-                        Accent="#C62828"
-                        CardBackground="#FDECEA"
+                        Accent="{DynamicResource Danger}"
+                        CardBackground="{DynamicResource DangerSoft}"
                         Title="Aralash"
-                        TitleBrush="#C0564B"
+                        TitleBrush="{DynamicResource Danger}"
                         Value="{Binding AralashAmount, StringFormat=N0}" />
                     <controls:StatCard
-                        Accent="#0D47A1"
-                        CardBackground="#EEF2FF"
+                        Accent="{DynamicResource Accent}"
+                        CardBackground="{DynamicResource AccentSoft}"
                         Title="Eva"
-                        TitleBrush="#3F62B3"
+                        TitleBrush="{DynamicResource Accent}"
                         Value="{Binding EvaAmount, StringFormat=N0}" />
                 </UniformGrid>
 

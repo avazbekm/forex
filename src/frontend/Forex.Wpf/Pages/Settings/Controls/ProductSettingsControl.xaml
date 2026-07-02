@@ -136,7 +136,7 @@
 							</Border>
 							<StackPanel VerticalAlignment="Center">
 								<Button Content="📷 Rasm Yuklash" Command="{Binding UploadImageCommand}" Style="{StaticResource MaterialDesignRaisedButton}" md:ButtonAssist.CornerRadius="4" Height="32" Margin="0 0 0 10"/>
-								<Button Content="🗑 Rasmni O'chirish" Command="{Binding DeleteImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" Height="32" Foreground="#D32F2F" BorderBrush="#D32F2F"/>
+								<Button Content="🗑 Rasmni O'chirish" Command="{Binding DeleteImageCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" md:ButtonAssist.CornerRadius="4" Height="32" Foreground="{DynamicResource Danger}" BorderBrush="{DynamicResource Danger}"/>
 							</StackPanel>
 						</StackPanel>
 
@@ -195,7 +195,7 @@
 									<DataGridTemplateColumn.CellTemplate>
 										<DataTemplate>
 											<Button Command="{Binding DataContext.PrintLabelsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Yorliq chop etish" Width="32" Height="32">
-												<fa:IconImage Icon="Print" Width="14" Foreground="#2563EB"/>
+												<fa:IconImage Icon="Print" Width="14" Foreground="{DynamicResource Accent}"/>
 											</Button>
 										</DataTemplate>
 									</DataGridTemplateColumn.CellTemplate>
@@ -204,7 +204,7 @@
 									<DataGridTemplateColumn.CellTemplate>
 										<DataTemplate>
 											<Button Command="{Binding DataContext.DeleteProductTypeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="O'chirish" Width="32" Height="32">
-												<fa:IconImage Icon="Trash" Width="14" Foreground="#D32F2F"/>
+												<fa:IconImage Icon="Trash" Width="14" Foreground="{DynamicResource Danger}"/>
 											</Button>
 										</DataTemplate>
 									</DataGridTemplateColumn.CellTemplate>
@@ -226,7 +226,7 @@
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 md:ButtonAssist.CornerRadius="4"
                                 Height="40" Padding="20 0"
-                                Foreground="#D32F2F" BorderBrush="#D32F2F"/>
+                                Foreground="{DynamicResource Danger}" BorderBrush="{DynamicResource Danger}"/>
 					</StackPanel>
 				</Border>
 			</Grid>

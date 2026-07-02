@@ -36,6 +36,7 @@ public partial class BarcodePageViewModel : ViewModelBase
     public bool CanNext => CurrentPage < PageCount;
 
     [ObservableProperty] private ProductViewModel? selectedProduct;
+    [ObservableProperty] private ProductViewModel? detailProduct;
     [ObservableProperty] private ProductTypeViewModel? selectedType;
     [ObservableProperty] private ObservableCollection<string> units = ["Qop", "To'plam"];
     [ObservableProperty] private string selectedUnit = "Qop";
@@ -166,8 +167,17 @@ public partial class BarcodePageViewModel : ViewModelBase
 
     partial void OnSelectedProductChanged(ProductViewModel? value)
     {
-        SelectedType = value?.ProductTypes?.FirstOrDefault();
+        if (value is not null)
+            DetailProduct = value;
+    }
+
+    partial void OnDetailProductChanged(ProductViewModel? value)
+    {
         SelectedUnit = "Qop";
+        var firstType = value?.ProductTypes?.FirstOrDefault();
+        System.Windows.Application.Current?.Dispatcher.BeginInvoke(
+            System.Windows.Threading.DispatcherPriority.Background,
+            new Action(() => SelectedType = firstType));
     }
 
     [RelayCommand]
@@ -189,14 +199,16 @@ public partial class BarcodePageViewModel : ViewModelBase
     [RelayCommand]
     private void Show()
     {
-        if (SelectedProduct is null || SelectedType is null)
+        var product = DetailProduct;
+        var type = SelectedType ?? product?.ProductTypes?.FirstOrDefault();
+        if (product is null || type is null)
         {
             WarningMessage = "Mahsulot va razmerni tanlang.";
             return;
         }
 
         if (Copies < 1) Copies = 1;
-        OpenPopup(SelectedProduct, SelectedType, SelectedUnit == "To'plam");
+        OpenPopup(product, type, SelectedUnit == "To'plam");
     }
 
     private void OpenPopup(ProductViewModel product, ProductTypeViewModel type, bool isPachka)
@@ -223,16 +235,22 @@ public partial class BarcodePageViewModel : ViewModelBase
     {
         if (!IsPopupOpen || string.IsNullOrWhiteSpace(Barcode)) return;
 
+        var count = Math.Clamp(Copies, 1, 500);
+        Copies = count;
+
         var label = new LabelItem(Title, Size, UnitLabel, Pairs, Barcode);
-        if (LabelPrintService.Print([label], AppPreferences.Instance.LabelPrinter, Copies))
+        if (LabelPrintService.Print([label], AppPreferences.Instance.LabelPrinter, count))
         {
-            SuccessMessage = $"{(Copies > 0 ? Copies : 1)} ta yorliq chop etishga yuborildi.";
+            SuccessMessage = $"{count} ta yorliq chop etishga yuborildi.";
             ClosePopup();
         }
     }
 
     [RelayCommand]
-    private void IncrementCopies() => Copies++;
+    private void IncrementCopies()
+    {
+        if (Copies < 500) Copies++;
+    }
 
     [RelayCommand]
     private void DecrementCopies()

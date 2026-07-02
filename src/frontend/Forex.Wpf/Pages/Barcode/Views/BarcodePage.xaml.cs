@@ -5,6 +5,7 @@ using Forex.Wpf.Pages.Barcode.ViewModels;
 using Forex.Wpf.Pages.Home;
 using Forex.Wpf.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -53,8 +54,29 @@ public partial class BarcodePage : Page
         {
             if (e.Key != Key.Enter) return;
             e.Handled = true;
+
+            var text = copiesBox.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(text) && BarcodeResolver.Resolve(vm.AvailableProducts, text) is not null)
+            {
+                vm.ScanCommand.Execute(text);
+                copiesBox.Text = vm.Copies.ToString();
+                copiesBox.SelectAll();
+                return;
+            }
+
+            NormalizeCopies(copiesBox);
             vm.PrintCommand.Execute(null);
         };
+
+        copiesBox.LostFocus += (_, _) => NormalizeCopies(copiesBox);
+        copiesBoxSide.LostFocus += (_, _) => NormalizeCopies(copiesBoxSide);
+    }
+
+    private void NormalizeCopies(TextBox box)
+    {
+        var n = int.TryParse(box.Text, out var c) ? Math.Clamp(c, 1, 500) : 1;
+        vm.Copies = n;
+        box.Text = n.ToString();
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

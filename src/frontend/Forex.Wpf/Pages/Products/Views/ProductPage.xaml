@@ -42,14 +42,14 @@
                     <Border
                         Width="42"
                         Height="42"
-                        Background="#E8EDFB"
+                        Background="{DynamicResource AccentSoft}"
                         CornerRadius="11">
                         <md:PackIcon
                             Width="24"
                             Height="24"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#3B5BDB"
+                            Foreground="{DynamicResource Accent}"
                             Kind="PackageVariant" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -241,10 +241,10 @@
                     Margin="2,0,0,0"
                     Padding="16,0"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="#16A34A"
+                    Background="{DynamicResource SuccessStrong}"
                     BorderThickness="0"
                     Command="{Binding SaveCommand}"
-                    Foreground="White"
+                    Foreground="{DynamicResource OnAccent}"
                     FontSize="14">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="ContentSave" />
@@ -260,10 +260,10 @@
                     Padding="14,0"
                     md:ButtonAssist.CornerRadius="9"
                     Background="{DynamicResource SurfaceCard}"
-                    BorderBrush="#E11D48"
+                    BorderBrush="{DynamicResource Danger}"
                     BorderThickness="1"
                     Command="{Binding CancelCommand}"
-                    Foreground="#E11D48"
+                    Foreground="{DynamicResource Danger}"
                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
                     FontSize="14">
                         <StackPanel Orientation="Horizontal">
@@ -371,10 +371,10 @@
                             Height="30"
                             Padding="14,0"
                             md:ButtonAssist.CornerRadius="9"
-                            Background="#15803D"
+                            Background="{DynamicResource SuccessStrong}"
                             BorderThickness="0"
                             Command="{Binding ExportToExcelCommand}"
-                            Foreground="White">
+                            Foreground="{DynamicResource OnAccent}">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon
                                     Width="16"
@@ -557,24 +557,24 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="0" Background="#EEF2FF" Style="{StaticResource StatChip}">
+                        <Border Grid.Column="0" Background="{DynamicResource AccentSoft}" Style="{StaticResource StatChip}">
                             <StackPanel>
-                                <TextBlock FontSize="12" Foreground="#6470B0" Text="Kirimlar" />
-                                <TextBlock Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="#3949AB" Text="{Binding TotalEntries, Mode=OneWay}" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource InkSecondary}" Text="Kirimlar" />
+                                <TextBlock Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource Accent}" Text="{Binding TotalEntries, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="1" Background="#FFF6E6" Style="{StaticResource StatChip}">
+                        <Border Grid.Column="1" Background="{DynamicResource WarningSoft}" Style="{StaticResource StatChip}">
                             <StackPanel>
-                                <TextBlock FontSize="12" Foreground="#B7791F" Text="Jami dona" />
-                                <TextBlock Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="#A66A12" Text="{Binding TotalStockCount, StringFormat={}{0:N0}, Mode=OneWay}" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource Warning}" Text="Jami dona" />
+                                <TextBlock Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource Warning}" Text="{Binding TotalStockCount, StringFormat={}{0:N0}, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="2" Background="#E9F8EE" Style="{StaticResource StatChip}">
+                        <Border Grid.Column="2" Background="{DynamicResource SuccessSoft}" Style="{StaticResource StatChip}">
                             <StackPanel>
-                                <TextBlock FontSize="12" Foreground="#2E8B57" Text="Jami summa (so'm)" />
-                                <TextBlock Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="#1B7A3E" Text="{Binding TotalStockValue, StringFormat={}{0:N0}, Mode=OneWay}" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource Success}" Text="Jami summa (so'm)" />
+                                <TextBlock Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource Success}" Text="{Binding TotalStockValue, StringFormat={}{0:N0}, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -635,7 +635,7 @@
                                                             </MultiBinding>
                                                         </DataTrigger.Binding>
                                                         <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}" />
-                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource OnAccent}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

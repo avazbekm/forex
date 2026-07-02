@@ -12,9 +12,10 @@
     ResizeMode="NoResize"
     ShowInTaskbar="False"
     WindowStartupLocation="CenterOwner"
-    WindowStyle="SingleBorderWindow">
+    WindowStyle="SingleBorderWindow"
+    Background="{DynamicResource PrimaryBackground}">
 
-    <Grid Margin="15">
+    <Grid Margin="15" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -46,10 +47,10 @@
         <Separator Grid.Row="3" Grid.ColumnSpan="2" Margin="0,5" />
 
         <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,5" Text="Kerakli miqdor:" />
-        <TextBlock x:Name="txtNeeded" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="#E53935" FontWeight="SemiBold" />
+        <TextBlock x:Name="txtNeeded" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="{DynamicResource Danger}" FontWeight="SemiBold" />
 
         <TextBlock Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,5" Text="Omborda:" />
-        <TextBlock x:Name="txtStock" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="#EF6C00" FontWeight="SemiBold" />
+        <TextBlock x:Name="txtStock" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="{DynamicResource Warning}" FontWeight="SemiBold" />
 
         <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,5" Text="1 qopda:" />
         <TextBlock x:Name="txtBundleInfo" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Margin="0,5" Foreground="{DynamicResource InkSecondary}" />
@@ -84,21 +85,21 @@
                 Width="110"
                 Height="32"
                 Margin="5"
-                Background="#3B82F6"
-                BorderBrush="#2563EB"
+                Background="{DynamicResource Accent}"
+                BorderBrush="{DynamicResource Accent}"
                 BorderThickness="1"
                 Click="BtnSave_Click"
                 Content="Saqlash"
-                Foreground="White" />
+                Foreground="{DynamicResource OnAccent}" />
             <Button
                 Width="110"
                 Height="32"
                 Margin="5"
-                Background="#E5E7EB"
+                Background="{DynamicResource SurfaceMuted}"
                 BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="1"
                 Content="Bekor qilish"
-                Foreground="#333"
+                Foreground="{DynamicResource InkPrimary}"
                 IsCancel="True" />
         </StackPanel>
     </Grid>

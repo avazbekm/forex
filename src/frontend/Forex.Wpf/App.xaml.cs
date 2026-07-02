@@ -52,8 +52,8 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
-        // 0. Mavzu hozircha muzlatilgan — doim yorug' rejim
-        Common.Services.ThemeService.Apply(false);
+        // 0. Saqlangan mavzuni qo'llaymiz (yorug'/tungi)
+        Common.Services.ThemeService.Apply(Common.Services.AppPreferences.Instance.DarkTheme);
 
         // 1. Hostni ishga tushiramiz
         await AppHost!.StartAsync();

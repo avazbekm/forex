@@ -29,14 +29,14 @@
 				<Border
                     Width="36"
                     Height="36"
-                    Background="#E8EDFB"
+                    Background="{DynamicResource AccentSoft}"
                     CornerRadius="10">
 					<md:PackIcon
                         Width="20"
                         Height="20"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="#3B5BDB"
+                        Foreground="{DynamicResource Accent}"
                         Kind="CartPlus" />
 				</Border>
 				<TextBlock
@@ -52,21 +52,21 @@
                 Padding="14,5"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Background="#E8EDFB"
+                Background="{DynamicResource AccentSoft}"
                 CornerRadius="9">
 				<StackPanel Orientation="Horizontal">
 					<md:PackIcon
                         Width="16"
                         Height="16"
                         VerticalAlignment="Center"
-                        Foreground="#3B5BDB"
+                        Foreground="{DynamicResource Accent}"
                         Kind="CashMultiple" />
 					<TextBlock
                         Margin="6,0,0,0"
                         VerticalAlignment="Center"
                         FontSize="13"
                         FontWeight="SemiBold"
-                        Foreground="#3B5BDB"
+                        Foreground="{DynamicResource Accent}"
                         Text="{Binding Customer.CurrencyCode, StringFormat='Qaytarish valyutasi: {0}', FallbackValue='Mijoz tanlang', TargetNullValue='Mijoz tanlang'}" />
 				</StackPanel>
 			</Border>
@@ -391,11 +391,11 @@
                     Padding="14,0"
                     md:ButtonAssist.CornerRadius="9"
                     Background="{DynamicResource SurfaceCard}"
-                    BorderBrush="#E11D48"
+                    BorderBrush="{DynamicResource Danger}"
                     BorderThickness="1"
                     Command="{Binding CancelEditCommand}"
                     FontSize="14"
-                    Foreground="#E11D48"
+                    Foreground="{DynamicResource Danger}"
                     Visibility="{Binding IsEditingItem, Converter={StaticResource BoolToVisibilityConverter}}">
 					<StackPanel Orientation="Horizontal">
 						<md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Close" />
@@ -410,11 +410,11 @@
                     Margin="2,0"
                     Padding="16,0"
                     md:ButtonAssist.CornerRadius="9"
-                    Background="#16A34A"
+                    Background="{DynamicResource SuccessStrong}"
                     BorderThickness="0"
                     Command="{Binding AddCommand}"
                     FontSize="14"
-                    Foreground="White">
+                    Foreground="{DynamicResource OnAccent}">
 					<StackPanel Orientation="Horizontal">
 						<md:PackIcon Width="16" Height="16" VerticalAlignment="Center" Kind="Plus" />
 						<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Qo'shish" />
@@ -428,6 +428,8 @@
                 x:Name="dataGrid"
                 AlternatingRowBackground="{DynamicResource SurfaceMuted}"
                 AutoGenerateColumns="False"
+                Background="{DynamicResource SurfaceCard}"
+                RowBackground="{DynamicResource SurfaceCard}"
                 BorderBrush="{DynamicResource HairlineBorder}"
                 BorderThickness="2"
                 CanUserAddRows="False"
@@ -581,28 +583,28 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Margin="0,0,8,0" Padding="14,8" Background="#EEF2FF" CornerRadius="10">
+            <Border Grid.Column="0" Margin="0,0,8,0" Padding="14,8" Background="{DynamicResource AccentSoft}" CornerRadius="10">
                 <StackPanel>
-                    <TextBlock FontSize="11" Foreground="#6470B0" Text="Qatorlar" />
-                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#3949AB" Text="{Binding TotalRowsCount}" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource InkSecondary}" Text="Qatorlar" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Accent}" Text="{Binding TotalRowsCount}" />
                 </StackPanel>
             </Border>
-            <Border Grid.Column="1" Margin="0,0,8,0" Padding="14,8" Background="#E6FBF6" CornerRadius="10">
+            <Border Grid.Column="1" Margin="0,0,8,0" Padding="14,8" Background="{DynamicResource TealSoft}" CornerRadius="10">
                 <StackPanel>
-                    <TextBlock FontSize="11" Foreground="#0F9488" Text="Turli mahsulot" />
-                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#0D8276" Text="{Binding DistinctProductsCount}" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Teal}" Text="Turli mahsulot" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Teal}" Text="{Binding DistinctProductsCount}" />
                 </StackPanel>
             </Border>
-            <Border Grid.Column="2" Margin="0,0,8,0" Padding="14,8" Background="#FFF6E6" CornerRadius="10">
+            <Border Grid.Column="2" Margin="0,0,8,0" Padding="14,8" Background="{DynamicResource WarningSoft}" CornerRadius="10">
                 <StackPanel>
-                    <TextBlock FontSize="11" Foreground="#B7791F" Text="Jami qoplar" />
-                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#A66A12" Text="{Binding TotalBundlesCount}" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Warning}" Text="Jami qoplar" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Warning}" Text="{Binding TotalBundlesCount}" />
                 </StackPanel>
             </Border>
-            <Border Grid.Column="3" Padding="14,8" Background="#E9F8EE" CornerRadius="10">
+            <Border Grid.Column="3" Padding="14,8" Background="{DynamicResource SuccessSoft}" CornerRadius="10">
                 <StackPanel>
-                    <TextBlock FontSize="11" Foreground="#2E8B57" Text="Jami soni" />
-                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="#1B7A3E" Text="{Binding TotalQuantityCount}" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Success}" Text="Jami soni" />
+                    <TextBlock Margin="0,2,0,0" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Success}" Text="{Binding TotalQuantityCount}" />
                 </StackPanel>
             </Border>
         </Grid>
@@ -620,10 +622,10 @@
                 Padding="16,0"
                 md:ButtonAssist.CornerRadius="9"
                 Background="{DynamicResource SurfaceCard}"
-                BorderBrush="#E11D48"
+                BorderBrush="{DynamicResource Danger}"
                 BorderThickness="1"
                 Command="{Binding ClearSaleCommand}"
-                Foreground="#E11D48"
+                Foreground="{DynamicResource Danger}"
                 ToolTip="Barcha ma'lumotlarni tozalash">
 				<StackPanel Orientation="Horizontal">
 					<md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="DeleteSweepOutline" />
@@ -637,10 +639,10 @@
                 Padding="22,0"
                 md:ButtonAssist.CornerRadius="9"
                 md:ElevationAssist.Elevation="Dp2"
-                Background="#16A34A"
+                Background="{DynamicResource SuccessStrong}"
                 BorderThickness="0"
                 Command="{Binding SubmitCommand}"
-                Foreground="White">
+                Foreground="{DynamicResource OnAccent}">
 				<StackPanel Orientation="Horizontal">
 					<md:PackIcon Width="18" Height="18" VerticalAlignment="Center" Kind="Check" />
 					<TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Yuborish" />
@@ -651,7 +653,7 @@
 
 		<Grid
             Grid.RowSpan="5"
-            Background="#AA000000"
+            Background="{DynamicResource Scrim}"
             IsHitTestVisible="{Binding IsPopupOpen}"
             PreviewMouseDown="ClosePopup_MouseDown"
             Visibility="{Binding IsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -720,7 +722,7 @@
                             <TextBlock Grid.Row="8" Grid.Column="2" FontSize="16" Text="{Binding PopupItem.UnitPrice, StringFormat={}{0:N2}}" />
 
                             <TextBlock Grid.Row="10" Grid.Column="0" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkSecondary}" Text="Jami summa:" />
-                            <TextBlock Grid.Row="10" Grid.Column="2" FontSize="20" FontWeight="Bold" Foreground="Green" Text="{Binding PopupItem.Amount, StringFormat={}{0:N2}}" />
+                            <TextBlock Grid.Row="10" Grid.Column="2" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource Success}" Text="{Binding PopupItem.Amount, StringFormat={}{0:N2}}" />
                         </Grid>
                     </StackPanel>
 

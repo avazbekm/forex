@@ -1,5 +1,6 @@
 namespace Forex.Wpf.Common.Services;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Printing;
@@ -14,6 +15,7 @@ public sealed record LabelItem(string Title, string Size, string UnitLabel, int 
 public static class LabelPrintService
 {
     private const double MmToDip = 96.0 / 25.4;
+    private const int MaxCopies = 500;
 
     public static bool Print(IReadOnlyCollection<LabelItem> labels, string? printerName, int copies, double widthMm = 60, double heightMm = 40)
     {
@@ -30,9 +32,18 @@ public static class LabelPrintService
             return false;
         }
 
-        var queue = new LocalPrintServer()
-            .GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections })
-            .FirstOrDefault(q => q.FullName == printerName);
+        PrintQueue? queue;
+        try
+        {
+            queue = new LocalPrintServer()
+                .GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections })
+                .FirstOrDefault(q => q.FullName == printerName);
+        }
+        catch
+        {
+            MessageBox.Show("Printerlar ro'yxatini olib bo'lmadi. Windows Print Spooler xizmati ishlayotganini tekshiring.", "Yorliq", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
 
         if (queue is null)
         {
@@ -40,8 +51,16 @@ public static class LabelPrintService
             return false;
         }
 
-        new PrintDialog { PrintQueue = queue }
-            .PrintDocument(BuildDocument(valid, copies > 0 ? copies : 1, widthMm, heightMm).DocumentPaginator, "Yorliqlar");
+        try
+        {
+            new PrintDialog { PrintQueue = queue }
+                .PrintDocument(BuildDocument(valid, Math.Clamp(copies, 1, MaxCopies), widthMm, heightMm).DocumentPaginator, "Yorliqlar");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Chop etishda xatolik: {ex.Message}", "Yorliq", MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
 
         return true;
     }
@@ -122,20 +141,23 @@ public static class LabelPrintService
         doc.DocumentPaginator.PageSize = new Size(pageWidth, pageHeight);
 
         foreach (var label in labels)
+        {
+            var barcode = BarcodeImageService.Render(label.Barcode!);
             for (var i = 0; i < copies; i++)
             {
                 var page = new FixedPage { Width = pageWidth, Height = pageHeight, Background = Brushes.White };
-                page.Children.Add(BuildLabel(label, pageWidth, pageHeight));
+                page.Children.Add(BuildLabel(label, barcode, pageWidth, pageHeight));
 
                 var content = new PageContent();
                 ((IAddChild)content).AddChild(page);
                 doc.Pages.Add(content);
             }
+        }
 
         return doc;
     }
 
-    private static UIElement BuildLabel(LabelItem label, double pageWidth, double pageHeight)
+    private static UIElement BuildLabel(LabelItem label, ImageSource barcode, double pageWidth, double pageHeight)
     {
         var ink = new SolidColorBrush(Color.FromRgb(0x12, 0x18, 0x22));
 
@@ -182,7 +204,7 @@ public static class LabelPrintService
 
         panel.Children.Add(new Image
         {
-            Source = BarcodeImageService.Render(label.Barcode!),
+            Source = barcode,
             Width = pageWidth - 20,
             Height = 46,
             Stretch = Stretch.Fill

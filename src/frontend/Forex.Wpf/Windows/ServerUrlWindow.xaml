@@ -8,7 +8,7 @@
     Height="230"
     WindowStartupLocation="CenterOwner"
     ResizeMode="NoResize">
-    <Border Padding="18" Background="{DynamicResource PrimaryBackground}">
+    <Border Padding="18" Background="{DynamicResource PrimaryBackground}" TextElement.Foreground="{DynamicResource InkPrimary}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

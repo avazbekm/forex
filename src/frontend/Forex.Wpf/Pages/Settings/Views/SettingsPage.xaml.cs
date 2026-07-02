@@ -66,14 +66,7 @@ public partial class SettingsPage : Page
             targetElement: this,
             key: Key.F5,
             targetAction: () => tabControl.SelectedIndex = 4,
-            tooltipText: "Ko'rinish sozlamalari (F5)"
-        );
-
-        ShortcutAttacher.RegisterShortcut(
-            targetElement: this,
-            key: Key.F6,
-            targetAction: () => tabControl.SelectedIndex = 5,
-            tooltipText: "Printer sozlamalari (F6)"
+            tooltipText: "Dastur sozlamalari (F5)"
         );
     }
 

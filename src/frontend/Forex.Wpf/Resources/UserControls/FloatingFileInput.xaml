@@ -28,7 +28,7 @@
                 <TextBox
                     x:Name="input"
                     VerticalContentAlignment="Center"
-                    Background="{DynamicResource InputBackground}"
+                    Background="{DynamicResource SurfaceCard}"
                     BorderThickness="0"
                     IsReadOnly="True"
                     Style="{x:Null}"

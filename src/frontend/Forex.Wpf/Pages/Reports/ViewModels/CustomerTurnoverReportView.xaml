@@ -130,10 +130,10 @@
                         Margin="5,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#673AB7"
+                        Background="{DynamicResource IconViolet}"
                         BorderThickness="0"
                         Command="{Binding PreviewCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Ko'rish">
                         <md:PackIcon Width="18" Height="18" Kind="Eye" />
@@ -143,10 +143,10 @@
                         Margin="5,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#00897B"
+                        Background="{DynamicResource Teal}"
                         BorderThickness="0"
                         Command="{Binding PrintCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Pechat">
                         <md:PackIcon Width="18" Height="18" Kind="Printer" />
@@ -156,10 +156,10 @@
                         Margin="5,0,0,0"
                         Padding="12,0"
                         md:ButtonAssist.CornerRadius="9"
-                        Background="#15803D"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Command="{Binding ExportToExcelCommand}"
-                        Foreground="White"
+                        Foreground="{DynamicResource OnAccent}"
                         IsEnabled="{Binding HasData}"
                         ToolTip="Excel">
                         <md:PackIcon Width="18" Height="18" Kind="FileExcel" />
@@ -228,7 +228,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right" />
                             <Setter Property="Padding" Value="0,0,12,0" />
-                            <Setter Property="Foreground" Value="#C62828" />
+                            <Setter Property="Foreground" Value="{DynamicResource Danger}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
@@ -240,7 +240,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Right" />
                             <Setter Property="Padding" Value="0,0,12,0" />
-                            <Setter Property="Foreground" Value="#1B5E20" />
+                            <Setter Property="Foreground" Value="{DynamicResource Success}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                         </Style>
@@ -280,7 +280,7 @@
                         Width="20"
                         Height="20"
                         VerticalAlignment="Center"
-                        Foreground="#3949AB"
+                        Foreground="{DynamicResource Accent}"
                         Kind="ChartLine" />
                     <TextBlock
                         Margin="8,0,0,0"
@@ -317,30 +317,30 @@
                     Margin="0,0,12,0"
                     Rows="1">
                     <controls:StatCard
-                        Accent="#3949AB"
-                        CardBackground="#EEF2FF"
+                        Accent="{DynamicResource Accent}"
+                        CardBackground="{DynamicResource AccentSoft}"
                         Caption="{Binding SettlementCurrencyCode}"
                         Title="Boshlang'ich qoldiq"
-                        TitleBrush="#6470B0"
+                        TitleBrush="{DynamicResource InkSecondary}"
                         Value="{Binding BeginBalance, StringFormat=N2}" />
                     <controls:StatCard
-                        Accent="#C62828"
-                        CardBackground="#FDECEA"
+                        Accent="{DynamicResource Danger}"
+                        CardBackground="{DynamicResource DangerSoft}"
                         Title="Jami chiqim"
-                        TitleBrush="#C0564B"
+                        TitleBrush="{DynamicResource Danger}"
                         Value="{Binding SummaryDebit, StringFormat=N0}" />
                     <controls:StatCard
-                        Accent="#1B7A3E"
-                        CardBackground="#E9F8EE"
+                        Accent="{DynamicResource Success}"
+                        CardBackground="{DynamicResource SuccessSoft}"
                         Title="Jami kirim"
-                        TitleBrush="#2E8B57"
+                        TitleBrush="{DynamicResource Success}"
                         Value="{Binding SummaryCredit, StringFormat=N0}" />
                     <controls:StatCard
-                        Accent="#A66A12"
-                        CardBackground="#FFF6E6"
+                        Accent="{DynamicResource Warning}"
+                        CardBackground="{DynamicResource WarningSoft}"
                         Caption="{Binding SettlementCurrencyCode}"
                         Title="Oxirgi qoldiq"
-                        TitleBrush="#B7791F"
+                        TitleBrush="{DynamicResource Warning}"
                         Value="{Binding LastBalance, StringFormat=N2}" />
                 </UniformGrid>
 

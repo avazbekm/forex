@@ -42,14 +42,14 @@
                     <Border
                         Width="42"
                         Height="42"
-                        Background="#E8EDFB"
+                        Background="{DynamicResource AccentSoft}"
                         CornerRadius="11">
                         <md:PackIcon
                             Width="24"
                             Height="24"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#3B5BDB"
+                            Foreground="{DynamicResource Accent}"
                             Kind="CashMultiple" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -449,8 +449,8 @@
                             Margin="10,0,0,0"
                             Padding="0"
                             md:ElevationAssist.Elevation="Dp8"
-                            Background="#FF6B6B"
-                            BorderBrush="#D32F2F"
+                            Background="{DynamicResource Danger}"
+                            BorderBrush="{DynamicResource Danger}"
                             Command="{Binding CancelCommand}"
                             Content="Bekor qilish"
                             Foreground="{StaticResource SuccessButtonForeground}"
@@ -559,10 +559,10 @@
                             Height="30"
                             Padding="14,0"
                             md:ButtonAssist.CornerRadius="9"
-                            Background="#15803D"
+                            Background="{DynamicResource SuccessStrong}"
                             BorderThickness="0"
                             Command="{Binding ExportToExcelCommand}"
-                            Foreground="White">
+                            Foreground="{DynamicResource OnAccent}">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon
                                     Width="16"
@@ -721,19 +721,19 @@
 
                 <Border
                     Grid.Column="0"
-                    Background="#E9F8EE"
+                    Background="{DynamicResource SuccessSoft}"
                     Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock
                             FontSize="12"
                             FontWeight="Medium"
-                            Foreground="#2E8B57"
+                            Foreground="{DynamicResource Success}"
                             Text="Jami kirim" />
                         <TextBlock
                             Margin="0,2,0,0"
                             FontSize="22"
                             FontWeight="Bold"
-                            Foreground="#1B7A3E">
+                            Foreground="{DynamicResource Success}">
                             <Run Text="{Binding TotalIncome, StringFormat={}{0:N2}}" />
                             <Run Text=" so'm" />
                         </TextBlock>
@@ -742,19 +742,19 @@
 
                 <Border
                     Grid.Column="1"
-                    Background="#FDECEC"
+                    Background="{DynamicResource DangerSoft}"
                     Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock
                             FontSize="12"
                             FontWeight="Medium"
-                            Foreground="#C0392B"
+                            Foreground="{DynamicResource Danger}"
                             Text="Jami chiqim" />
                         <TextBlock
                             Margin="0,2,0,0"
                             FontSize="22"
                             FontWeight="Bold"
-                            Foreground="#D32F2F">
+                            Foreground="{DynamicResource Danger}">
                             <Run Text="{Binding TotalExpense, StringFormat={}{0:N2}}" />
                             <Run Text=" so'm" />
                         </TextBlock>
@@ -763,21 +763,21 @@
 
                 <Border
                     Grid.Column="2"
-                    Background="#EEF2FF"
+                    Background="{DynamicResource AccentSoft}"
                     Style="{StaticResource StatCard}">
                     <StackPanel>
                         <TextBlock
                             FontSize="12"
                             FontWeight="Medium"
-                            Foreground="#6470B0"
+                            Foreground="{DynamicResource InkSecondary}"
                             Text="Sof natija" />
                         <TextBlock Margin="0,2,0,0" FontSize="22" FontWeight="Bold">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#3949AB" />
+                                    <Setter Property="Foreground" Value="{DynamicResource Accent}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding NetAmount, Converter={StaticResource NumberToBoolConverter}}" Value="False">
-                                            <Setter Property="Foreground" Value="#D32F2F" />
+                                            <Setter Property="Foreground" Value="{DynamicResource Danger}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

@@ -13,7 +13,7 @@
     Loaded="Page_Loaded"
     mc:Ignorable="d">
 
-    <Grid Background="#1E1E2F">
+    <Grid Background="{DynamicResource SurfacePage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -24,7 +24,7 @@
             Padding="20"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Background="#2D2D44"
+            Background="{DynamicResource SurfaceCard}"
             CornerRadius="12"
             Effect="{DynamicResource MaterialDesignElevationShadow8}"
             Opacity="0">
@@ -33,7 +33,7 @@
                     Margin="0,0,0,20"
                     FontSize="24"
                     FontWeight="Bold"
-                    Foreground="White"
+                    Foreground="{DynamicResource InkPrimary}"
                     Text="Create account 📝" />
 
                 <TextBox
@@ -41,61 +41,61 @@
                     Margin="0,0,0,10"
                     Padding="8"
                     md:HintAssist.Hint="Full name"
-                    Background="#3A3A55"
+                    Background="{DynamicResource SurfaceMuted}"
                     BorderThickness="0"
                     FontSize="16"
-                    Foreground="White" />
+                    Foreground="{DynamicResource InkPrimary}" />
 
                 <TextBox
                     x:Name="tbEmail"
                     Margin="0,0,0,10"
                     Padding="8"
                     md:HintAssist.Hint="Email"
-                    Background="#3A3A55"
+                    Background="{DynamicResource SurfaceMuted}"
                     BorderThickness="0"
                     FontSize="16"
-                    Foreground="White" />
+                    Foreground="{DynamicResource InkPrimary}" />
 
                 <TextBox
                     x:Name="tbPhone"
                     Margin="0,0,0,10"
                     Padding="8"
                     md:HintAssist.Hint="Phone"
-                    Background="#3A3A55"
+                    Background="{DynamicResource SurfaceMuted}"
                     BorderThickness="0"
                     FontSize="16"
-                    Foreground="White" />
+                    Foreground="{DynamicResource InkPrimary}" />
 
                 <PasswordBox
                     x:Name="pbPassword"
                     Margin="0,0,0,10"
                     Padding="8"
                     md:HintAssist.Hint="Password"
-                    Background="#3A3A55"
+                    Background="{DynamicResource SurfaceMuted}"
                     BorderThickness="0"
                     FontSize="16"
-                    Foreground="White" />
+                    Foreground="{DynamicResource InkPrimary}" />
 
                 <PasswordBox
                     x:Name="pbConfirm"
                     Margin="0,0,0,10"
                     Padding="8"
                     md:HintAssist.Hint="Confirm password"
-                    Background="#3A3A55"
+                    Background="{DynamicResource SurfaceMuted}"
                     BorderThickness="0"
                     FontSize="16"
-                    Foreground="White" />
+                    Foreground="{DynamicResource InkPrimary}" />
 
                 <Button
                     x:Name="btnRegister"
                     Padding="8"
                     md:ButtonAssist.CornerRadius="6"
-                    Background="#4C8EF7"
+                    Background="{DynamicResource Accent}"
                     BorderThickness="0"
                     Click="BtnRegister_Click"
                     Content="📝 Register"
                     FontWeight="Bold"
-                    Foreground="White"
+                    Foreground="{DynamicResource OnAccent}"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolToBoolConverter}}" />
 
                 <Button
@@ -105,19 +105,19 @@
                     BorderThickness="0"
                     Click="BtnGoLogin_Click"
                     Content="Back to login"
-                    Foreground="#AABBDD" />
+                    Foreground="{DynamicResource BorderStrong}" />
 
                 <TextBlock
                     x:Name="lblError"
                     Margin="0,10,0,0"
-                    Foreground="Crimson"
+                    Foreground="{DynamicResource Danger}"
                     TextWrapping="Wrap"
                     Visibility="Collapsed" />
 
                 <TextBlock
                     x:Name="lblOk"
                     Margin="0,5,0,0"
-                    Foreground="LightGreen"
+                    Foreground="{DynamicResource Success}"
                     TextWrapping="Wrap"
                     Visibility="Collapsed" />
             </StackPanel>

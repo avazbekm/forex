@@ -37,11 +37,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="chip" Property="Background" Value="#3B5BDB" />
-                                <Setter TargetName="txt" Property="Foreground" Value="White" />
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource OnAccent}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="chip" Property="BorderBrush" Value="#C2CCE8" />
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -72,11 +72,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="chip" Property="Background" Value="#3B5BDB" />
-                                <Setter TargetName="txt" Property="Foreground" Value="White" />
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource OnAccent}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="chip" Property="BorderBrush" Value="#C2CCE8" />
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -107,11 +107,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="chip" Property="Background" Value="#3B5BDB" />
-                                <Setter TargetName="txt" Property="Foreground" Value="White" />
+                                <Setter TargetName="chip" Property="Background" Value="{DynamicResource Accent}" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource OnAccent}" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="chip" Property="BorderBrush" Value="#C2CCE8" />
+                                <Setter TargetName="chip" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -128,12 +128,12 @@
 
         <Grid Grid.Row="0">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Width="36" Height="36" Background="#E8EDFB" CornerRadius="10">
+                <Border Width="36" Height="36" Background="{DynamicResource AccentSoft}" CornerRadius="10">
                     <md:PackIcon
                         Width="20" Height="20"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="#3B5BDB"
+                        Foreground="{DynamicResource Accent}"
                         Kind="BarcodeScan" />
                 </Border>
                 <TextBlock
@@ -276,11 +276,11 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="bd" Property="BorderBrush" Value="#3B5BDB" />
-                                                    <Setter TargetName="bd" Property="Background" Value="#EEF2FF" />
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                                                    <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}" />
                                                 </Trigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="BorderBrush" Value="#C2CCE8" />
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -383,7 +383,7 @@
                             <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedProduct}" Value="{x:Null}">
+                                    <DataTrigger Binding="{Binding DetailProduct}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Visible" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -392,7 +392,7 @@
                         <md:PackIcon
                             Width="48" Height="48"
                             HorizontalAlignment="Center"
-                            Foreground="#C2CCE8"
+                            Foreground="{DynamicResource BorderStrong}"
                             Kind="BarcodeScan" />
                         <TextBlock
                             Margin="0,12,0,0"
@@ -409,7 +409,7 @@
                             <Style TargetType="ScrollViewer">
                                 <Setter Property="Visibility" Value="Visible" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedProduct}" Value="{x:Null}">
+                                    <DataTrigger Binding="{Binding DetailProduct}" Value="{x:Null}">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -420,19 +420,19 @@
                                 Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"
                                 Background="{DynamicResource SurfaceMuted}"
                                 CornerRadius="10">
-                                <Image Source="{Binding SelectedProduct.DisplayImagePath, Converter={StaticResource ImageResolver}}" Stretch="Uniform" />
+                                <Image Source="{Binding DetailProduct.DisplayImagePath, Converter={StaticResource ImageResolver}}" Stretch="Uniform" />
                             </Border>
 
                             <TextBlock
                                 Margin="0,12,0,0"
                                 FontSize="18"
                                 FontWeight="Bold"
-                                Text="{Binding SelectedProduct.Code}"
+                                Text="{Binding DetailProduct.Code}"
                                 TextTrimming="CharacterEllipsis" />
                             <TextBlock
                                 FontSize="13"
                                 Foreground="{DynamicResource InkMuted}"
-                                Text="{Binding SelectedProduct.Name}"
+                                Text="{Binding DetailProduct.Name}"
                                 TextWrapping="Wrap" />
 
                             <TextBlock Style="{StaticResource SectionLabel}" Text="RAZMER" />
@@ -440,7 +440,7 @@
                                 Background="Transparent"
                                 BorderThickness="0"
                                 ItemContainerStyle="{StaticResource ChipSize}"
-                                ItemsSource="{Binding SelectedProduct.ProductTypes}"
+                                ItemsSource="{Binding DetailProduct.ProductTypes}"
                                 Padding="0"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
@@ -491,6 +491,7 @@
                                         FontWeight="Bold"
                                         Foreground="{DynamicResource InkSecondary}" />
                                     <TextBox
+                                        x:Name="copiesBoxSide"
                                         Grid.Column="1"
                                         Background="Transparent"
                                         BorderThickness="0"
@@ -518,10 +519,10 @@
                                 Margin="0,22,0,0"
                                 md:ButtonAssist.CornerRadius="9"
                                 md:ElevationAssist.Elevation="Dp2"
-                                Background="#3B5BDB"
+                                Background="{DynamicResource Accent}"
                                 BorderThickness="0"
                                 Command="{Binding ShowCommand}"
-                                Foreground="White">
+                                Foreground="{DynamicResource OnAccent}">
                                 <StackPanel Orientation="Horizontal">
                                     <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Kind="Check" />
                                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="Tasdiqlash" />
@@ -536,7 +537,7 @@
         <!--  MODAL  -->
         <Grid
             Grid.RowSpan="2"
-            Background="#AA000000"
+            Background="{DynamicResource Scrim}"
             IsHitTestVisible="{Binding IsPopupOpen}"
             PreviewMouseDown="ClosePopup_MouseDown"
             Visibility="{Binding IsPopupOpen, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -562,11 +563,11 @@
                             Text="{Binding Title}"
                             TextWrapping="Wrap" />
                         <StackPanel Margin="0,0,0,16" Orientation="Horizontal">
-                            <Border Padding="10,3" Background="#E8EDFB" CornerRadius="8">
-                                <TextBlock FontSize="18" FontWeight="Bold" Foreground="#3B5BDB" Text="{Binding Size}" />
+                            <Border Padding="10,3" Background="{DynamicResource AccentSoft}" CornerRadius="8">
+                                <TextBlock FontSize="18" FontWeight="Bold" Foreground="{DynamicResource Accent}" Text="{Binding Size}" />
                             </Border>
-                            <Border Margin="8,0,0,0" Padding="10,3" Background="#E9F8EE" CornerRadius="8">
-                                <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#1B7A3E" Text="{Binding UnitLabel}" />
+                            <Border Margin="8,0,0,0" Padding="10,3" Background="{DynamicResource SuccessSoft}" CornerRadius="8">
+                                <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource Success}" Text="{Binding UnitLabel}" />
                             </Border>
                             <TextBlock
                                 Margin="10,0,0,0"
@@ -579,7 +580,7 @@
                         <Border
                             Padding="12,10"
                             HorizontalAlignment="Left"
-                            Background="White"
+                            Background="{DynamicResource SurfaceCard}"
                             BorderBrush="{DynamicResource HairlineBorder}"
                             BorderThickness="1"
                             CornerRadius="8">
@@ -659,10 +660,10 @@
                                 Margin="12,0,0,0"
                                 md:ButtonAssist.CornerRadius="9"
                                 md:ElevationAssist.Elevation="Dp2"
-                                Background="#16A34A"
+                                Background="{DynamicResource SuccessStrong}"
                                 BorderThickness="0"
                                 Command="{Binding PrintCommand}"
-                                Foreground="White">
+                                Foreground="{DynamicResource OnAccent}">
                                 <StackPanel Orientation="Horizontal">
                                     <md:PackIcon Width="20" Height="20" VerticalAlignment="Center" Kind="Printer" />
                                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="Chop etish (Enter)" />

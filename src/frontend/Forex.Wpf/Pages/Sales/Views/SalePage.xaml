@@ -43,14 +43,14 @@
                     <Border
                         Width="42"
                         Height="42"
-                        Background="#E8EDFB"
+                        Background="{DynamicResource AccentSoft}"
                         CornerRadius="11">
                         <md:PackIcon
                             Width="24"
                             Height="24"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#3B5BDB"
+                            Foreground="{DynamicResource Accent}"
                             Kind="Cart" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -74,10 +74,10 @@
                         Padding="16,0"
                         md:ButtonAssist.CornerRadius="9"
                         md:ElevationAssist.Elevation="Dp2"
-                        Background="#16A34A"
+                        Background="{DynamicResource SuccessStrong}"
                         BorderThickness="0"
                         Click="BtnAddSale_Click"
-                        Foreground="White">
+                        Foreground="{DynamicResource OnAccent}">
                         <StackPanel Orientation="Horizontal">
                             <md:PackIcon
                                 Width="18"
@@ -190,10 +190,10 @@
                             Height="30"
                             Padding="14,0"
                             md:ButtonAssist.CornerRadius="9"
-                            Background="#15803D"
+                            Background="{DynamicResource SuccessStrong}"
                             BorderThickness="0"
                             Command="{Binding ExportToExcelCommand}"
-                            Foreground="White">
+                            Foreground="{DynamicResource OnAccent}">
                             <StackPanel Orientation="Horizontal">
                                 <md:PackIcon
                                     Width="16"
@@ -256,6 +256,8 @@
                     <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="{DynamicResource GridHeaderBg}" />
                         <Setter Property="Foreground" Value="{DynamicResource GridHeaderInk}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBorder}" />
+                        <Setter Property="SeparatorBrush" Value="{DynamicResource HairlineBorder}" />
                         <Setter Property="FontWeight" Value="SemiBold" />
                         <Setter Property="Padding" Value="10,0" />
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -378,36 +380,36 @@
 
                         <Border
                             Grid.Column="0"
-                            Background="#EEF2FF"
+                            Background="{DynamicResource AccentSoft}"
                             Style="{StaticResource StatChip}">
                             <StackPanel>
-                                <TextBlock FontSize="12" Foreground="#6470B0" Text="Savdolar" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource InkSecondary}" Text="Savdolar" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="20"
                                     FontWeight="Bold"
-                                    Foreground="#3949AB"
+                                    Foreground="{DynamicResource Accent}"
                                     Text="{Binding TotalCount, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
 
                         <Border
                             Grid.Column="1"
-                            Background="#E9F8EE"
+                            Background="{DynamicResource SuccessSoft}"
                             Style="{StaticResource StatChip}"
                             ToolTip="{Binding CurrencyBreakdown}">
                             <StackPanel>
-                                <TextBlock FontSize="12" Foreground="#2E8B57" Text="Summa (so'm)" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource Success}" Text="Summa (so'm)" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="20"
                                     FontWeight="Bold"
-                                    Foreground="#1B7A3E"
+                                    Foreground="{DynamicResource Success}"
                                     Text="{Binding TotalSalesAmount, StringFormat={}{0:N2}, Mode=OneWay}" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="10"
-                                    Foreground="#5E8B6F"
+                                    Foreground="{DynamicResource SuccessMuted}"
                                     Text="{Binding CurrencyBreakdown}"
                                     TextTrimming="CharacterEllipsis" />
                             </StackPanel>
@@ -415,15 +417,15 @@
 
                         <Border
                             Grid.Column="2"
-                            Background="#FFF6E6"
+                            Background="{DynamicResource WarningSoft}"
                             Style="{StaticResource StatChip}">
                             <StackPanel>
-                                <TextBlock FontSize="12" Foreground="#B7791F" Text="Dona" />
+                                <TextBlock FontSize="12" Foreground="{DynamicResource Warning}" Text="Dona" />
                                 <TextBlock
                                     Margin="0,2,0,0"
                                     FontSize="20"
                                     FontWeight="Bold"
-                                    Foreground="#A66A12"
+                                    Foreground="{DynamicResource Warning}"
                                     Text="{Binding TotalItemsSold, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
@@ -498,7 +500,7 @@
                                                             </MultiBinding>
                                                         </DataTrigger.Binding>
                                                         <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}" />
-                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource OnAccent}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
